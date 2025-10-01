@@ -1,184 +1,198 @@
--- Tạo database cho hệ thống tuyển dụng
-CREATE DATABASE recruitment_db;
 
--- Sử dụng database vừa tạo
-\c recruitment_db;
+-- ================================
+-- PostgreSQL Database Schema Script
+-- Generated from ERD + Specifications
+-- ================================
 
--- Bảng người dùng
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+-- 1. account_type
+CREATE TABLE account_type (
+    account_type_id SERIAL PRIMARY KEY,
+    role_name VARCHAR(100) NOT NULL
+);
+
+-- 2. account
+CREATE TABLE account (
+    account_id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'candidate', -- 'candidate', 'employer', 'admin'
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    avatar_url TEXT,
-    is_verified BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    gender VARCHAR(10),
+    date_of_birth DATE,
+    phone_number VARCHAR(11),
+    company_id INT,
+    CONSTRAINT fk_account_company FOREIGN KEY (company_id) REFERENCES company(company_id)
 );
 
--- Bảng profile ứng viên
-CREATE TABLE candidate_profiles (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255),
-    summary TEXT,
-    skills TEXT[], -- Array of skills
-    experience_years INTEGER DEFAULT 0,
-    education_level VARCHAR(50),
-    location VARCHAR(100),
-    salary_expectation INTEGER,
-    cv_url TEXT,
-    portfolio_url TEXT,
-    linkedin_url TEXT,
-    github_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 3. account_account_type
+CREATE TABLE account_account_type (
+    account_id INT NOT NULL,
+    account_type_id INT NOT NULL,
+    PRIMARY KEY (account_id, account_type_id),
+    CONSTRAINT fk_a_at_account FOREIGN KEY (account_id) REFERENCES account(account_id),
+    CONSTRAINT fk_a_at_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(account_type_id)
 );
 
--- Bảng công ty
-CREATE TABLE companies (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+-- 4. company
+CREATE TABLE company (
+    company_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
+    industry_id INT NOT NULL,
     website VARCHAR(255),
-    logo_url TEXT,
-    industry VARCHAR(100),
-    company_size VARCHAR(50),
-    location VARCHAR(100),
-    founded_year INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    logo_url TEXT NOT NULL,
+    size VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
+    description TEXT,
+    CONSTRAINT fk_company_industry FOREIGN KEY (industry_id) REFERENCES industry(industry_id)
 );
 
--- Bảng việc làm
-CREATE TABLE jobs (
-    id SERIAL PRIMARY KEY,
-    company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
+-- 5. industry
+CREATE TABLE industry (
+    industry_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- 6. company_industry
+CREATE TABLE company_industry (
+    company_id INT NOT NULL,
+    industry_id INT NOT NULL,
+    PRIMARY KEY (company_id, industry_id),
+    CONSTRAINT fk_ci_company FOREIGN KEY (company_id) REFERENCES company(company_id),
+    CONSTRAINT fk_ci_industry FOREIGN KEY (industry_id) REFERENCES industry(industry_id)
+);
+
+-- 7. job_posting
+CREATE TABLE job_posting (
+    job_posting_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    company_id INT NOT NULL,
+    industry_id INT NOT NULL,
+    position_name VARCHAR(255) NOT NULL,
+    job_description TEXT,
     requirements TEXT,
+    salary VARCHAR(100),
+    work_type VARCHAR(50),
+    deadline DATE,
+    skills TEXT,
+    experience_years INT,
+    education_level VARCHAR(100),
     benefits TEXT,
-    salary_min INTEGER,
-    salary_max INTEGER,
-    location VARCHAR(100),
-    job_type VARCHAR(50), -- 'full-time', 'part-time', 'contract', 'internship'
-    experience_level VARCHAR(50), -- 'entry', 'mid', 'senior', 'lead'
-    skills_required TEXT[],
-    is_active BOOLEAN DEFAULT TRUE,
-    application_deadline DATE,
-    views_count INTEGER DEFAULT 0,
-    applications_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    working_time VARCHAR(100),
+    CONSTRAINT fk_jp_account FOREIGN KEY (account_id) REFERENCES account(account_id),
+    CONSTRAINT fk_jp_company FOREIGN KEY (company_id) REFERENCES company(company_id),
+    CONSTRAINT fk_jp_industry FOREIGN KEY (industry_id) REFERENCES industry(industry_id)
 );
 
--- Bảng ứng tuyển
-CREATE TABLE applications (
-    id SERIAL PRIMARY KEY,
-    job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
-    candidate_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    cover_letter TEXT,
-    cv_url TEXT,
-    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'reviewing', 'interviewed', 'accepted', 'rejected'
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(job_id, candidate_id)
+-- 8. job_posting_industry
+CREATE TABLE job_posting_industry (
+    job_posting_id INT NOT NULL,
+    industry_id INT NOT NULL,
+    PRIMARY KEY (job_posting_id, industry_id),
+    CONSTRAINT fk_jpi_job_posting FOREIGN KEY (job_posting_id) REFERENCES job_posting(job_posting_id),
+    CONSTRAINT fk_jpi_industry FOREIGN KEY (industry_id) REFERENCES industry(industry_id)
 );
 
--- Bảng cuộc trò chuyện chatbot
-CREATE TABLE chat_sessions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    session_id VARCHAR(255) UNIQUE NOT NULL,
-    context JSONB, -- Lưu context của cuộc trò chuyện
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 9. job_application
+CREATE TABLE job_application (
+    job_application_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    job_posting_id INT NOT NULL,
+    cv_id INT NOT NULL,
+    cover_letter TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    file_upload VARCHAR(255) NOT NULL,
+    file_url TEXT NOT NULL,
+    CONSTRAINT fk_ja_account FOREIGN KEY (account_id) REFERENCES account(account_id),
+    CONSTRAINT fk_ja_job_posting FOREIGN KEY (job_posting_id) REFERENCES job_posting(job_posting_id),
+    CONSTRAINT fk_ja_cv FOREIGN KEY (cv_id) REFERENCES cv(cv_id)
 );
 
--- Bảng tin nhắn chat
-CREATE TABLE chat_messages (
-    id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES chat_sessions(id) ON DELETE CASCADE,
-    sender_type VARCHAR(20) NOT NULL, -- 'user', 'bot'
-    message TEXT NOT NULL,
-    message_type VARCHAR(50) DEFAULT 'text', -- 'text', 'file', 'suggestion'
-    metadata JSONB, -- Lưu thông tin bổ sung
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 10. cv
+CREATE TABLE cv (
+    cv_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    cv_link TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    years_experience INT CHECK (years_experience >= 0),
+    education_level VARCHAR(100),
+    CONSTRAINT fk_cv_account FOREIGN KEY (account_id) REFERENCES account(account_id)
 );
 
--- Bảng saved jobs
-CREATE TABLE saved_jobs (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, job_id)
+-- 11. skill
+CREATE TABLE skill (
+    skill_id SERIAL PRIMARY KEY,
+    skill_name VARCHAR(100) NOT NULL
 );
 
--- Bảng reviews công ty
-CREATE TABLE company_reviews (
-    id SERIAL PRIMARY KEY,
-    company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-    title VARCHAR(255),
-    content TEXT,
-    pros TEXT,
-    cons TEXT,
-    is_anonymous BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 12. cv_skill
+CREATE TABLE cv_skill (
+    cv_id INT NOT NULL,
+    skill_id INT NOT NULL,
+    PRIMARY KEY (cv_id, skill_id),
+    CONSTRAINT fk_cvs_cv FOREIGN KEY (cv_id) REFERENCES cv(cv_id),
+    CONSTRAINT fk_cvs_skill FOREIGN KEY (skill_id) REFERENCES skill(skill_id)
 );
 
--- Bảng notifications
-CREATE TABLE notifications (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    type VARCHAR(50), -- 'application', 'job_match', 'interview', 'general'
-    is_read BOOLEAN DEFAULT FALSE,
-    related_id INTEGER, -- ID của object liên quan (job, application, etc.)
-    related_type VARCHAR(50), -- Loại object liên quan
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 13. job_posting_skill
+CREATE TABLE job_posting_skill (
+    job_posting_id INT NOT NULL,
+    skill_id INT NOT NULL,
+    PRIMARY KEY (job_posting_id, skill_id),
+    CONSTRAINT fk_jps_job_posting FOREIGN KEY (job_posting_id) REFERENCES job_posting(job_posting_id),
+    CONSTRAINT fk_jps_skill FOREIGN KEY (skill_id) REFERENCES skill(skill_id)
 );
 
--- Tạo indexes để tối ưu performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_jobs_company_id ON jobs(company_id);
-CREATE INDEX idx_jobs_location ON jobs(location);
-CREATE INDEX idx_jobs_job_type ON jobs(job_type);
-CREATE INDEX idx_jobs_experience_level ON jobs(experience_level);
-CREATE INDEX idx_jobs_is_active ON jobs(is_active);
-CREATE INDEX idx_applications_job_id ON applications(job_id);
-CREATE INDEX idx_applications_candidate_id ON applications(candidate_id);
-CREATE INDEX idx_applications_status ON applications(status);
-CREATE INDEX idx_chat_sessions_user_id ON chat_sessions(user_id);
-CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id);
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+-- 14. invoice
+CREATE TABLE invoice (
+    invoice_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    card_number VARCHAR(20) NOT NULL,
+    description TEXT NOT NULL,
+    amount NUMERIC(15,2) NOT NULL CHECK (amount >= 10000),
+    bank_name VARCHAR(100) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL,
+    CONSTRAINT fk_invoice_account FOREIGN KEY (account_id) REFERENCES account(account_id)
+);
 
--- Tạo full-text search index
-CREATE INDEX idx_jobs_search ON jobs USING gin(to_tsvector('english', title || ' ' || description));
+-- 15. message
+CREATE TABLE message (
+    message_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    message_account TEXT NOT NULL,
+    message_ai TEXT NOT NULL,
+    CONSTRAINT fk_message_account FOREIGN KEY (account_id) REFERENCES account(account_id)
+);
 
--- Triggers để tự động update updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- 16. user_guide
+CREATE TABLE user_guide (
+    guide_id SERIAL PRIMARY KEY,
+    guide_title TEXT NOT NULL,
+    guide_content TEXT NOT NULL,
+    update_at DATE NOT NULL
+);
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_candidate_profiles_updated_at BEFORE UPDATE ON candidate_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON jobs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_applications_updated_at BEFORE UPDATE ON applications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_chat_sessions_updated_at BEFORE UPDATE ON chat_sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- 17. contact_info
+CREATE TABLE contact_info (
+    contact_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    contact_detail VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_contact_account FOREIGN KEY (account_id) REFERENCES account(account_id)
+);
+
+-- 18. work_type
+CREATE TABLE work_type (
+    work_type_id SERIAL PRIMARY KEY,
+    job_posting_id INT NOT NULL,
+    work_type_name VARCHAR(100) NOT NULL,
+    CONSTRAINT fk_worktype_jobposting FOREIGN KEY (job_posting_id) REFERENCES job_posting(job_posting_id)
+);
+
+-- 19. address
+CREATE TABLE address (
+    address_id SERIAL PRIMARY KEY,
+    company_id INT NOT NULL,
+    address_detail VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_address_company FOREIGN KEY (company_id) REFERENCES company(company_id)
+);

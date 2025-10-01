@@ -190,6 +190,129 @@ def search_similar_jobs(query_vector: List[float], top_k: int = 5):
         print(f"❌ Error in searching similar jobs: {str(e)}")
         return []
 
+
+@server.tool()
+def get_companies_grouped_by_industries() -> List[Dict[str, Any]]:
+    """
+    Lấy danh sách công ty đã được nhóm theo ngành nghề từ PostgreSQL/Supabase
+    Returns:
+        List[Dict]: danh sách công ty với ngành nghề đã nhóm
+    """
+    from tool.database.postgest import PostgreSQLClient
+    
+    try:
+        # Khởi tạo PostgreSQL client (chỉ cần Supabase)
+        pg_client = PostgreSQLClient(
+            url=os.getenv("SUPABASE_URL"),
+            key=os.getenv("SUPABASE_ANON_KEY")
+        )
+        
+        # Lấy dữ liệu từ procedure (đã được gom nhóm)
+        companies_data = pg_client.get_data_from_procedures("get_cong_ty_full", limit=1000)
+        
+        print(f"✅ Retrieved {len(companies_data)} grouped companies")
+        return companies_data
+        
+    except Exception as e:
+        print(f"❌ Error getting grouped companies: {str(e)}")
+        return []
+
+
+@server.tool()
+def upsert_companies_to_qdrant_optimized(limit: int = 100):
+    """
+    Lấy công ty từ PostgreSQL, tạo embedding và lưu vào Qdrant (sử dụng LLMManager tối ưu)
+    Args:
+        limit: số lượng công ty để xử lý
+    Returns:
+        dict: Kết quả thêm dữ liệu
+    """
+    from tool.database.postgest import PostgreSQLClient
+    
+    try:
+        # Định nghĩa extractors
+        def company_text_extractor(record: Dict[str, Any]) -> str:
+            text_parts = []
+            
+            if record.get('ten_cong_ty'):
+                text_parts.append(f"Công ty: {record['ten_cong_ty']}")
+            
+            if record.get('ds_nganh_nghe'):
+                text_parts.append(f"Ngành nghề: {record['ds_nganh_nghe']}")
+            
+            if record.get('linh_vuc'):
+                text_parts.append(f"Lĩnh vực: {record['linh_vuc']}")
+            
+            if record.get('mo_ta'):
+                text_parts.append(f"Mô tả: {record['mo_ta']}")
+            
+            return ". ".join(text_parts)
+        
+        def company_id_extractor(record: Dict[str, Any]) -> str:
+            return f"company_{record['ma_cong_ty']}"
+        
+        # Khởi tạo PostgreSQL client với Qdrant
+        pg_client = PostgreSQLClient(
+            url=os.getenv("SUPABASE_URL"),
+            key=os.getenv("SUPABASE_ANON_KEY"),
+            qdrant_url=settings.QDRANT_URL,
+            qdrant_api_key=settings.QDRANT_API_KEY
+        )
+        
+        # Sử dụng embedding method tích hợp
+        result = pg_client.embed_data_to_qdrant(
+            procedure_name="get_cong_ty_full",
+            collection_name=getattr(settings, 'COLLECTION_COMPANY', 'companies'),
+            text_extractor=company_text_extractor,
+            id_extractor=company_id_extractor,
+            limit=limit,
+            batch_size=20
+        )
+        
+        print(f"✅ Embedding completed: {result}")
+        return result
+        
+    except Exception as e:
+        print(f"❌ Error in optimized embedding: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+@server.tool()
+def search_similar_companies_optimized(query: str, top_k: int = 5):
+    """
+    Tìm kiếm các công ty tương tự (sử dụng PostgreSQLClient tối ưu)
+    Args:
+        query: văn bản tìm kiếm
+        top_k: số lượng kết quả trả về
+    Returns:
+        list: danh sách các công ty tương tự
+    """
+    from tool.database.postgest import PostgreSQLClient
+    
+    try:
+        # Khởi tạo client với Qdrant
+        pg_client = PostgreSQLClient(
+            url=os.getenv("SUPABASE_URL"),
+            key=os.getenv("SUPABASE_ANON_KEY"),
+            qdrant_url=settings.QDRANT_URL,
+            qdrant_api_key=settings.QDRANT_API_KEY
+        )
+        
+        # Tìm kiếm sử dụng method tích hợp
+        results = pg_client.search_similar_records(
+            collection_name=getattr(settings, 'COLLECTION_COMPANY', 'companies'),
+            query_text=query,
+            top_k=top_k,
+            score_threshold=0.4
+        )
+        
+        print(f"✅ Found {len(results)} similar companies for: '{query}'")
+        return results
+        
+    except Exception as e:
+        print(f"❌ Error in optimized search: {str(e)}")
+        return []
+
 # 3️⃣ Chạy server qua STDIO
 if __name__ == "__main__":
     server.run()

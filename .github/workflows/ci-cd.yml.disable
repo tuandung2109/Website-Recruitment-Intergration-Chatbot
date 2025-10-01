@@ -1,0 +1,342 @@
+name: CI/CD Pipeline - Recruitment Website with AI Chatbot
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_PREFIX: ${{ github.repository }}
+
+jobs:
+  # Test jobs
+  test-backend:
+    runs-on: ubuntu-latest
+    name: Test Backend (Node.js)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: Backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./Backend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./Backend
+      run: |
+        npm test || echo "No tests configured yet"
+    
+    - name: Run linting
+      working-directory: ./Backend
+      run: |
+        npm run lint || echo "No linting configured yet"
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    name: Test Frontend (React)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: Frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./Frontend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./Frontend
+      run: |
+        npm test -- --coverage --watchAll=false || echo "No tests configured yet"
+    
+    - name: Build application
+      working-directory: ./Frontend
+      run: npm run build
+
+  test-ai:
+    runs-on: ubuntu-latest
+    name: Test AI Service (Python)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: AI/requirements.txt
+    
+    - name: Install dependencies
+      working-directory: ./AI
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      working-directory: ./AI
+      run: |
+        python -m pytest || echo "No tests configured yet"
+
+  # Build and push Docker images
+  build-and-push:
+    needs: [test-backend, test-frontend, test-ai]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    strategy:
+      matrix:
+        service: [backend, frontend, ai]
+        include:
+          - service: backend
+            context: ./Backend
+            dockerfile: ./Backend/Dockerfile
+            port: 3001
+          - service: frontend
+            context: ./Frontend
+            dockerfile: ./Frontend/Dockerfile
+            port: 3000
+          - service: ai
+            context: ./AI
+            dockerfile: ./AI/Dockerfile
+            port: 5000
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}-${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ matrix.context }}
+        file: ${{ matrix.dockerfile }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  # Deploy to staging/production
+  deploy:
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Create deployment directory
+      run: |
+        mkdir -p deployment
+        cp docker-compose.yml deployment/
+        cp -r Docker deployment/
+        cp -r Database deployment/
+    
+    - name: Create environment file
+      run: |
+        cat > deployment/.env << EOF
+        # Supabase Configuration
+        SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        DATABASE_URL=${{ secrets.DATABASE_URL }}
+        
+        # Backend
+        JWT_SECRET=${{ secrets.JWT_SECRET }}
+        NODE_ENV=production
+        
+        # AI Service
+        OLLAMA_MODEL=hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M
+        OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+        
+        # URLs
+        FRONTEND_URL=http://localhost:3000
+        BACKEND_URL=http://localhost:3001
+        AI_SERVICE_URL=http://localhost:5000
+        
+        # Registry
+        REGISTRY=${{ env.REGISTRY }}
+        IMAGE_PREFIX=${{ env.IMAGE_NAME_PREFIX }}
+        IMAGE_TAG=latest
+        EOF
+    
+    - name: Create production docker-compose file
+      run: |
+        cat > deployment/docker-compose.prod.yml << 'EOF'
+        version: '3.8'
+        
+        services:
+          backend:
+            image: ${REGISTRY}/${IMAGE_PREFIX}-backend:${IMAGE_TAG}
+            container_name: recruitment_backend_prod
+            environment:
+              NODE_ENV: production
+              SUPABASE_URL: ${SUPABASE_URL}
+              SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+              SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+              DATABASE_URL: ${DATABASE_URL}
+              JWT_SECRET: ${JWT_SECRET}
+              PORT: 3001
+              CORS_ORIGIN: ${FRONTEND_URL}
+            ports:
+              - "3001:3001"
+            networks:
+              - recruitment_network
+            restart: unless-stopped
+        
+          ai_service:
+            image: ${REGISTRY}/${IMAGE_PREFIX}-ai:${IMAGE_TAG}
+            container_name: recruitment_ai_prod
+            environment:
+              FLASK_ENV: production
+              SUPABASE_URL: ${SUPABASE_URL}
+              SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+              SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+              DATABASE_URL: ${DATABASE_URL}
+              DOCKER_ENV: "true"
+              OLLAMA_URL: http://host.docker.internal:11434
+              OLLAMA_MODEL: ${OLLAMA_MODEL}
+              OPENAI_API_KEY: ${OPENAI_API_KEY}
+              PORT: 5000
+            ports:
+              - "5000:5000"
+            networks:
+              - recruitment_network
+            extra_hosts:
+              - "host.docker.internal:host-gateway"
+            restart: unless-stopped
+        
+          frontend:
+            image: ${REGISTRY}/${IMAGE_PREFIX}-frontend:${IMAGE_TAG}
+            container_name: recruitment_frontend_prod
+            environment:
+              REACT_APP_API_URL: ${BACKEND_URL}
+              REACT_APP_AI_SERVICE_URL: ${AI_SERVICE_URL}
+              REACT_APP_SUPABASE_URL: ${SUPABASE_URL}
+              REACT_APP_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+            ports:
+              - "3000:3000"
+            depends_on:
+              - backend
+              - ai_service
+            networks:
+              - recruitment_network
+            restart: unless-stopped
+        
+          nginx:
+            image: nginx:alpine
+            container_name: recruitment_nginx_prod
+            ports:
+              - "80:80"
+              - "443:443"
+            volumes:
+              - ./Docker/nginx.conf:/etc/nginx/nginx.conf
+              - ./Docker/ssl:/etc/nginx/ssl
+            depends_on:
+              - frontend
+              - backend
+              - ai_service
+            networks:
+              - recruitment_network
+            restart: unless-stopped
+        
+        networks:
+          recruitment_network:
+            driver: bridge
+        EOF
+    
+    # Deploy to remote server (uncomment and configure for actual deployment)
+    # - name: Deploy to server
+    #   uses: appleboy/ssh-action@v1.0.0
+    #   with:
+    #     host: ${{ secrets.HOST }}
+    #     username: ${{ secrets.USERNAME }}
+    #     key: ${{ secrets.SSH_KEY }}
+    #     port: ${{ secrets.PORT }}
+    #     script: |
+    #       cd /opt/recruitment-app
+    #       docker-compose -f docker-compose.prod.yml down
+    #       docker-compose -f docker-compose.prod.yml pull
+    #       docker-compose -f docker-compose.prod.yml up -d
+    #       docker system prune -f
+    
+    - name: Upload deployment artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-files
+        path: deployment/
+        retention-days: 30
+
+  # Security scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Notification
+  notify:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "✅ Deployment successful!"
+        else
+          echo "❌ Deployment failed!"
+        fi

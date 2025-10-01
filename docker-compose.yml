@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  # Backend NodeJS
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: recruitment_backend
+    environment:
+      NODE_ENV: production
+      # Supabase Configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key}
+      PORT: 3001
+      CORS_ORIGIN: ${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "3001:3001"
+    networks:
+      - recruitment_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # AI Chatbot Service
+  ai_service:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: recruitment_ai
+    environment:
+      FLASK_ENV: production
+      # Supabase Configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      DATABASE_URL: ${DATABASE_URL}
+      DOCKER_ENV: "true"
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M}
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    networks:
+      - recruitment_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Frontend ReactJS
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: recruitment_frontend
+    environment:
+      REACT_APP_API_URL: ${BACKEND_URL:-http://localhost:3001}
+      REACT_APP_AI_SERVICE_URL: ${AI_SERVICE_URL:-http://localhost:5000}
+      REACT_APP_SUPABASE_URL: ${SUPABASE_URL}
+      REACT_APP_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+      ai_service:
+        condition: service_healthy
+    networks:
+      - recruitment_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Ollama for Local LLM (Optional - can run on host)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: recruitment_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - recruitment_network
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # QDrant Vector Database (Optional)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: recruitment_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - recruitment_network
+    restart: unless-stopped
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: recruitment_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - recruitment_network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: recruitment_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./Docker/ssl:/etc/nginx/ssl
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      ai_service:
+        condition: service_healthy
+    networks:
+      - recruitment_network
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  qdrant_data:
+  redis_data:
+
+networks:
+  recruitment_network:
+    driver: bridge

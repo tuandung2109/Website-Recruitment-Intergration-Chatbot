@@ -39,7 +39,6 @@ Hệ thống website tuyển dụng hiện đại với chatbot AI tích hợp, 
   - Hugging Face Transformers
   - Ollama (Local LLM)
   - QDrant (Vector Database)
-  - LangChain
 - **Tính năng**:
   - Natural Language Processing
   - Resume analysis
@@ -137,7 +136,6 @@ Website-Recruitment-Integration-Chatbot/
 - 🧠 LLM: Ollama (Local) + OpenAI GPT
 - 🔍 Vector Search: QDrant
 - 🤗 NLP: Hugging Face Transformers
-- 🔗 Orchestration: LangChain
 
 ## 🛠️ Công nghệ sử dụng
 

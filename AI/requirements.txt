@@ -1,13 +1,24 @@
+# Core dependencies
 pytest==7.4.0
 requests==2.31.0
 flask==2.3.2
 python-dotenv==1.0.0
 gunicorn==21.2.0
 loguru
+
+# AI/ML dependencies
 ollama>=0.4.0
 qdrant-client
+
+# MCP (Model Context Protocol)
 fastmcp>=0.1.0
 mcp>=1.0.0
+
+# Data processing
 pymongo>=4.0.0
 pandas>=2.0.0
+
+# Database client
 supabase>=2.0.0
+
+# Note: We don't use LangChain - direct integration with Ollama for simplicity

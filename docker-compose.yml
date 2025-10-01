@@ -28,7 +28,7 @@ services:
       retries: 3
     restart: unless-stopped
 
-  # AI Chatbot Service
+  # AI Chatbot Service (Python/Flask with Ollama integration)
   ai_service:
     build:
       context: ./AI

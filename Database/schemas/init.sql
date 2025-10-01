@@ -21,6 +21,7 @@ CREATE TABLE account (
     date_of_birth DATE,
     phone_number VARCHAR(11),
     company_id INT,
+    int money_balance,
     CONSTRAINT fk_account_company FOREIGN KEY (company_id) REFERENCES company(company_id)
 );
 

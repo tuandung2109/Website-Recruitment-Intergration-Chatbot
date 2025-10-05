@@ -1,8 +1,5 @@
 // const API = `https://topcv-api.vercel.app/api` || "http://localhost:9000/api";
-const API =
-  process.env.NODE_ENV === "production"
-    ? "https://topcv-api.vercel.app/api"
-    : "http://localhost:9000/api";
+const API = process.env.NODE_ENV === "http://localhost:9000/api";
 
 export const _get = async (path) => {
   const response = await fetch(API + path, {

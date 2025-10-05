@@ -27,18 +27,8 @@ const Chatbot = () => {
     "Content-Type": "application/json",
     Accept: "application/json",
   };
-
-  // const quickReplies = [
-  //   { id: 1, text: "Tìm việc làm", icon: "🔍", router: "job" },
-  //   { id: 2, text: "backend", icon: "📄", router: "company" },
-  //   { id: 3, text: "Tư vấn nghề nghiệp", icon: "💡", router: "cv" },
-  //   { id: 4, text: "Hỗ trợ phỏng vấn", icon: "💬", router: "support" },
-  // ];
-
-  // Check AI service health on component mount
   useEffect(() => {
     checkAIServiceHealth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAIServiceHealth = async () => {
@@ -169,9 +159,7 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      // Always try AI response first
       const aiResponse = await getAIResponse(userMessageText);
-
       const botResponse = {
         id: Date.now() + 1,
         text: aiResponse,
@@ -201,71 +189,21 @@ const Chatbot = () => {
       setIsTyping(false);
     }
   };
-
-  // const handleQuickReply = async (text) => {
-  //   // Add user message immediately
-  //   const userMessage = {
-  //     id: Date.now(),
-  //     text: text,
-  //     sender: "user",
-  //     timestamp: new Date(),
-  //   };
-
-  //   setMessages((prev) => [...prev, userMessage]);
-  //   setIsTyping(true);
-
-  //   try {
-  //     // Always try AI response first
-  //     const aiResponse = await getAIResponse(text);
-
-  //     setTimeout(() => {
-  //       const botResponse = {
-  //         id: Date.now() + 1,
-  //         text: aiResponse,
-  //         sender: "bot",
-  //         timestamp: new Date(),
-  //       };
-  //       setMessages((prev) => [...prev, botResponse]);
-  //       setIsTyping(false);
-  //     }, 500); // Small delay for better UX
-  //   } catch (error) {
-  //     console.error("Error getting AI response:", error);
-
-  //     setTimeout(() => {
-  //       const errorResponse = {
-  //         id: Date.now() + 1,
-  //         text: getEmergencyFallback(),
-  //         sender: "bot",
-  //         timestamp: new Date(),
-  //       };
-  //       setMessages((prev) => [...prev, errorResponse]);
-  //       setIsTyping(false);
-
-  //       // Try to reconnect after failure
-  //       checkAIServiceHealth();
-  //     }, 500);
-  //   }
-  // };
-
   const handleQuickReply = async (text, router) => {
     // Nếu có router thì điều hướng sang trang đó
     if (router) {
       navigate(`/${router}`);
-      setIsOpen(false); // ẩn chatbot khi chuyển trang (tuỳ bạn)
+      setIsOpen(false);
       return;
     }
-
-    // Còn nếu không có router thì vẫn gửi tin nhắn như bình thường
     const userMessage = {
       id: Date.now(),
       text: text,
       sender: "user",
       timestamp: new Date(),
     };
-
     setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
-
     try {
       const aiResponse = await getAIResponse(text);
 
@@ -438,7 +376,7 @@ const Chatbot = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
+                placeholder="Nhập tin nhắn..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <button

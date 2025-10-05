@@ -1,4 +1,4 @@
-import { _post } from "../utils/request";
+import { _get, _post } from "../utils/request";
 
 const postRegister = async ({ username, password, email, phone }) => {
   try {
@@ -49,4 +49,26 @@ const loginAccount = async ({ email, password }) => {
   }
 };
 
-export { postRegister, loginAccount };
+const listAccount = async () => {
+  try {
+    const res = await _get(`/account/listAccount`);
+    const result = await res.json();
+
+    if (res.ok && result.success) {
+      // Giả sử backend trả về: { success: true, accounts: [...] }
+      return { success: true, accounts: result.accounts };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Không thể lấy danh sách tài khoản",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối đến máy chủ",
+    };
+  }
+};
+
+export { postRegister, loginAccount, listAccount };

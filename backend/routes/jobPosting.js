@@ -6,7 +6,7 @@ router.get("/listJobPosting", controllerJobsPostings.listJobPostings); //Lấy d
 router.get(
   "/listJobPostingDeleted",
   controllerJobsPostings.listJobPostingsDeleted
-); //Lấy danh sách bài đăng
+);
 router.get("/listJobPostingId/:id", controllerJobsPostings.listJobPostingId); // Chi tiết công việc
 router.post("/postJobPosting", controllerJobsPostings.postJobPosting); //Đăng bài
 router.post("/deleteJobPosting/:id", controllerJobsPostings.deleteJobPosting); //Xóa bài đăng

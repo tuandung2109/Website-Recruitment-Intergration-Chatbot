@@ -1,41 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { filterCategories as staticFilterCategories } from '../data/jobsData';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { filterCategories as staticFilterCategories } from "../data/jobsData";
 
 const JobListings = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
-    keywords: '',
-    location: '',
-    distance: ''
+    keywords: "",
+    location: "",
+    distance: "",
   });
-  
+
   const [activeFilters, setActiveFilters] = useState({
     workType: [],
     salary: [],
     experience: [],
-    industry: []
+    industry: [],
   });
-  
+
   const [isVisible, setIsVisible] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState("newest");
   const jobsPerPage = 5;
 
   // Data from API
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [filtersFromDb, setFiltersFromDb] = useState({ workType: [], industry: [] });
+  const [error, setError] = useState("");
+  const [filtersFromDb, setFiltersFromDb] = useState({
+    workType: [],
+    industry: [],
+  });
 
   // Load filter options and fetch jobs from backend API once on mount
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        setError('');
-        const params = new URLSearchParams({ page: '1', limit: '200' });
-        const url = `${process.env.REACT_APP_API_URL}/api/jobs?${params.toString()}`;
+        setError("");
+        const params = new URLSearchParams({ page: "1", limit: "200" });
+        const url = `${
+          process.env.REACT_APP_API_URL
+        }/api/jobs?${params.toString()}`;
         const res = await fetch(url);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
@@ -44,24 +49,33 @@ const JobListings = () => {
 
         const mapped = (json.jobs || []).map((j) => ({
           id: j.job_posting_id,
-          title: j.position_name || 'Untitled',
-          company: j.company_name || (j.company_id ? `Company ${j.company_id}` : 'Company'),
-          description: j.job_description || '',
+          title: j.position_name || "Untitled",
+          company:
+            j.company_name ||
+            (j.company_id ? `Company ${j.company_id}` : "Company"),
+          description: j.job_description || "",
           skills: Array.isArray(j.skills) ? j.skills : [],
           industries: Array.isArray(j.industries) ? j.industries : [],
-          location: j.address_detail || j.location || '',
-          type: Array.isArray(j.work_types) && j.work_types.length > 0 ? j.work_types.join(', ') : '',
-          experience: typeof j.experience_years === 'number' ? `${j.experience_years} năm` : (j.experience || ''),
-          experienceYears: typeof j.experience_years === 'number' ? j.experience_years : 0,
+          location: j.address_detail || j.location || "",
+          type:
+            Array.isArray(j.work_types) && j.work_types.length > 0
+              ? j.work_types.join(", ")
+              : "",
+          experience:
+            typeof j.experience_years === "number"
+              ? `${j.experience_years} năm`
+              : j.experience || "",
+          experienceYears:
+            typeof j.experience_years === "number" ? j.experience_years : 0,
           salary: Number(j.salary) || 0,
-          salaryRange: j.salary ? `${j.salary}` : '',
-          deadline: j.deadline_date || '',
-          postedDate: j.created_at ? new Date(j.created_at) : new Date()
+          salaryRange: j.salary ? `${j.salary}` : "",
+          deadline: j.deadline_date || "",
+          postedDate: j.created_at ? new Date(j.created_at) : new Date(),
         }));
 
         setJobs(mapped);
       } catch (e) {
-        setError('Không thể tải danh sách công việc');
+        setError("Không thể tải danh sách công việc");
       } finally {
         setLoading(false);
       }
@@ -74,7 +88,7 @@ const JobListings = () => {
           const data = await res.json();
           setFiltersFromDb({
             workType: data.workTypes || [],
-            industry: data.industries || []
+            industry: data.industries || [],
           });
         }
       } catch {}
@@ -89,18 +103,24 @@ const JobListings = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(prev => ({ ...prev, [entry.target.id]: true }));
+            setIsVisible((prev) => ({ ...prev, [entry.target.id]: true }));
           }
         });
       },
       { threshold: 0.1 }
     );
 
-    const elements = document.querySelectorAll('[data-animate]');
-    elements.forEach(el => observer.observe(el));
+    const elements = document.querySelectorAll("[data-animate]");
+    elements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [/* reattach when list changes */ jobs, currentPage, sortBy, activeFilters, searchData]);
+  }, [
+    /* reattach when list changes */ jobs,
+    currentPage,
+    sortBy,
+    activeFilters,
+    searchData,
+  ]);
 
   // Hàm lọc công việc
   const filterJobs = () => {
@@ -109,38 +129,44 @@ const JobListings = () => {
     // Lọc theo từ khóa
     if (searchData.keywords.trim()) {
       const keyword = searchData.keywords.toLowerCase();
-      filtered = filtered.filter(job => 
-        job.title.toLowerCase().includes(keyword) ||
-        job.company.toLowerCase().includes(keyword) ||
-        job.description.toLowerCase().includes(keyword) ||
-        job.skills.some(skill => skill.toLowerCase().includes(keyword))
+      filtered = filtered.filter(
+        (job) =>
+          job.title.toLowerCase().includes(keyword) ||
+          job.company.toLowerCase().includes(keyword) ||
+          job.description.toLowerCase().includes(keyword) ||
+          job.skills.some((skill) => skill.toLowerCase().includes(keyword))
       );
     }
 
     // Lọc theo địa điểm
     if (searchData.location.trim()) {
       const location = searchData.location.toLowerCase();
-      filtered = filtered.filter(job => 
+      filtered = filtered.filter((job) =>
         job.location.toLowerCase().includes(location)
       );
     }
 
     // Lọc theo loại công việc (từ DB: work_types)
     if (activeFilters.workType.length > 0) {
-      filtered = filtered.filter(job => {
-        const types = Array.isArray(job.work_types) && job.work_types.length > 0 ? job.work_types : [job.type].filter(Boolean);
-        return activeFilters.workType.some(t => types.includes(t));
+      filtered = filtered.filter((job) => {
+        const types =
+          Array.isArray(job.work_types) && job.work_types.length > 0
+            ? job.work_types
+            : [job.type].filter(Boolean);
+        return activeFilters.workType.some((t) => types.includes(t));
       });
     }
 
     // Lọc theo mức lương
     if (activeFilters.salary.length > 0) {
-      filtered = filtered.filter(job => {
-        return activeFilters.salary.some(salaryFilter => {
-          const bucket = staticFilterCategories.salary.options.find(opt => opt.label === salaryFilter);
+      filtered = filtered.filter((job) => {
+        return activeFilters.salary.some((salaryFilter) => {
+          const bucket = staticFilterCategories.salary.options.find(
+            (opt) => opt.label === salaryFilter
+          );
           if (!bucket) return false;
-          const min = typeof bucket.min === 'number' ? bucket.min : -Infinity;
-          const max = typeof bucket.max === 'number' ? bucket.max : Infinity;
+          const min = typeof bucket.min === "number" ? bucket.min : -Infinity;
+          const max = typeof bucket.max === "number" ? bucket.max : Infinity;
           return job.salary >= min && job.salary <= max;
         });
       });
@@ -148,14 +174,24 @@ const JobListings = () => {
 
     // Lọc theo kinh nghiệm (experience_years)
     if (activeFilters.experience.length > 0) {
-      filtered = filtered.filter(job => {
-        return activeFilters.experience.some(expLabel => {
+      filtered = filtered.filter((job) => {
+        return activeFilters.experience.some((expLabel) => {
           // Map nhãn -> khoảng số năm
-          let min = 0, max = Infinity;
-          if (expLabel === 'Không yêu cầu') { min = 0; max = 0; }
-          else if (expLabel === '1-2 năm') { min = 1; max = 2; }
-          else if (expLabel === '2-5 năm') { min = 2; max = 5; }
-          else if (expLabel === '5+ năm') { min = 5; max = Infinity; }
+          let min = 0,
+            max = Infinity;
+          if (expLabel === "Không yêu cầu") {
+            min = 0;
+            max = 0;
+          } else if (expLabel === "1-2 năm") {
+            min = 1;
+            max = 2;
+          } else if (expLabel === "2-5 năm") {
+            min = 2;
+            max = 5;
+          } else if (expLabel === "5+ năm") {
+            min = 5;
+            max = Infinity;
+          }
           return job.experienceYears >= min && job.experienceYears <= max;
         });
       });
@@ -163,9 +199,9 @@ const JobListings = () => {
 
     // Lọc theo ngành nghề (từ DB: industries array)
     if (activeFilters.industry.length > 0) {
-      filtered = filtered.filter(job => {
+      filtered = filtered.filter((job) => {
         const inds = Array.isArray(job.industries) ? job.industries : [];
-        return activeFilters.industry.some(i => inds.includes(i));
+        return activeFilters.industry.some((i) => inds.includes(i));
       });
     }
 
@@ -175,13 +211,13 @@ const JobListings = () => {
   // Hàm sắp xếp
   const sortJobs = (jobs) => {
     const sorted = [...jobs];
-    
-    switch(sortBy) {
-      case 'newest':
+
+    switch (sortBy) {
+      case "newest":
         return sorted.sort((a, b) => b.postedDate - a.postedDate);
-      case 'salary':
+      case "salary":
         return sorted.sort((a, b) => b.salary - a.salary);
-      case 'relevant':
+      case "relevant":
         return sorted;
       default:
         return sorted;
@@ -204,17 +240,17 @@ const JobListings = () => {
   const handleInputChange = (e) => {
     setSearchData({
       ...searchData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const toggleFilter = (category, value) => {
-    setActiveFilters(prev => {
+    setActiveFilters((prev) => {
       const currentFilters = prev[category];
       const newFilters = currentFilters.includes(value)
-        ? currentFilters.filter(f => f !== value)
+        ? currentFilters.filter((f) => f !== value)
         : [...currentFilters, value];
-      
+
       return { ...prev, [category]: newFilters };
     });
     setCurrentPage(1); // Reset về trang 1 khi thay đổi filter
@@ -225,36 +261,39 @@ const JobListings = () => {
       workType: [],
       salary: [],
       experience: [],
-      industry: []
+      industry: [],
     });
     setSearchData({
-      keywords: '',
-      location: '',
-      distance: ''
+      keywords: "",
+      location: "",
+      distance: "",
     });
     setCurrentPage(1);
   };
 
   const removeFilter = (category, value) => {
-    setActiveFilters(prev => ({
+    setActiveFilters((prev) => ({
       ...prev,
-      [category]: prev[category].filter(f => f !== value)
+      [category]: prev[category].filter((f) => f !== value),
     }));
     setCurrentPage(1);
   };
 
   // Đếm tổng số filter đang active
   const getTotalActiveFilters = () => {
-    return Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+    return Object.values(activeFilters).reduce(
+      (sum, arr) => sum + arr.length,
+      0
+    );
   };
 
   // Format thời gian đăng
   const getTimeAgo = (date) => {
     const now = new Date();
     const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diff === 0) return 'Hôm nay';
-    if (diff === 1) return '1 ngày trước';
+
+    if (diff === 0) return "Hôm nay";
+    if (diff === 1) return "1 ngày trước";
     if (diff < 7) return `${diff} ngày trước`;
     if (diff < 30) return `${Math.floor(diff / 7)} tuần trước`;
     return `${Math.floor(diff / 30)} tháng trước`;
@@ -262,19 +301,23 @@ const JobListings = () => {
 
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {loading && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-200">Đang tải danh sách công việc...</div>
+          <div className="bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-200">
+            Đang tải danh sách công việc...
+          </div>
         </div>
       )}
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg border border-red-200">{error}</div>
+          <div className="bg-red-50 text-red-700 p-3 rounded-lg border border-red-200">
+            {error}
+          </div>
         </div>
       )}
       <section className="relative bg-gradient-to-br from-blue-300 via-purple-200 to-blue-100 py-16 overflow-hidden">
@@ -290,13 +333,23 @@ const JobListings = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
             Tìm kiếm công việc mơ ước
           </h1>
-          
+
           <div className="bg-white bg-opacity-90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -305,16 +358,31 @@ const JobListings = () => {
                   placeholder="Từ khóa/chức danh"
                   value={searchData.keywords}
                   onChange={handleInputChange}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
                 />
               </div>
-              
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -323,15 +391,25 @@ const JobListings = () => {
                   placeholder="Địa điểm"
                   value={searchData.location}
                   onChange={handleInputChange}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
                 />
               </div>
-              
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <select
@@ -347,15 +425,25 @@ const JobListings = () => {
                   <option value="50">50 km</option>
                 </select>
               </div>
-              
+
               <button
                 onClick={handleSearch}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold transform hover:scale-105 shadow-xl hover:shadow-2xl group backdrop-blur-sm"
               >
                 <span className="flex items-center justify-center">
                   Tìm kiếm
-                  <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+                    className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </span>
               </button>
@@ -370,7 +458,8 @@ const JobListings = () => {
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Bộ lọc {getTotalActiveFilters() > 0 && (
+                  Bộ lọc{" "}
+                  {getTotalActiveFilters() > 0 && (
                     <span className="ml-2 text-sm bg-blue-600 text-white px-2 py-1 rounded-full">
                       {getTotalActiveFilters()}
                     </span>
@@ -400,8 +489,16 @@ const JobListings = () => {
                             onClick={() => removeFilter(category, filter)}
                             className="ml-2 hover:text-blue-900"
                           >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </button>
                         </span>
@@ -412,14 +509,22 @@ const JobListings = () => {
               )}
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">{staticFilterCategories.workType.name}</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {staticFilterCategories.workType.name}
+                </h3>
                 <div className="space-y-2">
-                  {(filtersFromDb.workType.length > 0 ? filtersFromDb.workType : staticFilterCategories.workType.options).map((option) => (
-                    <label key={option} className="flex items-center cursor-pointer group">
+                  {(filtersFromDb.workType.length > 0
+                    ? filtersFromDb.workType
+                    : staticFilterCategories.workType.options
+                  ).map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center cursor-pointer group"
+                    >
                       <input
                         type="checkbox"
                         checked={activeFilters.workType.includes(option)}
-                        onChange={() => toggleFilter('workType', option)}
+                        onChange={() => toggleFilter("workType", option)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <span className="ml-3 text-gray-700 group-hover:text-blue-600 transition-colors">
@@ -431,14 +536,19 @@ const JobListings = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">{staticFilterCategories.salary.name}</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {staticFilterCategories.salary.name}
+                </h3>
                 <div className="space-y-2">
                   {staticFilterCategories.salary.options.map((option) => (
-                    <label key={option.label} className="flex items-center cursor-pointer group">
+                    <label
+                      key={option.label}
+                      className="flex items-center cursor-pointer group"
+                    >
                       <input
                         type="checkbox"
                         checked={activeFilters.salary.includes(option.label)}
-                        onChange={() => toggleFilter('salary', option.label)}
+                        onChange={() => toggleFilter("salary", option.label)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <span className="ml-3 text-gray-700 group-hover:text-blue-600 transition-colors">
@@ -450,14 +560,19 @@ const JobListings = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">{staticFilterCategories.experience.name}</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {staticFilterCategories.experience.name}
+                </h3>
                 <div className="space-y-2">
                   {staticFilterCategories.experience.options.map((option) => (
-                    <label key={option} className="flex items-center cursor-pointer group">
+                    <label
+                      key={option}
+                      className="flex items-center cursor-pointer group"
+                    >
                       <input
                         type="checkbox"
                         checked={activeFilters.experience.includes(option)}
-                        onChange={() => toggleFilter('experience', option)}
+                        onChange={() => toggleFilter("experience", option)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <span className="ml-3 text-gray-700 group-hover:text-blue-600 transition-colors">
@@ -469,14 +584,22 @@ const JobListings = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">{staticFilterCategories.industry.name}</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {staticFilterCategories.industry.name}
+                </h3>
                 <div className="space-y-2">
-                  {(filtersFromDb.industry.length > 0 ? filtersFromDb.industry : staticFilterCategories.industry.options).map((option) => (
-                    <label key={option} className="flex items-center cursor-pointer group">
+                  {(filtersFromDb.industry.length > 0
+                    ? filtersFromDb.industry
+                    : staticFilterCategories.industry.options
+                  ).map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center cursor-pointer group"
+                    >
                       <input
                         type="checkbox"
                         checked={activeFilters.industry.includes(option)}
-                        onChange={() => toggleFilter('industry', option)}
+                        onChange={() => toggleFilter("industry", option)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <span className="ml-3 text-gray-700 group-hover:text-blue-600 transition-colors">
@@ -492,9 +615,11 @@ const JobListings = () => {
           <main className="lg:w-3/4">
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
-                Tìm thấy <span className="text-blue-600">{filteredJobs.length}</span> công việc
+                Tìm thấy{" "}
+                <span className="text-blue-600">{filteredJobs.length}</span>{" "}
+                công việc
               </h2>
-              <select 
+              <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -507,11 +632,25 @@ const JobListings = () => {
 
             {currentJobs.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-24 h-24 mx-auto text-gray-300 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy công việc phù hợp</h3>
-                <p className="text-gray-600 mb-6">Hãy thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Không tìm thấy công việc phù hợp
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Hãy thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm
+                </p>
                 <button
                   onClick={clearAllFilters}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -528,7 +667,9 @@ const JobListings = () => {
                       id={`job-${job.id}`}
                       data-animate
                       className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 transform hover:scale-[1.02] ${
-                        isVisible[`job-${job.id}`] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                        isVisible[`job-${job.id}`]
+                          ? "opacity-100 translate-y-0"
+                          : "opacity-0 translate-y-4"
                       }`}
                       style={{ transitionDelay: `${index * 50}ms` }}
                     >
@@ -540,22 +681,22 @@ const JobListings = () => {
                                 {job.company.charAt(0)}
                               </span>
                             </div>
-                            
+
                             <div className="flex-1">
-                            <h3 
-                            onClick={() => navigate(`/job/${job.id}`)}
-                            className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer transition-colors"
-                            >
-                            {job.title}
-                            </h3>
+                              <h3
+                                onClick={() => navigate(`/job/${job.id}`)}
+                                className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer transition-colors"
+                              >
+                                {job.title}
+                              </h3>
                               <p className="text-sm text-gray-600 mb-3">
                                 {job.type} • {job.company} • {job.location}
                               </p>
-                              
+
                               <p className="text-gray-700 mb-4 leading-relaxed">
                                 {job.description}
                               </p>
-                              
+
                               <div className="flex flex-wrap gap-2 mb-4">
                                 {job.skills.map((skill, skillIndex) => (
                                   <span
@@ -565,33 +706,58 @@ const JobListings = () => {
                                     {skill}
                                   </span>
                                 ))}
-                                {job.industries && job.industries.map((ind, indIndex) => (
-                                  <span
-                                    key={`ind-${indIndex}`}
-                                    className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full font-medium"
-                                  >
-                                    {ind}
-                                  </span>
-                                ))}
+                                {job.industries &&
+                                  job.industries.map((ind, indIndex) => (
+                                    <span
+                                      key={`ind-${indIndex}`}
+                                      className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full font-medium"
+                                    >
+                                      {ind}
+                                    </span>
+                                  ))}
                               </div>
-                              
+
                               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                 <span className="flex items-center">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                      clipRule="evenodd"
+                                    />
                                   </svg>
                                   Hạn nộp: {job.deadline}
                                 </span>
                                 <span className="flex items-center">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                      clipRule="evenodd"
+                                    />
                                   </svg>
                                   {job.experience}
                                 </span>
                                 <span className="flex items-center text-green-600 font-semibold">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+                                      clipRule="evenodd"
+                                    />
                                   </svg>
                                   {job.salaryRange}
                                 </span>
@@ -599,17 +765,27 @@ const JobListings = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col gap-2 md:items-end">
-                            <button 
+                          <button
                             onClick={() => navigate(`/job/${job.id}`)}
                             className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap"
-                            >
+                          >
                             Ứng tuyển ngay
-                            </button>
+                          </button>
                           <button className="text-gray-500 hover:text-blue-600 transition-colors">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                              />
                             </svg>
                           </button>
                           <span className="text-sm text-gray-500 mt-2">
@@ -629,19 +805,20 @@ const JobListings = () => {
                         disabled={currentPage === 1}
                         className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
                           currentPage === 1
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-gray-50'
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         Trước
                       </button>
-                      
+
                       {[...Array(totalPages)].map((_, index) => {
                         const pageNumber = index + 1;
                         if (
                           pageNumber === 1 ||
                           pageNumber === totalPages ||
-                          (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                          (pageNumber >= currentPage - 1 &&
+                            pageNumber <= currentPage + 1)
                         ) {
                           return (
                             <button
@@ -649,8 +826,8 @@ const JobListings = () => {
                               onClick={() => paginate(pageNumber)}
                               className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                                 currentPage === pageNumber
-                                  ? 'bg-blue-600 text-white'
-                                  : 'border border-gray-300 hover:bg-gray-50'
+                                  ? "bg-blue-600 text-white"
+                                  : "border border-gray-300 hover:bg-gray-50"
                               }`}
                             >
                               {pageNumber}
@@ -660,18 +837,22 @@ const JobListings = () => {
                           pageNumber === currentPage - 2 ||
                           pageNumber === currentPage + 2
                         ) {
-                          return <span key={pageNumber} className="px-2">...</span>;
+                          return (
+                            <span key={pageNumber} className="px-2">
+                              ...
+                            </span>
+                          );
                         }
                         return null;
                       })}
-                      
+
                       <button
                         onClick={() => paginate(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
                           currentPage === totalPages
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-gray-50'
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         Sau

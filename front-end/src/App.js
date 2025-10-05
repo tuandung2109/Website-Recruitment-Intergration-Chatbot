@@ -5,9 +5,9 @@ import AuthLayout from "./layouts/AuthLayout";
 import Home from "./pages/Home";
 import JobListings from "./pages/JobListings";
 import JobDetail from "./pages/JobDetail";
-import Login from "./pages/Auth/Login";
-import Register from "./pages/Auth/Register";
-import ForgotPassword from "./pages/Auth/ForgotPassword";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import Company from "./pages/Company/company";
 import "./App.css";
 

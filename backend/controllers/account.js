@@ -245,57 +245,6 @@ const softDeleteAccount = async (req, res) => {
   }
 };
 
-const userForgot1 = async (req, res) => {
-  try {
-    // Lấy email từ body
-    const email = req.body.email || req.body.email?.email;
-    console.log("DEBUG: email to send =", email);
-
-    // Kiểm tra email tồn tại trong bảng account
-    const { data: accountData, error: accountError } = await supabase
-      .from("account")
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (accountError) {
-      console.error("❌ Lỗi khi kiểm tra account:", accountError);
-      return res.status(500).json({ success: false, message: "Lỗi server" });
-    }
-
-    if (!accountData) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email không tồn tại!" });
-    }
-
-    // Tạo OTP
-    const otp = generateOTP.generateRandomNumber(6);
-    console.log("DEBUG: OTP =", otp);
-
-    // Tính thời gian hết hạn: 3 phút từ hiện tại
-    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 phút
-    console.log("DEBUG: OTP expires at =", expiresAt);
-
-    // Gửi OTP qua email
-    const subject = "Mã OTP đặt lại mật khẩu";
-    const html = `Mã OTP là <b style="color:blue">${otp}</b>. Có hiệu lực 3 phút.`;
-    await sendMailHelper.sendMail(email, subject, html);
-
-    // Trả về client thông tin OTP và thời gian hết hạn (chỉ tham khảo, không lưu DB)
-    return res.status(200).json({
-      success: true,
-      message: "OTP đã được gửi! Có hiệu lực 3 phút.",
-      email,
-      otp, // tùy bạn có muốn trả về hay không (nên chỉ dùng cho test)
-      expiresAt,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi server:", error);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
-  }
-};
-
 const userForgot = async (req, res) => {
   try {
     const email = req.body.email || req.body.email?.email;
@@ -337,7 +286,6 @@ const userForgot = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 // API kiểm tra OTP
 const userOtp = async (req, res) => {
   try {
@@ -378,7 +326,6 @@ const userOtp = async (req, res) => {
       .json({ success: false, message: "Lỗi server khi xác minh OTP" });
   }
 };
-
 const userResetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;

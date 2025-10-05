@@ -1,9 +1,10 @@
-const generateOTP = require("../helper/generate");
 const supabase = require("../config/supabase");
 // Lấy danh sách account
-const listCompany = async (req, res) => {
+const listApplication = async (req, res) => {
   try {
-    const { data: company, error } = await supabase.from("company").select("*");
+    const { data: company, error } = await supabase
+      .from("job_application")
+      .select("*");
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ company });
   } catch (err) {
@@ -12,4 +13,4 @@ const listCompany = async (req, res) => {
   }
 };
 
-module.exports = { listCompany };
+module.exports = { listApplication };

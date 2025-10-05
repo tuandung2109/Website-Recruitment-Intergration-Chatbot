@@ -1,18 +1,18 @@
 import { _get } from "../utils/request";
-const listCompany = async () => {
-  try {
-    const res = await _get(`/company/listCompany`);
-    const result = await res.json();
 
+const listJobApplication = async () => {
+  try {
+    const res = await _get(`/jobsApplication/listApplication`);
+    const result = await res.json();
     if (res.ok && result.company) {
       return {
         success: true,
-        companys: result.company, // ✅ trả về companys
+        jobApplications: result.company,
       };
     } else {
       return {
         success: false,
-        message: result.message || "Không thể lấy danh sách công ty",
+        message: result.message || "Không thể lấy danh sách ứng tuyển",
       };
     }
   } catch (error) {
@@ -23,4 +23,4 @@ const listCompany = async () => {
   }
 };
 
-export { listCompany };
+export { listJobApplication };

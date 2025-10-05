@@ -8,6 +8,7 @@ import JobDetail from "./pages/JobDetail";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
+import Company from "./pages/Company/company";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/job" element={<JobListings />} />
           <Route path="/job/:id" element={<JobDetail />} />
+          <Route path="/company" element={<Company />} />
         </Route>
       </Routes>
     </Router>

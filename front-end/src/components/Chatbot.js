@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import quickReplies from "../controller/chatbot";
+// import quickReplies from "../controller/chatbot";
 
 const Chatbot = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [chatMode, setChatMode] = useState("agent"); // "agent" or "ask"
+  const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -27,8 +29,18 @@ const Chatbot = () => {
     "Content-Type": "application/json",
     Accept: "application/json",
   };
+
+  const quickReplies = [
+    { id: 1, text: "Tìm việc làm", icon: "🔍", router: "job" },
+    { id: 2, text: "backend", icon: "📄", router: "company" },
+    { id: 3, text: "Tư vấn nghề nghiệp", icon: "💡", router: "cv" },
+    { id: 4, text: "Hỗ trợ phỏng vấn", icon: "💬", router: "support" },
+  ];
+
+  // Check AI service health on component mount
   useEffect(() => {
     checkAIServiceHealth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAIServiceHealth = async () => {
@@ -89,6 +101,7 @@ const Chatbot = () => {
         credentials: "include", // Include session cookies
         body: JSON.stringify({
           message: userMessage,
+          mode: chatMode, // Gửi mode hiện tại đến backend
         }),
       });
 
@@ -159,7 +172,9 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
+      // Always try AI response first
       const aiResponse = await getAIResponse(userMessageText);
+
       const botResponse = {
         id: Date.now() + 1,
         text: aiResponse,
@@ -189,23 +204,73 @@ const Chatbot = () => {
       setIsTyping(false);
     }
   };
+
+  // const handleQuickReply = async (text) => {
+  //   // Add user message immediately
+  //   const userMessage = {
+  //     id: Date.now(),
+  //     text: text,
+  //     sender: "user",
+  //     timestamp: new Date(),
+  //   };
+
+  //   setMessages((prev) => [...prev, userMessage]);
+  //   setIsTyping(true);
+
+  //   try {
+  //     // Always try AI response first
+  //     const aiResponse = await getAIResponse(text);
+
+  //     setTimeout(() => {
+  //       const botResponse = {
+  //         id: Date.now() + 1,
+  //         text: aiResponse,
+  //         sender: "bot",
+  //         timestamp: new Date(),
+  //       };
+  //       setMessages((prev) => [...prev, botResponse]);
+  //       setIsTyping(false);
+  //     }, 500); // Small delay for better UX
+  //   } catch (error) {
+  //     console.error("Error getting AI response:", error);
+
+  //     setTimeout(() => {
+  //       const errorResponse = {
+  //         id: Date.now() + 1,
+  //         text: getEmergencyFallback(),
+  //         sender: "bot",
+  //         timestamp: new Date(),
+  //       };
+  //       setMessages((prev) => [...prev, errorResponse]);
+  //       setIsTyping(false);
+
+  //       // Try to reconnect after failure
+  //       checkAIServiceHealth();
+  //     }, 500);
+  //   }
+  // };
+
   const handleQuickReply = async (text, router) => {
-    // Nếu có router thì điều hướng sang trang đó
-    if (router) {
+    // Nếu ở Agent Mode và có router thì điều hướng sang trang đó
+    if (chatMode === "agent" && router) {
       navigate(`/${router}`);
-      setIsOpen(false);
+      setIsOpen(false); // ẩn chatbot khi chuyển trang
       return;
     }
+
+    // Ở Ask Mode hoặc không có router thì gửi tin nhắn
     const userMessage = {
       id: Date.now(),
-      text: text,
+      text: chatMode === "ask" && router ? `Hỏi về: ${text}` : text,
       sender: "user",
       timestamp: new Date(),
     };
+
     setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
+
     try {
-      const aiResponse = await getAIResponse(text);
+      const aiResponse = await getAIResponse(userMessage.text);
 
       setTimeout(() => {
         const botResponse = {
@@ -299,6 +364,180 @@ const Chatbot = () => {
             </button>
           </div>
 
+          {/* Mode Selector - Giống GitHub Copilot */}
+          <div className="bg-white border-b border-gray-200 px-4 py-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowModeDropdown(!showModeDropdown)}
+                className="flex items-center justify-between w-full px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+              >
+                <div className="flex items-center space-x-2">
+                  {chatMode === "agent" ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                      <span className="font-medium text-gray-700">
+                        Agent Mode
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        • Tự động xử lý
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="font-medium text-gray-700">
+                        Ask Mode
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        • Chỉ trả lời
+                      </span>
+                    </>
+                  )}
+                </div>
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform ${
+                    showModeDropdown ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showModeDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setChatMode("agent");
+                      setShowModeDropdown(false);
+                    }}
+                    className={`w-full px-3 py-3 text-left hover:bg-gray-50 transition-colors ${
+                      chatMode === "agent" ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <svg
+                        className="w-5 h-5 text-purple-600 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          Agent Mode
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Bot tự động thực hiện hành động, tìm kiếm việc làm và
+                          điều hướng
+                        </div>
+                      </div>
+                      {chatMode === "agent" && (
+                        <svg
+                          className="w-5 h-5 text-blue-600 ml-auto"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setChatMode("ask");
+                      setShowModeDropdown(false);
+                    }}
+                    className={`w-full px-3 py-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100 ${
+                      chatMode === "ask" ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <svg
+                        className="w-5 h-5 text-blue-600 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          Ask Mode
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Chỉ trả lời câu hỏi, tư vấn và hướng dẫn không thực
+                          hiện hành động
+                        </div>
+                      </div>
+                      {chatMode === "ask" && (
+                        <svg
+                          className="w-5 h-5 text-blue-600 ml-auto"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.map((message) => (
@@ -371,14 +610,50 @@ const Chatbot = () => {
           {/* Input */}
           <div className="p-4 bg-white border-t border-gray-200">
             <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={
+                    chatMode === "agent"
+                      ? "Hỏi hoặc yêu cầu thực hiện..."
+                      : "Đặt câu hỏi..."
+                  }
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+                {/* Mode Indicator Badge */}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {chatMode === "agent" ? (
+                    <div
+                      className="flex items-center space-x-1 text-purple-600"
+                      title="Agent Mode"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center space-x-1 text-blue-600"
+                      title="Ask Mode"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
               <button
                 onClick={handleSendMessage}
                 className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors duration-300 transform hover:scale-105"

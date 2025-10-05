@@ -1,5 +1,9 @@
 // const API = `https://topcv-api.vercel.app/api` || "http://localhost:9000/api";
-const API = process.env.NODE_ENV === "http://localhost:9000/api";
+// const API = process.env.NODE_ENV === "http://localhost:9000/api";
+const API =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:9000/api"
+    : "https://your-production-url.com/api";
 
 export const _get = async (path) => {
   const response = await fetch(API + path, {
@@ -55,7 +59,6 @@ export const _patch = async (path, data) => {
     credentials: "include",
     body: data,
   };
-
   if (!isFormData) {
     options.headers = {
       Accept: "application/json",
@@ -63,7 +66,6 @@ export const _patch = async (path, data) => {
     };
     options.body = JSON.stringify(data);
   }
-
   const response = await fetch(API + path, options);
   return response;
 };

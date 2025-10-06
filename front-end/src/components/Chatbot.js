@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { handleIntent, parseAIResponse } from "../controller/agentController";
 // import quickReplies from "../controller/chatbot";
 
 const Chatbot = () => {
@@ -31,8 +32,21 @@ const Chatbot = () => {
   };
 
   const quickReplies = [
-    { id: 1, text: "Tìm việc làm", icon: "🔍", router: "job" },
-    { id: 2, text: "backend", icon: "📄", router: "company" },
+    { 
+      id: 1, 
+      text: "Tìm việc làm", 
+      icon: "🔍", 
+      router: "job",
+      action: "navigate" // Chỉ chuyển hướng, không filter
+    },
+    { 
+      id: 2, 
+      text: "backend", 
+      icon: "�", 
+      router: "job",
+      action: "filter", // Áp dụng filter
+      filters: { title: "backend" } // Filter theo backend
+    },
     { id: 3, text: "Tư vấn nghề nghiệp", icon: "💡", router: "cv" },
     { id: 4, text: "Hỗ trợ phỏng vấn", icon: "💬", router: "support" },
   ];
@@ -175,14 +189,80 @@ const Chatbot = () => {
       // Always try AI response first
       const aiResponse = await getAIResponse(userMessageText);
 
+      // 🤖 Handle structured response from Agent Mode
+      let botMessageText = aiResponse;
+      let agentData = null;
+
+      // Check if response is an object (agent mode structured response)
+      if (typeof aiResponse === 'object' && aiResponse !== null && !Array.isArray(aiResponse)) {
+        agentData = aiResponse;
+        
+        // Extract intent and features
+        const intent = agentData.intent;
+        const extracted_features = agentData.extracted_features;
+        
+        console.log("🎯 Agent Mode - Intent:", intent);
+        console.log("📦 Agent Mode - Extracted Features:", extracted_features);
+        
+        // Create user-friendly message
+        try {
+          const featuresObj = JSON.parse(extracted_features);
+          botMessageText = `Tôi hiểu bạn đang tìm công việc với các yêu cầu sau:\n`;
+          if (featuresObj.title) botMessageText += `• Vị trí: ${featuresObj.title}\n`;
+          if (featuresObj.location) botMessageText += `• Địa điểm: ${featuresObj.location}\n`;
+          if (featuresObj.salary) botMessageText += `• Mức lương: ${featuresObj.salary}\n`;
+          botMessageText += `\nĐang chuyển đến trang tìm kiếm...`;
+        } catch (e) {
+          botMessageText = "Đã hiểu yêu cầu của bạn. Đang tìm kiếm công việc phù hợp...";
+        }
+      }
+
       const botResponse = {
         id: Date.now() + 1,
-        text: aiResponse,
+        text: botMessageText,
         sender: "bot",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, botResponse]);
+
+      // 🤖 Xử lý intent và filters nếu ở Agent Mode với structured data
+      if (chatMode === "agent" && agentData) {
+        const intent = agentData.intent;
+        let filters = {};
+        
+        // Parse extracted_features if it's a JSON string
+        try {
+          if (agentData.extracted_features) {
+            filters = JSON.parse(agentData.extracted_features);
+          }
+        } catch (e) {
+          console.warn("Could not parse extracted_features:", e);
+        }
+        
+        console.log("🎯 Intent detected from AI:", intent);
+        console.log("📦 Filters detected from AI:", filters);
+        
+        // Điều hướng sau 1 giây (giữ chatbot mở)
+        if (intent) {
+          setTimeout(() => {
+            handleIntent(intent, navigate, filters);
+          }, 1000);
+        }
+      }
+      // Fallback: Try to parse text response for intent
+      else if (chatMode === "agent" && typeof aiResponse === 'string') {
+        const { intent, filters } = parseAIResponse(aiResponse);
+        
+        if (intent) {
+          console.log("🎯 Intent detected from AI (text):", intent);
+          console.log("📦 Filters detected from AI (text):", filters);
+          
+          setTimeout(() => {
+            handleIntent(intent, navigate, filters);
+          }, 1000);
+        }
+      }
     } catch (error) {
       console.error("Error getting AI response:", error);
 
@@ -205,56 +285,32 @@ const Chatbot = () => {
     }
   };
 
-  // const handleQuickReply = async (text) => {
-  //   // Add user message immediately
-  //   const userMessage = {
-  //     id: Date.now(),
-  //     text: text,
-  //     sender: "user",
-  //     timestamp: new Date(),
-  //   };
+  
 
-  //   setMessages((prev) => [...prev, userMessage]);
-  //   setIsTyping(true);
-
-  //   try {
-  //     // Always try AI response first
-  //     const aiResponse = await getAIResponse(text);
-
-  //     setTimeout(() => {
-  //       const botResponse = {
-  //         id: Date.now() + 1,
-  //         text: aiResponse,
-  //         sender: "bot",
-  //         timestamp: new Date(),
-  //       };
-  //       setMessages((prev) => [...prev, botResponse]);
-  //       setIsTyping(false);
-  //     }, 500); // Small delay for better UX
-  //   } catch (error) {
-  //     console.error("Error getting AI response:", error);
-
-  //     setTimeout(() => {
-  //       const errorResponse = {
-  //         id: Date.now() + 1,
-  //         text: getEmergencyFallback(),
-  //         sender: "bot",
-  //         timestamp: new Date(),
-  //       };
-  //       setMessages((prev) => [...prev, errorResponse]);
-  //       setIsTyping(false);
-
-  //       // Try to reconnect after failure
-  //       checkAIServiceHealth();
-  //     }, 500);
-  //   }
-  // };
-
-  const handleQuickReply = async (text, router) => {
-    // Nếu ở Agent Mode và có router thì điều hướng sang trang đó
+  const handleQuickReply = async (text, router, reply) => {
+    // 🧪 TEST MODE: Xử lý các action đặc biệt cho testing
     if (chatMode === "agent" && router) {
+      // TEST 1: "Tìm việc làm" - Chỉ chuyển hướng (action: "navigate")
+      if (reply?.action === "navigate") {
+        console.log("🔍 TEST 1: Navigate to job page (no filter)");
+        navigate(`/${router}`);
+        // Giữ chatbot mở khi chuyển trang
+        return;
+      }
+      
+      // TEST 2: "backend" - Áp dụng filter (action: "filter")
+      if (reply?.action === "filter" && reply?.filters) {
+        console.log("💼 TEST 2: Navigate with filters:", reply.filters);
+        
+        // Sử dụng handleIntent để áp dụng filters
+        handleIntent("intent_jd", navigate, reply.filters);
+        // Giữ chatbot mở khi chuyển trang
+        return;
+      }
+      
+      // Default: Chuyển hướng thông thường
       navigate(`/${router}`);
-      setIsOpen(false); // ẩn chatbot khi chuyển trang
+      // Giữ chatbot mở khi chuyển trang
       return;
     }
 
@@ -597,8 +653,9 @@ const Chatbot = () => {
               {quickReplies.map((reply) => (
                 <button
                   key={reply.id}
-                  onClick={() => handleQuickReply(reply.text, reply.router)}
+                  onClick={() => handleQuickReply(reply.text, reply.router, reply)}
                   className="text-xs bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-full transition-all duration-300 border border-transparent hover:border-blue-200"
+                  title={reply.action === "filter" ? `Filter: ${JSON.stringify(reply.filters)}` : "Navigate"}
                 >
                   <span className="mr-1">{reply.icon}</span>
                   {reply.text}

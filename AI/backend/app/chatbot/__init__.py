@@ -1,2 +1,2 @@
-from .ChatbotOllama import ChatbotOllama
-__all__ = ["ChatbotOllama"]
+from .AgentOllama import AgentOllama
+__all__ = ["AgentOllama"]

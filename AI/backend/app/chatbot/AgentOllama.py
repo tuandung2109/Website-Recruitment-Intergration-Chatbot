@@ -1,6 +1,7 @@
 
 import os
 import logging
+from unittest import result
 from .base import BaseAI
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -10,7 +11,7 @@ from prompt.promt_config import PromptConfig
 from MCP import get_reflection, retrive_infor_company
 
 
-class ChatbotOllama(BaseAI):
+class AgentOllama(BaseAI):
     def __init__(self, model_name: str = "", **kwargs):
         settings = Settings.load_settings()
         resolved_model = model_name or settings.OLLAMA_MODEL
@@ -46,6 +47,27 @@ class ChatbotOllama(BaseAI):
     def add_assistant_message(self, message: str):  # override to clean
         super().add_assistant_message(self._strip_think(message))
     
+    
+    def chat_with_agent(self, message: str) -> str:
+        try:
+            classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
+            intent = self._strip_think(self.client.generate_content([{"role": "user", "content": classification_prompt}]))
+            print(f"Intent classified as: {intent}")
+  
+            if intent == "intent_jd":
+                extracted_features_prompt = self.prompt_config.get_prompt("extract_feature_question_about_jd", user_input=message)
+                extracted_features = self._strip_think(self.client.generate_content([{"role": "user", "content": extracted_features_prompt}]))
+                result = {
+                    "intent": intent,
+                    "extracted_features": extracted_features
+                }
+                print(f"Extracted features: {extracted_features}")
+                return result  # Return as dict - Flask will handle JSON serialization
+        except Exception as e:
+            error_msg = f"Error communicating with Ollama: {str(e)}"
+            self.add_assistant_message(error_msg)
+            return error_msg
+
 
     def chat(self, message: str, include_history: bool = True) -> str:
         self.add_user_message(message)
@@ -153,6 +175,8 @@ class ChatbotOllama(BaseAI):
             error_msg = f"Error communicating with Ollama: {str(e)}"
             self.add_assistant_message(error_msg)
             return error_msg
+        
+    
 
     def _format_extracted_features(self, features: dict) -> str:
         """Format extracted features for user display"""

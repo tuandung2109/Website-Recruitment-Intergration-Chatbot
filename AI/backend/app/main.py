@@ -13,7 +13,7 @@ from datetime import datetime
 backend_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_path)
 
-from chatbot.ChatbotOllama import ChatbotOllama
+from app.chatbot.AgentOllama import AgentOllama
 from setting import Settings
 from tool.embeddings import sync_company_embeddings
 import logging
@@ -110,12 +110,8 @@ def get_user_chatbot(session_id):
     """Get or create chatbot instance for specific user session"""
     if session_id not in user_chatbots:
         try:
-            chatbot = ChatbotOllama()
-            # chatbot.add_system_message(
-            #     "Bạn là một trợ lý thân thiện trong lĩnh vực tuyển dụng. "
-            #     "Hãy giúp đỡ ứng viên về việc làm, phỏng vấn và tư vấn nghề nghiệp. "
-            #     "Trả lời ngắn gọn và hữu ích."s
-            # )
+            chatbot = AgentOllama()
+
             user_chatbots[session_id] = {
                 'chatbot': chatbot,
                 'created_at': datetime.now(),
@@ -186,7 +182,11 @@ def chat():
             return jsonify({"error": "Message is required"}), 400
         
         user_message = data['message']
-        
+        mode = data['mode']
+
+
+
+
         # Get user's session and chatbot
         session_id = get_session_id()
         bot = get_user_chatbot(session_id)
@@ -199,10 +199,25 @@ def chat():
         
         try:
             # Generate response using chatbot
-            response = bot.chat(user_message)
-            
+            if mode == "agent":
+                print("Using agent mode for response")
+                response = bot.chat_with_agent(user_message)
+                print("response:", response)
+                
+                # Check if response is a dictionary (structured agent response)
+                if isinstance(response, dict):
+                    # Return structured response for agent mode
+                    return jsonify({
+                        "response": response,
+                        "session_id": session_id,
+                        "status": "success",
+                        "mode": "agent"
+                    })
+            else:
+                response = bot.chat(user_message)
+
             # Clean response (remove thinking tags if present)
-            if "<think>" in response:
+            if isinstance(response, str) and "<think>" in response:
                 response = response.split("</think>")[-1].strip()
             
             # Cleanup inactive sessions periodically

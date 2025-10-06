@@ -1,6 +1,7 @@
 // src/pages/JobDetail.js
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import JobApplicationModal from "../components/Modal/JobApplicationModal";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const JobDetail = () => {
   const [relatedJobs, setRelatedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openApply, setOpenApply] = useState(false);
 
   // Fetch job detail by id
   useEffect(() => {
@@ -105,9 +107,7 @@ const JobDetail = () => {
     return `${Math.floor(diff / 30)} tháng trước`;
   };
 
-  const handleApply = () => {
-    alert("Chức năng ứng tuyển đang được phát triển!");
-  };
+  const handleApply = () => setOpenApply(true);
 
   if (loading) {
     return (
@@ -482,6 +482,12 @@ const JobDetail = () => {
           </div>
         </div>
       </div>
+            {/* Modal Ứng tuyển — để trong return, nằm cuối cùng */}
+      <JobApplicationModal
+        open={openApply}
+        onClose={() => setOpenApply(false)}
+        job={job}
+      />
     </div>
   );
 };

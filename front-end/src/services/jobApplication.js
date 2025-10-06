@@ -1,4 +1,4 @@
-import { _get } from "../utils/request";
+import { _get, _post } from "../utils/request";
 
 const listJobApplication = async () => {
   try {
@@ -21,6 +21,14 @@ const listJobApplication = async () => {
       message: error.message || "Lỗi kết nối đến máy chủ",
     };
   }
+};
+
+export const addJobApplication = async (payload) => {
+  // payload gồm: account_id, job_posting_id, cv_id, cover_letter, file_upload, file_url
+  const res = await _post(`/jobsApplication/addApplication`, payload);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || "Nộp đơn thất bại");
+  return data; // { message, data }
 };
 
 export { listJobApplication };

@@ -56,17 +56,27 @@ const Login = () => {
         // Gọi API login
         const response = await authAPI.login(formData.email, formData.password);
         
+        // if (response.success) {
+        //   const { token, account } = response.data; 
+        //   // Lưu token và thông tin user vào localStorage
+        //   localStorage.setItem('token', response.data.token);
+        //   localStorage.setItem('user', JSON.stringify(response.data.account));
+        //   localStorage.setItem('account_id', String(account.account_id));
+
+        //   // Hiển thị thông báo thành công (optional)
+        //   console.log('Login successful:', response.data.account);
+          
+        //   // Chuyển hướng về trang Home
+        //   navigate('/');
+        // }
         if (response.success) {
-          // Lưu token và thông tin user vào localStorage
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.account));
-          
-          // Hiển thị thông báo thành công (optional)
-          console.log('Login successful:', response.data.account);
-          
-          // Chuyển hướng về trang Home
+          const { token, account } = response.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(account));
+          localStorage.setItem('account_id', String(account.account_id)); // ✅
           navigate('/');
         }
+
       } catch (error) {
         console.error('Login error:', error);
         

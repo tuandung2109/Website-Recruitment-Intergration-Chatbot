@@ -12,15 +12,27 @@ const listApplication = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
-
 // 📝 Thêm đơn ứng tuyển
-const addApplication = async (req, res) => {
+const listApplicationId = async (req, res) => {
   try {
-    const { account_id, job_posting_id, cv_id, cover_letter, file_upload, file_url } = req.body;
+    const {
+      account_id,
+      job_posting_id,
+      cv_id,
+      cover_letter,
+      file_upload,
+      file_url,
+    } = req.body;
 
     // Kiểm tra dữ liệu đầu vào
-    if (!account_id || !job_posting_id || !cv_id || !cover_letter || !file_upload || !file_url) {
+    if (
+      !account_id ||
+      !job_posting_id ||
+      !cv_id ||
+      !cover_letter ||
+      !file_upload ||
+      !file_url
+    ) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
 
@@ -41,11 +53,13 @@ const addApplication = async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
-    return res.status(201).json({ message: "Nộp đơn ứng tuyển thành công", data });
+    return res
+      .status(201)
+      .json({ message: "Nộp đơn ứng tuyển thành công", data });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-module.exports = { listApplication ,addApplication };
+module.exports = { listApplication, listApplicationId };

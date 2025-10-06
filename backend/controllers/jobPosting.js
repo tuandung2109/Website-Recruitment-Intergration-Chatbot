@@ -48,7 +48,6 @@ const listJobPostingId = async (req, res) => {
     if (error) {
       return res.status(400).json({ error: error.message });
     }
-
     return res.status(200).json({ job_posting });
   } catch (error) {
     console.error("❌ Lỗi server:", error);

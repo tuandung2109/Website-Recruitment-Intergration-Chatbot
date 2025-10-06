@@ -3,6 +3,8 @@ const router = express.Router();
 const controllerJobsApplication = require("../controllers/jobApplicaton");
 
 router.get("/listApplication", controllerJobsApplication.listApplication);
-router.post("/addApplication", controllerJobsApplication.addApplication);
-
+router.get(
+  "/listApplicationId/:id",
+  controllerJobsApplication.listApplicationId
+);
 module.exports = router;

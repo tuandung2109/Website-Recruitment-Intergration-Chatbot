@@ -1,39 +1,42 @@
-const generateOTP = require("../helper/generate");
 const supabase = require("../config/supabase");
 // Lấy danh sách account
-const listCompany = async (req, res) => {
+const listInvoice = async (req, res) => {
   try {
-    const { data: company, error } = await supabase.from("company").select("*");
+    const { data: invoice, error } = await supabase
+      .from("invoice")
+      .select("*")
+      .eq("deleted", false)
+      .eq("status", "active");
     if (error) return res.status(400).json({ error: error.message });
-    return res.status(200).json({ company });
+    return res.status(200).json({ invoice });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-const listCompanyId = async (req, res) => {
+const listInvoiceId = async (req, res) => {
   try {
-    const company_id = req.params.id;
+    const invoice_id = req.params.id;
 
-    if (!company_id) {
+    if (!invoice_id) {
       return res.status(400).json({ error: "Thiếu ID bài đăng" });
     }
 
-    const { data: company, error } = await supabase
-      .from("company")
+    const { data: invoice, error } = await supabase
+      .from("invoice")
       .select("*")
-      .eq("company_id", company_id) // sửa tên cột
+      .eq("invoice_id", invoice_id) // sửa tên cột
       .single();
 
     if (error) {
       return res.status(400).json({ error: error.message });
     }
-    return res.status(200).json({ company });
+    return res.status(200).json({ invoice });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-module.exports = { listCompany, listCompanyId };
+module.exports = { listInvoice, listInvoiceId };

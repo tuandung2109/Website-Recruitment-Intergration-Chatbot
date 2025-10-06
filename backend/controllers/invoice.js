@@ -39,4 +39,12 @@ const listInvoiceId = async (req, res) => {
   }
 };
 
-module.exports = { listInvoice, listInvoiceId };
+// const postInvoice = async (req, res) => {};
+// const unlockInvoice = async (req, res) => {};
+// const updateInvoice = async (req, res) => {};
+// const deleteInvoice = async (req, res) => {};
+
+module.exports = {
+  listInvoice,
+  listInvoiceId,
+};

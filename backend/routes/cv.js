@@ -4,4 +4,5 @@ const controllerCv = require("../controllers/cv");
 
 router.get("/listCv", controllerCv.listCv);
 router.get("/listCvId/:id", controllerCv.listCvId);
+
 module.exports = router;

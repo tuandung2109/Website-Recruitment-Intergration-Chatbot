@@ -149,6 +149,30 @@ const updateJobPosting = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+
+// Thêm của Dũng ( lấy danh sách job theo companyId )
+// GET /api/jobPosting/byCompany/:companyId
+const listJobsByCompany = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    const { data: jobs, error } = await supabase
+      .from("job_posting")
+      .select("*")
+      .eq("company_id", companyId);
+
+    if (error) return res.status(400).json({ success: false, message: error.message });
+
+    return res.status(200).json({
+      success: true,
+      jobs: jobs || [],
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 module.exports = {
   listJobPostings,
   postJobPosting,
@@ -156,4 +180,5 @@ module.exports = {
   deleteJobPosting,
   updateJobPosting,
   listJobPostingsDeleted,
+  listJobsByCompany,
 };

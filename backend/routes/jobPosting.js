@@ -11,4 +11,7 @@ router.get("/listJobPostingId/:id", controllerJobsPostings.listJobPostingId); //
 router.post("/postJobPosting", controllerJobsPostings.postJobPosting); //Đăng bài
 router.post("/deleteJobPosting/:id", controllerJobsPostings.deleteJobPosting); //Xóa bài đăng
 router.patch("/updateJobPosting/:id", controllerJobsPostings.updateJobPosting); //Cập nhật bài đăng
+
+router.get("/byCompany/:companyId", controllerJobsPostings.listJobsByCompany); // Lấy danh sách job theo công ty
+
 module.exports = router;

@@ -54,13 +54,12 @@ const listAccount = async () => {
     const res = await _get(`/account/listAccount`);
     const result = await res.json();
 
-    if (res.ok && result.success) {
-      // Giả sử backend trả về: { success: true, accounts: [...] }
-      return { success: true, accounts: result.accounts };
+    if (res.ok) {
+      return { success: true, accounts: result.accounts || [] };
     } else {
       return {
         success: false,
-        message: result.message || "Không thể lấy danh sách tài khoản",
+        message: result.error || "Không thể lấy danh sách tài khoản",
       };
     }
   } catch (error) {

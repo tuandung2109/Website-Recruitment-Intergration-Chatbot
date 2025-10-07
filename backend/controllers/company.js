@@ -3,7 +3,20 @@ const supabase = require("../config/supabase");
 // 📍 Lấy danh sách tất cả công ty
 const listCompany = async (req, res) => {
   try {
-    const { data: company, error } = await supabase.from("company").select("*");
+    const { data: company, error } = await supabase
+      .from("company")
+      .select(
+        `*,
+      company_industry(
+        industry:industry_id(
+          industry_id,
+          name
+        )
+      )
+      `
+      )
+      .eq("deleted", false)
+      .eq("status", "active");
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ company });
   } catch (err) {

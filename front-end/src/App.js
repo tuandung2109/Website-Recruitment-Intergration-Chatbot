@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
+import AdminLayout from "./layouts/AdminLayout";
 import Home from "./pages/Home/Home";
 import JobListings from "./pages/JobListing/JobListings";
 import JobDetail from "./pages/JobDetail/JobDetail";
@@ -11,6 +12,9 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import Company from "./pages/Company/company";
 import CompanyDetail from "./pages/CompanyDetail/companydetail";
 import "./App.css";
+import AdminPage from "./pages/Admin";
+import AdminCompany from "./pages/Admin/Company/company";
+import AdminAccount from "./pages/Admin/account";
 
 function App() {
   return (
@@ -30,6 +34,11 @@ function App() {
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/company" element={<Company />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
+        </Route>
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="adminCompany" element={<AdminCompany />} />
+          <Route path="adminAccount" element={<AdminAccount />} />
         </Route>
       </Routes>
     </Router>

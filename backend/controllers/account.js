@@ -9,7 +9,16 @@ const listAccount = async (req, res) => {
   try {
     const { data: accounts, error } = await supabase
       .from("account")
-      .select("*")
+      .select(
+        `*,
+        account_account_type(
+          account_type:account_type_id(
+            account_type_id,
+            role_name
+          )
+        )
+        `
+      )
       .eq("status", "active");
 
     if (error) return res.status(400).json({ error: error.message });

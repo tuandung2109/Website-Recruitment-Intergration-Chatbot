@@ -180,6 +180,9 @@ const Home = () => {
                 : "translate-y-10 opacity-0"
             }`}
           >
+            <a href="/admin">
+              <button>Admin</button>
+            </a>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
               Tham gia thế hệ người tìm việc mới và Tải CV của bạn ngay!
             </h1>

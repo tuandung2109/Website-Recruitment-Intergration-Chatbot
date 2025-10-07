@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { filterCategories as staticFilterCategories } from "../data/jobsData";
-import { getAgentFilters, applyJobFilters } from "../controller/agentController";
+import {
+  getAgentFilters,
+  applyJobFilters,
+} from "../controller/agentController";
 
 const JobListings = () => {
   const navigate = useNavigate();
@@ -102,29 +105,29 @@ const JobListings = () => {
   // 🤖 Áp dụng agent filters khi có (từ chatbot agent mode)
   useEffect(() => {
     const agentFilters = getAgentFilters();
-    
+
     if (agentFilters) {
       console.log("🤖 Agent filters detected, applying to JobListings...");
-      
+
       // Áp dụng filters vào searchData
       if (agentFilters.title) {
-        setSearchData(prev => ({ ...prev, keywords: agentFilters.title }));
+        setSearchData((prev) => ({ ...prev, keywords: agentFilters.title }));
       }
       if (agentFilters.location) {
-        setSearchData(prev => ({ ...prev, location: agentFilters.location }));
+        setSearchData((prev) => ({ ...prev, location: agentFilters.location }));
       }
-      
+
       // Áp dụng filters vào activeFilters
       if (agentFilters.workType) {
-        setActiveFilters(prev => ({ 
-          ...prev, 
-          workType: [agentFilters.workType] 
+        setActiveFilters((prev) => ({
+          ...prev,
+          workType: [agentFilters.workType],
         }));
       }
-      
+
       // Scroll to top để người dùng thấy kết quả filter
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
       console.log("✅ Agent filters applied successfully");
     }
   }, [jobs]); // Chạy khi jobs đã được load

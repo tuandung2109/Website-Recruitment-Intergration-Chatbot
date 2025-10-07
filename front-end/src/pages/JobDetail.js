@@ -482,7 +482,7 @@ const JobDetail = () => {
           </div>
         </div>
       </div>
-            {/* Modal Ứng tuyển — để trong return, nằm cuối cùng */}
+      {/* Modal Ứng tuyển — để trong return, nằm cuối cùng */}
       <JobApplicationModal
         open={openApply}
         onClose={() => setOpenApply(false)}

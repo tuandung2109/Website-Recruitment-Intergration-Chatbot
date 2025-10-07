@@ -2,13 +2,14 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
-import Home from "./pages/Home";
-import JobListings from "./pages/JobListings";
-import JobDetail from "./pages/JobDetail";
+import Home from "./pages/Home/Home";
+import JobListings from "./pages/JobListing/JobListings";
+import JobDetail from "./pages/JobDetail/JobDetail";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Company from "./pages/Company/company";
+import CompanyDetail from "./pages/CompanyDetail/companydetail";
 import "./App.css";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/job" element={<JobListings />} />
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/company" element={<Company />} />
+          <Route path="/company/:id" element={<CompanyDetail />} />
         </Route>
       </Routes>
     </Router>

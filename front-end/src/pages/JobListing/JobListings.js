@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { filterCategories as staticFilterCategories } from "../data/jobsData";
-import { getAgentFilters, applyJobFilters } from "../controller/agentController";
+import { filterCategories as staticFilterCategories } from "../../data/jobsData";
+import { getAgentFilters, applyJobFilters } from "../../controller/agentController";
 
 const JobListings = () => {
   const navigate = useNavigate();

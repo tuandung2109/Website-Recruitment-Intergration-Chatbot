@@ -35,6 +35,7 @@
 
 import { useEffect, useState } from "react";
 import { listCompany } from "../../services/company";
+import { useNavigate } from "react-router-dom";
 
 function Company() {
   const [companies, setCompanies] = useState([]);
@@ -42,6 +43,7 @@ function Company() {
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,9 +160,12 @@ function Company() {
               </div>
 
               <div className="mt-6">
-                <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  Xem chi tiết
-                </button>
+                <button
+                  onClick={() => navigate(`/company/${company.company_id}`)}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                   Xem chi tiết
+                 </button>
               </div>
             </div>
           ))}

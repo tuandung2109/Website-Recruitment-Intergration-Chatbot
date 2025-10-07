@@ -30,4 +30,18 @@ const listJobPostingById = async (id) => {
   }
 };
 
-export { listJobsPosting, listJobPostingById };
+// Thêm của Dũng ( lấy danh sách job theo companyId )
+const listJobsByCompany = async (companyId) => {
+  try {
+    const res = await _get(`/jobPosting/byCompany/${companyId}`);
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, jobs: result.jobs || [] };
+    }
+    return { success: false, message: result.message || "Không lấy được danh sách job" };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+};
+
+export { listJobsPosting, listJobPostingById , listJobsByCompany};

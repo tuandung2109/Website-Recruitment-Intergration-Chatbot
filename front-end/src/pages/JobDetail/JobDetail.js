@@ -1,7 +1,7 @@
 // src/pages/JobDetail.js
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import JobApplicationModal from "../components/Modal/JobApplicationModal";
+import JobApplicationModal from "../../components/Modal/JobApplicationModal";
 
 const JobDetail = () => {
   const { id } = useParams();

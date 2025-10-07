@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Company from "./Company/company";
+import Company from "../Company/company";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("industry");

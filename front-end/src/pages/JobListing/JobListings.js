@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { filterCategories as staticFilterCategories } from "../data/jobsData";
+import { filterCategories as staticFilterCategories } from "../../data/jobsData";
 import {
   getAgentFilters,
   applyJobFilters,
-} from "../controller/agentController";
-
+} from "../../controller/agentController";
+import { listJobsPosting, listJobPostingById } from "../../services/jobPosting";
 const JobListings = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
@@ -36,69 +36,49 @@ const JobListings = () => {
   });
 
   // Load filter options and fetch jobs from backend API once on mount
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
         setError("");
-        const params = new URLSearchParams({ page: "1", limit: "200" });
-        const url = `${
-          process.env.REACT_APP_API_URL
-        }/api/jobs?${params.toString()}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        const json = await res.json();
+        const params = { page: 1, limit: 200 };
+        const json = await listJobsPosting(params);
 
-        const mapped = (json.jobs || []).map((j) => ({
-          id: j.job_posting_id,
-          title: j.position_name || "Untitled",
-          company:
-            j.company_name ||
-            (j.company_id ? `Company ${j.company_id}` : "Company"),
-          description: j.job_description || "",
-          skills: Array.isArray(j.skills) ? j.skills : [],
-          industries: Array.isArray(j.industries) ? j.industries : [],
-          location: j.address_detail || j.location || "",
-          type:
-            Array.isArray(j.work_types) && j.work_types.length > 0
-              ? j.work_types.join(", ")
-              : "",
-          experience:
-            typeof j.experience_years === "number"
-              ? `${j.experience_years} năm`
-              : j.experience || "",
-          experienceYears:
-            typeof j.experience_years === "number" ? j.experience_years : 0,
-          salary: Number(j.salary) || 0,
-          salaryRange: j.salary ? `${j.salary}` : "",
-          deadline: j.deadline_date || "",
-          postedDate: j.created_at ? new Date(j.created_at) : new Date(),
+        console.log("json123:", json);
+        console.log("json11111111:", json);
+
+        // ✅ Kiểm tra đúng cấu trúc thực tế
+        if (!json || !Array.isArray(json.jobs)) {
+          throw new Error("Dữ liệu trả về không hợp lệ");
+        }
+
+        const mapped = json.jobs.map((j) => ({
+          id: j.id,
+          title: j.title || "Untitled",
+          company: j.company?.name || "Công ty chưa xác định",
+          companyLogo: j.company?.logo_url || j.company?.logo || "",
+          location: j.company?.address?.[0]?.address_detail || "",
+          description: j.description || "",
+          skills: j.skills || [],
+          industries: j.industries || [],
+          type: j.workTypes?.join(", ") || "",
+          experienceYears: j.experienceYears || 0,
+          salary: j.salary || 0,
+          deadline: j.deadline || "",
         }));
+
+        console.log("✅ Dữ liệu sau khi map ở FE:", mapped);
 
         setJobs(mapped);
       } catch (e) {
-        setError("Không thể tải danh sách công việc");
+        console.error("❌ Lỗi khi fetch jobs:", e);
+        setError(e.message || "Không thể tải danh sách công việc");
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchFilters = async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/filters`);
-        if (res.ok) {
-          const data = await res.json();
-          setFiltersFromDb({
-            workType: data.workTypes || [],
-            industry: data.industries || [],
-          });
-        }
-      } catch {}
-    };
-
-    fetchFilters();
     fetchJobs();
   }, []);
 
@@ -366,7 +346,7 @@ const JobListings = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
-            Tìm kiếm công việc mơ ước
+            Tìm kiếm công việc mơ ước 123
           </h1>
           <div className="bg-white bg-opacity-90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -710,7 +690,16 @@ const JobListings = () => {
                           <div className="flex items-start gap-4">
                             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
                               <span className="text-white font-bold text-xl">
-                                {job.company.charAt(0)}
+                                <img
+                                  style={{ border: "1px solid red" }}
+                                  src={
+                                    job.companyLogo ||
+                                    "https://placehold.co/200x200?text=No+Logo"
+                                  }
+                                  alt={job.company}
+                                  // className="w-20 h-20 object-cover rounded-2xl"
+                                />
+                                {/* {job.company.charAt(0)} */}
                               </span>
                             </div>
 
@@ -719,16 +708,16 @@ const JobListings = () => {
                                 onClick={() => navigate(`/job/${job.id}`)}
                                 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer transition-colors"
                               >
-                                {job.title}
+                                Tên công việc:{job.title}
                               </h3>
                               <p className="text-sm text-gray-600 mb-3">
-                                {job.type} • {job.company} • {job.location}
+                                Hình thức làm việc: {job.type}
+                                <br></br>
+                                <b>{job.company}</b>
                               </p>
-
                               <p className="text-gray-700 mb-4 leading-relaxed">
                                 {job.description}
                               </p>
-
                               <div className="flex flex-wrap gap-2 mb-4">
                                 {job.skills.map((skill, skillIndex) => (
                                   <span
@@ -748,7 +737,6 @@ const JobListings = () => {
                                     </span>
                                   ))}
                               </div>
-
                               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                 <span className="flex items-center">
                                   <svg
@@ -778,6 +766,7 @@ const JobListings = () => {
                                   </svg>
                                   {job.experience}
                                 </span>
+
                                 <span className="flex items-center text-green-600 font-semibold">
                                   <svg
                                     className="w-4 h-4 mr-1"
@@ -792,6 +781,21 @@ const JobListings = () => {
                                     />
                                   </svg>
                                   {job.salaryRange}
+                                </span>
+                                <span className="flex items-center text-green-600 font-semibold">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  {job.location}
                                 </span>
                               </div>
                             </div>

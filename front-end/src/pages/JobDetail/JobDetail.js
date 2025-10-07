@@ -1,7 +1,7 @@
 // src/pages/JobDetail.js
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import JobApplicationModal from "../components/Modal/JobApplicationModal";
+import JobApplicationModal from "../../components/Modal/JobApplicationModal";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -21,49 +21,63 @@ const JobDetail = () => {
         setLoading(true);
         setError("");
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/jobs/${id}`
+          `${process.env.REACT_APP_API_URL}/api/jobPosting/listJobPostingId/${id}`
         );
+        console.log("res", res);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
-        // Map backend fields to UI shape
+        console.log("data123123:", data);
+        const job = data.job_posting; // Lấy đúng đối tượng bên trong
+        console.log("job123", job);
+        console.log("Chi tiết job11111111:", job.company.logo_url);
         const mapped = {
-          id: data.job_posting_id,
-          title: data.position_name || "Untitled",
-          company:
-            data.company_name ||
-            data.company?.company_name ||
-            data.company?.name ||
-            "Company",
-          description: data.job_description || "",
-          skills: Array.isArray(data.skills) ? data.skills : [],
-          industries: Array.isArray(data.industries) ? data.industries : [],
-          workTypes: Array.isArray(data.work_types) ? data.work_types : [],
-          location:
-            data.address_detail || data.location || data.working_time || "",
-          // type: data.work_type || (data.status === 'open' ? 'Full-time' : 'Closed'),
-          experience:
-            typeof data.experience_years === "number"
-              ? `${data.experience_years} năm`
-              : "",
-          salaryRange: data.salary ? `${data.salary}` : "",
-          deadline: data.deadline_date || "",
-          postedDate: data.created_at ? new Date(data.created_at) : new Date(),
-          requirements: Array.isArray(data.requirements_list)
-            ? data.requirements_list
-            : [],
-          benefits: Array.isArray(data.benefits_list) ? data.benefits_list : [],
+          id: job.job_posting_id,
+          title: job.position_name || "Untitled",
+          description: job.job_description || "",
+
+          // ✅ Công ty
+          company: job.company?.name || "Công ty chưa xác định",
           companyInfo: {
-            name:
-              data.company?.company_name ||
-              data.company?.name ||
-              data.company_name ||
-              "Company",
-            description: data.company?.description || "",
-            size: data.company?.size || "",
-            website: data.company?.website || "",
+            name: job.company?.name || "",
+            description: job.company?.description || "",
+            size: job.company?.size || "",
+            website: job.company?.website || "",
+            logo: job.company?.logo_url || "",
           },
+
+          // ✅ Địa chỉ
+          location:
+            Array.isArray(job.company?.address) &&
+            job.company.address.length > 0
+              ? job.company.address[0].address_detail
+              : "",
+
+          // ✅ Loại hình làm việc
+          workTypes: Array.isArray(job.work_type)
+            ? job.work_type.map((w) => w.work_type_name)
+            : [],
+
+          // ✅ Kỹ năng
+          skills: Array.isArray(job.job_posting_skill)
+            ? job.job_posting_skill.map((s) => s.skill.skill_name)
+            : [],
+
+          // ✅ Ngành nghề
+          industries: Array.isArray(job.job_posting_industry)
+            ? job.job_posting_industry.map((i) => i.industry.name)
+            : [],
+
+          salaryRange: job.salary ? `${job.salary}` : "",
+          experience:
+            typeof job.experience_years === "number"
+              ? `${job.experience_years} năm`
+              : "",
+          deadline: job.deadline || "",
+          postedDate: job.created_at ? new Date(job.created_at) : new Date(),
+          requirements: job.requirements || "",
+          benefits: job.benefits || "",
         };
+
         setJob(mapped);
 
         // Optionally fetch a few related jobs for the sidebar
@@ -163,12 +177,13 @@ const JobDetail = () => {
             {/* Job Header Card */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <div className="flex items-start gap-6 mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-3xl">
-                    {job.company.charAt(0)}
-                  </span>
+                <div className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-gray-100">
+                  <img
+                    src={job.companyInfo.logo}
+                    alt={job.company || "Company logo"}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-gray-900 mb-3">
                     {job.title}
@@ -387,7 +402,7 @@ const JobDetail = () => {
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Về {job.companyInfo.name}
+                Công ty: {job.companyInfo.name}
               </h2>
               <div className="space-y-4">
                 <p className="text-gray-700 leading-relaxed">

@@ -23,7 +23,7 @@ const listJobApplication = async () => {
   }
 };
 
-export const addJobApplication = async (payload) => {
+const addJobApplication = async (payload) => {
   // payload gồm: account_id, job_posting_id, cv_id, cover_letter, file_upload, file_url
   const res = await _post(`/jobsApplication/addApplication`, payload);
   const data = await res.json();
@@ -31,4 +31,4 @@ export const addJobApplication = async (payload) => {
   return data; // { message, data }
 };
 
-export { listJobApplication };
+export { listJobApplication , addJobApplication };

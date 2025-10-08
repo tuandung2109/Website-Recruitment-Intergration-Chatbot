@@ -7,6 +7,8 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const supabase = require("./config/supabase");
 const route = require("./routes/index.js");
+const cvRoutes = require("./routes/cv");
+
 
 // ✅ Thêm 2 dòng này từ app.js
 const jobPostingRoutes = require("./routes/jobPostingRoutes");
@@ -30,6 +32,7 @@ app.use(flash());
 route(app);
 app.use("/api", jobPostingRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/cv", cvRoutes);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.set("view engine", "ejs");

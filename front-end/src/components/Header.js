@@ -140,13 +140,13 @@ const Header = () => {
                         <User className="h-4 w-4 mr-3" />
                         Thông tin cá nhân
                       </a>
-
-                      <a
-                        href="/applications"
+                      
+                      <a 
+                        href="/cv" 
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <FileText className="h-4 w-4 mr-3" />
-                        Đơn ứng tuyển
+                        CV của tôi
                       </a>
 
                       <div className="border-t border-gray-200 my-2"></div>

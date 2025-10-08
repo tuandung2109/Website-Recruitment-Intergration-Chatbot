@@ -10,6 +10,9 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Company from "./pages/Company/company";
 import CompanyDetail from "./pages/CompanyDetail/companydetail";
+import CV from "./pages/CV/CV";
+import CVDetail from "./pages/CV/CVDetail/CVDetail";
+
 import "./App.css";
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
@@ -37,6 +40,8 @@ function App() {
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/company" element={<Company />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
+          <Route path="/cv" element={<CV />} />
+          <Route path="/cv/:id" element={<CVDetail />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

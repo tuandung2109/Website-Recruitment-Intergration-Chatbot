@@ -78,8 +78,6 @@ function AdminPage() {
       children: [
         { key: "9", label: "Danh sách kỹ năng" },
         { key: "10", label: "Thêm kỹ năng" },
-        { key: "11", label: "Option 11" },
-        { key: "12", label: "Option 12" },
       ],
     },
     {
@@ -96,7 +94,7 @@ function AdminPage() {
       label: "Quản lý hình thức làm việc",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Danh sách hình thức" },
+        { key: "work_type", label: "Danh sách hình thức" },
         { key: "10", label: "Thêm hình thức" },
       ],
     },
@@ -111,11 +109,11 @@ function AdminPage() {
     },
     {
       key: "sub9",
-      label: "Quản lý kinh nghiệm làm việc",
+      label: "Quản lý ngành nghề",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Danh sách kinh nghiệm" },
-        { key: "10", label: "Thêm kinh nghiệm" },
+        { key: "industry", label: "Danh sách ngành nghề" },
+        { key: "10", label: "Thêm ngành nghề" },
       ],
     },
     {
@@ -123,7 +121,7 @@ function AdminPage() {
       label: "Quản lý gói bài đăng",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Danh sách gói bài đăng" },
+        { key: "jobPosting", label: "Danh sách gói bài đăng" },
         { key: "10", label: "Thêm gói bài đăng" },
       ],
     },
@@ -132,10 +130,8 @@ function AdminPage() {
       label: "Quản lý hóa đơn",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Lịch sử gói bài đăng" },
+        { key: "invoice", label: "Lịch sử gói bài đăng" },
         { key: "10", label: "Lịch sử gói xem ứng viên" },
-        { key: "11", label: "Option 11" },
-        { key: "12", label: "Option 12" },
       ],
     },
     {
@@ -159,6 +155,18 @@ function AdminPage() {
     }
     if (e.key === "home") {
       navigate("/admin");
+    }
+    if (e.key === "invoice") {
+      navigate("/admin/adminInvoice");
+    }
+    if (e.key === "industry") {
+      navigate("/admin/adminIndustry");
+    }
+    if (e.key === "work_type") {
+      navigate("/admin/adminWorkType");
+    }
+    if (e.key === "jobPosting") {
+      navigate("/admin/adminJobPosting");
     }
   };
 

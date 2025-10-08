@@ -2,9 +2,7 @@ const supabase = require("../config/supabase");
 // Lấy danh sách account
 const listAccountWordType = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("account")
-      .select("*, account_type(*)"); // JOIN 2 bảng
+    const { data, error } = await supabase.from("work_type").select("* ");
 
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ accounts: data });

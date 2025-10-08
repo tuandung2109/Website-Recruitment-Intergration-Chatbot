@@ -4,7 +4,11 @@ const listInvoice = async (req, res) => {
   try {
     const { data: invoice, error } = await supabase
       .from("invoice")
-      .select("*")
+      .select(
+        `*,
+         account:account_id(email))
+        `
+      )
       .eq("deleted", false)
       .eq("status", "active");
     if (error) return res.status(400).json({ error: error.message });
@@ -38,11 +42,6 @@ const listInvoiceId = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
-// const postInvoice = async (req, res) => {};
-// const unlockInvoice = async (req, res) => {};
-// const updateInvoice = async (req, res) => {};
-// const deleteInvoice = async (req, res) => {};
 
 module.exports = {
   listInvoice,

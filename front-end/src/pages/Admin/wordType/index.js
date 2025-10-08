@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Table, Spin, Alert } from "antd";
 import { listWorkType } from "../../../services/wordType";
+import UseTitle from "../../../hooks/useTitle";
 
 function AdminWorkType() {
+  UseTitle(`JobVip - AdminWorkType`);
   const [workTypes, setWorkTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,7 +52,7 @@ function AdminWorkType() {
         dataSource={workTypes}
         columns={columns}
         rowKey="work_type_id"
-        pagination={false}
+        pagination={{ pageSize: 10 }}
       />
     </>
   );

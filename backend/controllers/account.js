@@ -93,14 +93,14 @@ const postRegister = async (req, res) => {
         .json({ success: false, message: "Phone đã tồn tại!" });
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10);
 
     // Thêm account mới
     const { data, error } = await supabase.from("account").insert([
       {
         email,
         phone_number,
-        password: hashedPassword,
+        password: password,
         status: "active", // default active
         gender: gender || null,
         date_of_birth: date_of_birth || null,
@@ -124,42 +124,33 @@ const postRegister = async (req, res) => {
 const postLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password)
       return res
         .status(400)
         .json({ success: false, message: "Email và password là bắt buộc!" });
-
     console.log("DEBUG: email =", email);
     console.log("DEBUG: password =", password);
-
     // Lấy account theo email
     const { data: account, error } = await supabase
       .from("account")
       .select("*")
       .eq("email", email)
       .maybeSingle();
-
     console.log("DEBUG: account từ Supabase =", account); // ✅ in ra account
     if (error) console.log("DEBUG: lỗi khi lấy account =", error);
-
     if (!account)
       return res
         .status(401)
         .json({ success: false, message: "Email hoặc password sai!" });
-
     console.log("DEBUG: account.password =", account.password);
     console.log("DEBUG: password nhập vào =", password);
-
-    // So sánh password
-    const isMatch = await bcrypt.compare(password, account.password);
-    console.log("DEBUG: isMatch =", isMatch);
-
-    if (!isMatch)
-      return res
-        .status(401)
-        .json({ success: false, message: "Email hoặc password sai!" });
-
+    // // So sánh password
+    // const isMatch = await bcrypt.compare(password, account.password);
+    // console.log("DEBUG: isMatch =", isMatch);
+    // if (!isMatch)
+    //   return res
+    //     .status(401)
+    //     .json({ success: false, message: "Email hoặc password sai!" });
     // Nếu đăng nhập thành công
     return res.status(200).json({
       success: true,
@@ -352,11 +343,11 @@ const userResetPassword = async (req, res) => {
       });
     }
     // Hash password mới
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10);
     // Cập nhật password vào bảng account
     const { data, error } = await supabase
       .from("account")
-      .update({ password: hashedPassword })
+      .update({ password: password })
       .eq("email", email);
 
     if (error) {

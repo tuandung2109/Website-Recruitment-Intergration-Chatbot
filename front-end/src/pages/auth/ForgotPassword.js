@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, CheckCircle, Briefcase, Shield, Clock } from 'lucide-react';
-
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Mail,
+  ArrowLeft,
+  CheckCircle,
+  Briefcase,
+  Shield,
+  Clock,
+} from "lucide-react";
+import UseTitle from "../../hooks/useTitle";
 const ForgotPassword = () => {
+  UseTitle("JobVip - Quên mật khẩu");
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -15,24 +23,24 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!email) {
-      setError('Vui lòng nhập email');
+      setError("Vui lòng nhập email");
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('Email không hợp lệ');
+      setError("Email không hợp lệ");
       return;
     }
 
     setIsLoading(true);
-    
+
     setTimeout(() => {
       setIsLoading(false);
       setIsSubmitted(true);
-      console.log('Reset password email sent to:', email);
+      console.log("Reset password email sent to:", email);
     }, 1500);
   };
 
@@ -43,14 +51,16 @@ const ForgotPassword = () => {
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 via-green-700 to-green-800 p-12 flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full opacity-20 -mr-48 -mt-48"></div>
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-green-900 rounded-full opacity-20 -ml-40 -mb-40"></div>
-          
+
           <div className="relative z-10 text-center">
             <div className="flex justify-center mb-8">
               <div className="bg-white p-6 rounded-full">
                 <CheckCircle className="h-20 w-20 text-green-600" />
               </div>
             </div>
-            <h1 className="text-5xl font-bold text-white mb-6">Email đã được gửi!</h1>
+            <h1 className="text-5xl font-bold text-white mb-6">
+              Email đã được gửi!
+            </h1>
             <p className="text-green-100 text-xl max-w-md mx-auto">
               Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến email của bạn
             </p>
@@ -69,7 +79,9 @@ const ForgotPassword = () => {
 
             <div className="text-center space-y-6">
               <div className="lg:hidden">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Email đã được gửi!</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Email đã được gửi!
+                </h2>
               </div>
 
               <div className="bg-gray-50 rounded-xl p-6">
@@ -84,19 +96,23 @@ const ForgotPassword = () => {
                   <div className="flex items-start space-x-3">
                     <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Kiểm tra email của bạn</p>
-                      <p className="text-sm text-gray-600 mt-1">Link sẽ hết hạn sau 15 phút</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        Kiểm tra email của bạn
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Link sẽ hết hạn sau 15 phút
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">
-                    Không nhận được email?{' '}
+                    Không nhận được email?{" "}
                     <button
                       onClick={() => {
                         setIsSubmitted(false);
-                        setEmail('');
+                        setEmail("");
                       }}
                       className="text-blue-600 hover:text-blue-500 font-medium"
                     >
@@ -105,7 +121,7 @@ const ForgotPassword = () => {
                   </p>
 
                   <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate("/login")}
                     className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/50"
                   >
                     Quay lại đăng nhập
@@ -132,10 +148,13 @@ const ForgotPassword = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full opacity-20 -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-900 rounded-full opacity-20 -ml-40 -mb-40"></div>
-        
+
         <div className="relative z-10">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 mb-12 hover:opacity-80 transition-opacity">
+          <Link
+            to="/"
+            className="flex items-center space-x-3 mb-12 hover:opacity-80 transition-opacity"
+          >
             <div className="bg-white p-3 rounded-xl">
               <Briefcase className="h-8 w-8 text-blue-600" />
             </div>
@@ -145,12 +164,13 @@ const ForgotPassword = () => {
           {/* Main content */}
           <div className="mt-20">
             <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
-              Đừng lo lắng!<br />
+              Đừng lo lắng!
+              <br />
               Chúng tôi sẽ giúp bạn
             </h1>
             <p className="text-blue-100 text-lg leading-relaxed max-w-md">
-              Việc quên mật khẩu là chuyện bình thường. 
-              Chỉ cần vài bước đơn giản để lấy lại quyền truy cập.
+              Việc quên mật khẩu là chuyện bình thường. Chỉ cần vài bước đơn
+              giản để lấy lại quyền truy cập.
             </p>
           </div>
         </div>
@@ -161,13 +181,17 @@ const ForgotPassword = () => {
             <div className="bg-blue-500 p-2 rounded-lg">
               <Shield className="h-5 w-5 text-white" />
             </div>
-            <span className="text-blue-100 text-sm">Bảo mật cao với mã hóa đầu cuối</span>
+            <span className="text-blue-100 text-sm">
+              Bảo mật cao với mã hóa đầu cuối
+            </span>
           </div>
           <div className="flex items-center space-x-3">
             <div className="bg-blue-500 p-2 rounded-lg">
               <Clock className="h-5 w-5 text-white" />
             </div>
-            <span className="text-blue-100 text-sm">Xử lý nhanh chóng trong vài phút</span>
+            <span className="text-blue-100 text-sm">
+              Xử lý nhanh chóng trong vài phút
+            </span>
           </div>
         </div>
       </div>
@@ -190,7 +214,9 @@ const ForgotPassword = () => {
                 <Mail className="h-10 w-10 text-blue-600" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Quên mật khẩu?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Quên mật khẩu?
+            </h2>
             <p className="text-gray-600">
               Nhập email và chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu
             </p>
@@ -200,7 +226,10 @@ const ForgotPassword = () => {
           <div className="space-y-6">
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Địa chỉ Email
               </label>
               <div className="relative">
@@ -214,17 +243,15 @@ const ForgotPassword = () => {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    setError('');
+                    setError("");
                   }}
                   className={`block w-full pl-10 pr-3 py-3 border-2 ${
-                    error ? 'border-red-500' : 'border-gray-300'
+                    error ? "border-red-500" : "border-gray-300"
                   } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                   placeholder="example@email.com"
                 />
               </div>
-              {error && (
-                <p className="mt-2 text-sm text-red-600">{error}</p>
-              )}
+              {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>
 
             {/* Submit Button */}
@@ -232,19 +259,35 @@ const ForgotPassword = () => {
               onClick={handleSubmit}
               disabled={isLoading}
               className={`w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/50 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Đang gửi...
                 </span>
               ) : (
-                'Gửi link đặt lại mật khẩu'
+                "Gửi link đặt lại mật khẩu"
               )}
             </button>
 
@@ -264,8 +307,8 @@ const ForgotPassword = () => {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">Cần thêm trợ giúp?</p>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
                 Liên hệ bộ phận hỗ trợ

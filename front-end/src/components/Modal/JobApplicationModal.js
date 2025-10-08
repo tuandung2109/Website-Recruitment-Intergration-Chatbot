@@ -24,7 +24,7 @@ const JobApplicationModal = ({ open, onClose, job }) => {
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key == "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
@@ -97,7 +97,9 @@ const JobApplicationModal = ({ open, onClose, job }) => {
             <h3 className="font-semibold">
               Ứng tuyển: <span className="text-blue-600">{job?.title}</span>
             </h3>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100">✕</button>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100">
+              ✕
+            </button>
           </header>
 
           {/* Nội dung form */}
@@ -153,7 +155,8 @@ const JobApplicationModal = ({ open, onClose, job }) => {
                   <option value="">Chọn CV</option>
                   {cvList.map((cv) => (
                     <option key={cv.cv_id} value={cv.cv_id}>
-                      CV #{cv.cv_id} — {cv.education_level} — {cv.years_experience} năm
+                      CV #{cv.cv_id} — {cv.education_level} —{" "}
+                      {cv.years_experience} năm
                     </option>
                   ))}
                 </select>
@@ -180,7 +183,9 @@ const JobApplicationModal = ({ open, onClose, job }) => {
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
-                onChange={(e) => handleChange("file", e.target.files?.[0] || null)}
+                onChange={(e) =>
+                  handleChange("file", e.target.files?.[0] || null)
+                }
                 className="mt-2"
               />
             </section>
@@ -197,7 +202,10 @@ const JobApplicationModal = ({ open, onClose, job }) => {
 
             {/* Nút */}
             <div className="flex justify-end gap-3">
-              <button onClick={onClose} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
                 Để sau
               </button>
               <button

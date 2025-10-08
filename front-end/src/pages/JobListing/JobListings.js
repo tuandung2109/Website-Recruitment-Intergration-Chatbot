@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { filterCategories as staticFilterCategories } from "../../data/jobsData";
-import {
-  getAgentFilters,
-  applyJobFilters,
-} from "../../controller/agentController";
-import { listJobsPosting, listJobPostingById } from "../../services/jobPosting";
+import { getAgentFilters } from "../../controller/agentController";
+import { listJobsPosting } from "../../services/jobPosting";
+import UseTitle from "../../hooks/useTitle";
 const JobListings = () => {
+  UseTitle("JobVip - Việc làm");
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
     keywords: "",
@@ -30,7 +29,7 @@ const JobListings = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [filtersFromDb, setFiltersFromDb] = useState({
+  const [filtersFromDb] = useState({
     workType: [],
     industry: [],
   });

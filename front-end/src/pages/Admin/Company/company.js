@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Table, Spin, Alert, Button, Popconfirm, message, Image } from "antd";
 import { listCompany } from "../../../services/company";
-
+import UseTitle from "../../../hooks/useTitle";
 function AdminCompany() {
+  UseTitle(`JobVip - AdminCompany`);
   const [companys, setCompanys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,7 +115,7 @@ function AdminCompany() {
         dataSource={companys}
         rowKey="company_id"
         bordered
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
       />
     </div>
   );

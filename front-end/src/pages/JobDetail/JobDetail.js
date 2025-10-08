@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JobApplicationModal from "../../components/Modal/JobApplicationModal";
-
+import UseTitle from "../../hooks/useTitle";
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();

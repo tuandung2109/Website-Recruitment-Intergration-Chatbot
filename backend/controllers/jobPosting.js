@@ -118,6 +118,7 @@ const listJobPostingId = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+
 const listJobPostingsDeleted = async (req, res) => {
   try {
     const { data: job_postings, error } = await supabase

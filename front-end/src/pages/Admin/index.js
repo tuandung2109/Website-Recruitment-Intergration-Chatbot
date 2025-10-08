@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  AppstoreOutlined,
-  MailOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { AppstoreOutlined, SettingOutlined } from "@ant-design/icons";
 import { Menu } from "antd";
 import { useNavigate } from "react-router-dom"; // ✅ import thêm
 
@@ -18,31 +14,6 @@ function AdminPage() {
       children: [
         { key: "home", label: "Trang chủ" },
         { key: "6", label: "Đồ thị doanh thu CV online" },
-        {
-          key: "sub3",
-          label: "Submenu",
-          children: [
-            { key: "7", label: "Option 7" },
-            { key: "8", label: "Option 8" },
-          ],
-        },
-      ],
-    },
-    {
-      key: "sub2",
-      label: "Đồ thị",
-      icon: <AppstoreOutlined />,
-      children: [
-        { key: "5", label: "Đồ thị doanh thu công việc" },
-        { key: "6", label: "Đồ thị doanh thu CV online" },
-        {
-          key: "sub3",
-          label: "Submenu",
-          children: [
-            { key: "7", label: "Option 7" },
-            { key: "8", label: "Option 8" },
-          ],
-        },
       ],
     },
     {
@@ -59,7 +30,7 @@ function AdminPage() {
       label: "Quản lý loại công việc",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Danh sách loại công việc" },
+        { key: "jobPosting", label: "Danh sách loại công việc" },
         { key: "10", label: "Thêm loại công việc" },
       ],
     },
@@ -76,17 +47,8 @@ function AdminPage() {
       label: "Quản lý kỹ năng",
       icon: <SettingOutlined />,
       children: [
-        { key: "9", label: "Danh sách kỹ năng" },
+        { key: "skills", label: "Danh sách kỹ năng" },
         { key: "10", label: "Thêm kỹ năng" },
-      ],
-    },
-    {
-      key: "sub6",
-      label: "Quản lý cấp bậc",
-      icon: <SettingOutlined />,
-      children: [
-        { key: "9", label: "Danh sách cấp bậc" },
-        { key: "10", label: "Thêm cấp bậc" },
       ],
     },
     {
@@ -96,15 +58,6 @@ function AdminPage() {
       children: [
         { key: "work_type", label: "Danh sách hình thức" },
         { key: "10", label: "Thêm hình thức" },
-      ],
-    },
-    {
-      key: "sub8",
-      label: "Quản lý khoản lương",
-      icon: <SettingOutlined />,
-      children: [
-        { key: "9", label: "Danh sách Lương" },
-        { key: "10", label: "Thêmsluongw" },
       ],
     },
     {
@@ -121,7 +74,7 @@ function AdminPage() {
       label: "Quản lý gói bài đăng",
       icon: <SettingOutlined />,
       children: [
-        { key: "jobPosting", label: "Danh sách gói bài đăng" },
+        { key: "jobPosting123", label: "Danh sách gói bài đăng" },
         { key: "10", label: "Thêm gói bài đăng" },
       ],
     },
@@ -133,12 +86,6 @@ function AdminPage() {
         { key: "invoice", label: "Lịch sử gói bài đăng" },
         { key: "10", label: "Lịch sử gói xem ứng viên" },
       ],
-    },
-    {
-      key: "grp",
-      label: "Quản lý công việc",
-      type: "group",
-      children: [{ key: "13", label: "Option 13" }],
     },
   ];
 
@@ -167,6 +114,9 @@ function AdminPage() {
     }
     if (e.key === "jobPosting") {
       navigate("/admin/adminJobPosting");
+    }
+    if (e.key === "skills") {
+      navigate("/admin/adminSkills");
     }
   };
 

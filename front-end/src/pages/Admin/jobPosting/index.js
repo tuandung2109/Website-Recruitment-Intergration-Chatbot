@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Table, Spin, Alert } from "antd";
 import { listJobsPosting } from "../../../services/jobPosting";
+import UseTitle from "../../../hooks/useTitle";
 
 function AdminJobPosting() {
+  UseTitle(`JobVip - AdminJobPosting`);
   const [jobPostings, setJobPosting] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,7 +67,7 @@ function AdminJobPosting() {
         dataSource={jobPostings}
         columns={columns}
         rowKey="id"
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
       />
     </>
   );

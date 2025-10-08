@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
@@ -12,13 +11,13 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import Company from "./pages/Company/company";
 import CompanyDetail from "./pages/CompanyDetail/companydetail";
 import "./App.css";
-// import AdminPage from "./pages/Admin";
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
 import AdminInvoice from "./pages/Admin/invoice";
 import AdminIndustry from "./pages/Admin/industry";
 import AdminWorkType from "./pages/Admin/wordType";
 import AdminJobPosting from "./pages/Admin/jobPosting";
+import AdminSkill from "./pages/Admin/skill";
 
 function App() {
   return (
@@ -47,6 +46,7 @@ function App() {
           <Route path="adminIndustry" element={<AdminIndustry />} />
           <Route path="adminWorkType" element={<AdminWorkType />} />
           <Route path="adminJobPosting" element={<AdminJobPosting />} />
+          <Route path="adminSkills" element={<AdminSkill />} />
         </Route>
       </Routes>
     </Router>

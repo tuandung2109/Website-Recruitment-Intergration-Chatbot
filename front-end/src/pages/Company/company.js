@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { listCompany } from "../../services/company";
 import { useNavigate } from "react-router-dom";
-
+import UseTitle from "../../hooks/useTitle";
 function Company() {
+  UseTitle("JobVip - Công ty");
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

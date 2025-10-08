@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Table, Spin, Alert, Button, Popconfirm, message } from "antd";
 import { listAccount } from "../../../services/account";
-
+import UseTitle from "../../../hooks/useTitle";
 function AdminAccount() {
+  UseTitle(`JobVip - AdminAccount`);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,7 +115,7 @@ function AdminAccount() {
         dataSource={accounts}
         rowKey="account_id"
         bordered
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
       />
     </div>
   );

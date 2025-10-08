@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Table, Spin, Alert } from "antd";
 import { listIndustry } from "../../../services/industry";
+import UseTitle from "../../../hooks/useTitle";
 
 function AdminIndustry() {
+  UseTitle(`JobVip - AdminIndustry`);
   const [industries, setIndustries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,7 +47,7 @@ function AdminIndustry() {
         dataSource={industries}
         columns={columns}
         rowKey="industry_id"
-        pagination={false}
+        pagination={{ pageSize: 10 }}
       />
     </>
   );

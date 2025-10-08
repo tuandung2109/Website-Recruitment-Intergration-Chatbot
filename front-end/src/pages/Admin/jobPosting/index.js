@@ -1,6 +1,21 @@
 import { useEffect, useState } from "react";
-import { Table, Spin, Alert } from "antd";
-import { listJobsPosting } from "../../../services/jobPosting";
+import {
+  Table,
+  Spin,
+  Alert,
+  Button,
+  Modal,
+  Tag,
+  message,
+  Descriptions,
+  Divider,
+} from "antd";
+import {
+  listJobPostingAdmin,
+  unlockJobPosting,
+  softJobPosting,
+  listJobPostingById,
+} from "../../../services/jobPosting";
 import UseTitle from "../../../hooks/useTitle";
 
 function AdminJobPosting() {
@@ -8,31 +23,72 @@ function AdminJobPosting() {
   const [jobPostings, setJobPosting] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await listJobsPosting();
-      if (res.success) {
-        setJobPosting(res.jobs || []); // ✅ đúng key
-      } else {
-        setError(res.message || "Không thể tải danh sách công việc");
-      }
-      setLoading(false);
-    };
     fetchData();
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const res = await listJobPostingAdmin();
+    if (res.success) {
+      setJobPosting(res.jobs || []);
+    } else {
+      setError(res.message || "Không thể tải danh sách công việc");
+    }
+    setLoading(false);
+  };
+
+  // 🟡 Khóa / mở khóa bài đăng
+  const handleToggleStatus = async (record) => {
+    try {
+      const isActive = record.status === "active";
+      const res = isActive
+        ? await softJobPosting(record.id)
+        : await unlockJobPosting(record.id);
+
+      if (res.success) {
+        message.success(
+          isActive ? "Đã khóa bài đăng!" : "Đã mở khóa bài đăng!"
+        );
+        await fetchData();
+      } else {
+        message.error(res.message || "Lỗi khi cập nhật trạng thái!");
+      }
+    } catch (err) {
+      message.error("Lỗi khi cập nhật trạng thái!");
+    }
+  };
+
+  // 🔍 Xem chi tiết bài đăng
+  const handleViewDetail = async (record) => {
+    setModalVisible(true);
+    setModalLoading(true);
+    const res = await listJobPostingById(record.id);
+    if (res.success) {
+      setSelectedJob(res.job_posting);
+    } else {
+      message.error("Không thể tải thông tin chi tiết");
+    }
+    setModalLoading(false);
+  };
 
   const columns = [
     {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 80,
+      width: 70,
+      align: "center",
     },
     {
       title: "Vị trí",
       dataIndex: "title",
       key: "title",
+      render: (text) => <b>{text}</b>,
     },
     {
       title: "Công ty",
@@ -43,7 +99,7 @@ function AdminJobPosting() {
       title: "Mức lương (VND)",
       dataIndex: "salary",
       key: "salary",
-      render: (s) => s.toLocaleString(),
+      render: (s) => s?.toLocaleString() || "—",
     },
     {
       title: "Hạn nộp",
@@ -54,6 +110,34 @@ function AdminJobPosting() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      render: (status) => {
+        if (status === "active") return <Tag color="green">Đã duyệt</Tag>;
+        if (status === "pending") return <Tag color="gold">Chờ duyệt</Tag>;
+        return <Tag color="red">Bị khóa</Tag>;
+      },
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record) => (
+        <>
+          <Button
+            type="primary"
+            onClick={() => handleViewDetail(record)}
+            style={{ marginRight: 8 }}
+          >
+            Chi tiết
+          </Button>
+
+          <Button
+            danger={record.status === "active"}
+            type={record.status === "active" ? "default" : "primary"}
+            onClick={() => handleToggleStatus(record)}
+          >
+            {record.status === "active" ? "Khóa" : "Chờ Duyệt"}
+          </Button>
+        </>
+      ),
     },
   ];
 
@@ -62,13 +146,97 @@ function AdminJobPosting() {
 
   return (
     <>
-      <h3>Danh sách bài đăng tuyển dụng</h3>
+      <h2 style={{ marginBottom: 16 }}>Danh sách bài đăng tuyển dụng</h2>
       <Table
+        bordered
         dataSource={jobPostings}
         columns={columns}
         rowKey="id"
         pagination={{ pageSize: 10 }}
       />
+
+      {/* 🧩 Modal xem chi tiết */}
+      <Modal
+        open={modalVisible}
+        title="Chi tiết công việc"
+        onCancel={() => setModalVisible(false)}
+        footer={null}
+        width={850}
+      >
+        {modalLoading ? (
+          <Spin />
+        ) : selectedJob ? (
+          <>
+            <Divider orientation="left">
+              <b>Thông tin cơ bản</b>
+            </Divider>
+            <Descriptions bordered column={2}>
+              <Descriptions.Item label="Vị trí">
+                {selectedJob.position_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Công ty">
+                {selectedJob.company?.name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Mức lương">
+                {selectedJob.salary?.toLocaleString()} VND
+              </Descriptions.Item>
+              <Descriptions.Item label="Hạn nộp">
+                {selectedJob.deadline}
+              </Descriptions.Item>
+              <Descriptions.Item label="Kinh nghiệm">
+                {selectedJob.experience_years} năm
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag
+                  color={
+                    selectedJob.status === "active"
+                      ? "green"
+                      : selectedJob.status === "pending"
+                      ? "gold"
+                      : "red"
+                  }
+                >
+                  {selectedJob.status === "active"
+                    ? "Đã duyệt"
+                    : selectedJob.status === "pending"
+                    ? "Chờ duyệt"
+                    : "Bị khóa"}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Divider orientation="left">
+              <b>Chi tiết công việc</b>
+            </Divider>
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="Mô tả công việc">
+                {selectedJob.job_description}
+              </Descriptions.Item>
+              <Descriptions.Item label="Yêu cầu">
+                {selectedJob.requirements}
+              </Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ">
+                {selectedJob.company?.address?.[0]?.address_detail || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Hình thức làm việc">
+                {selectedJob.work_type?.map((w) => w.work_type_name).join(", ")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Kỹ năng yêu cầu">
+                {selectedJob.job_posting_skill
+                  ?.map((s) => s.skill.skill_name)
+                  .join(", ")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngành nghề">
+                {selectedJob.job_posting_industry
+                  ?.map((i) => i.industry.name)
+                  .join(", ")}
+              </Descriptions.Item>
+            </Descriptions>
+          </>
+        ) : (
+          <Alert message="Không có dữ liệu" type="warning" />
+        )}
+      </Modal>
     </>
   );
 }

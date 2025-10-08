@@ -7,6 +7,32 @@ const otpStore = new Map();
 // Lấy danh sách account
 const listAccount = async (req, res) => {
   try {
+    const { data: accounts, error } = await supabase.from("account").select(
+      `*,
+        account_account_type(
+          account_type:account_type_id(
+            account_type_id,
+            role_name
+          )
+        )
+        `
+    );
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    return res.status(200).json({ accounts });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ error: "Lỗi server" });
+  }
+};
+// Lấy danh sách account
+const listAccountId = async (req, res) => {
+  try {
+    const account_id = req.params.id;
+    if (!account_id) {
+      return res.status(400).json({ error: "Thiếu ID tai khoan" });
+    }
     const { data: accounts, error } = await supabase
       .from("account")
       .select(
@@ -19,10 +45,11 @@ const listAccount = async (req, res) => {
         )
         `
       )
-      .eq("status", "active");
-
-    if (error) return res.status(400).json({ error: error.message });
-
+      .eq("account_id", account_id);
+    if (error) {
+      console.error("❌ Lỗi Supabase:", error);
+      return res.status(400).json({ error: error.message });
+    }
     return res.status(200).json({ accounts });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
@@ -198,51 +225,80 @@ const hardDeleteAccount = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-// Xóa mềm account (cập nhật status từ active -> inactive)
+// KHÓA account
 const softDeleteAccount = async (req, res) => {
-  try {
-    const id = req.params.id;
-    if (!id) {
-      req.flash("error", "ID không được để trống!");
-      return res.redirect("/accounts");
-    }
+  const { id } = req.params; // ✅ đổi lại cho khớp
+  console.log("req.params:", req.params);
 
-    // Kiểm tra account tồn tại
-    const { data: existingAccount, error: fetchError } = await supabase
-      .from("account")
-      .select("*")
-      .eq("account_id", id)
-      .maybeSingle();
+  if (!id)
+    return res
+      .status(400)
+      .json({ success: false, message: "Thiếu account_id" });
 
-    if (fetchError) {
-      console.error("❌ Lỗi khi kiểm tra account:", fetchError);
-      req.flash("error", "Lỗi server khi kiểm tra account!");
-      return res.redirect("/accounts");
-    }
+  const { data: existingAccount, error: fetchError } = await supabase
+    .from("account")
+    .select("*")
+    .eq("account_id", id)
+    .maybeSingle();
 
-    if (!existingAccount) {
-      req.flash("error", "Account không tồn tại!");
-      return res.redirect("/accounts");
-    }
+  if (fetchError)
+    return res
+      .status(500)
+      .json({ success: false, message: fetchError.message });
+  if (!existingAccount)
+    return res
+      .status(404)
+      .json({ success: false, message: "Không tìm thấy account" });
 
-    // Cập nhật status
-    const { data, error } = await supabase
-      .from("account")
-      .update({ status: "inactive" })
-      .eq("account_id", id);
+  const { error } = await supabase
+    .from("account")
+    .update({ status: "inactive" })
+    .eq("account_id", id);
 
-    if (error) {
-      console.error("❌ Lỗi khi xóa mềm account:", error);
-      req.flash("error", "Xóa mềm account thất bại!");
-      return res.redirect("/accounts");
-    }
+  if (error)
+    return res.status(500).json({ success: false, message: error.message });
 
-    req.flash("success", "Xóa mềm account thành công!");
-    return res.redirect("/accounts");
-  } catch (err) {
-    console.error("❌ Lỗi server:", err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
-  }
+  return res
+    .status(200)
+    .json({ success: true, message: "Khóa tài khoản thành công" });
+};
+
+// MỞ KHÓA account
+const unlockDeleteAccount = async (req, res) => {
+  const { id } = req.params; // ✅ đổi lại cho khớp
+  console.log("req.params:", req.params);
+
+  if (!id)
+    return res
+      .status(400)
+      .json({ success: false, message: "Thiếu account_id" });
+
+  const { data: existingAccount, error: fetchError } = await supabase
+    .from("account")
+    .select("*")
+    .eq("account_id", id)
+    .maybeSingle();
+
+  if (fetchError)
+    return res
+      .status(500)
+      .json({ success: false, message: fetchError.message });
+  if (!existingAccount)
+    return res
+      .status(404)
+      .json({ success: false, message: "Không tìm thấy account" });
+
+  const { error } = await supabase
+    .from("account")
+    .update({ status: "active" })
+    .eq("account_id", id);
+
+  if (error)
+    return res.status(500).json({ success: false, message: error.message });
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Mở khóa tài khoản thành công" });
 };
 
 const userForgot = async (req, res) => {
@@ -371,6 +427,7 @@ const userResetPassword = async (req, res) => {
 
 module.exports = {
   listAccount,
+  listAccountId,
   postRegister,
   postLogin,
   userForgot,
@@ -378,4 +435,5 @@ module.exports = {
   userResetPassword,
   hardDeleteAccount,
   softDeleteAccount,
+  unlockDeleteAccount,
 };

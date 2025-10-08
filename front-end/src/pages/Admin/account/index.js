@@ -1,53 +1,88 @@
 import { useEffect, useState } from "react";
-import { Table, Spin, Alert, Button, Popconfirm, message } from "antd";
-import { listAccount } from "../../../services/account";
+import {
+  Table,
+  Spin,
+  Alert,
+  Button,
+  Popconfirm,
+  message,
+  Modal,
+  Descriptions,
+} from "antd";
+import {
+  listAccount,
+  listAccountId,
+  softDeleteAccount,
+  unlockDeleteAccount,
+} from "../../../services/account";
 import UseTitle from "../../../hooks/useTitle";
+
 function AdminAccount() {
   UseTitle(`JobVip - AdminAccount`);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const res = await listAccount();
+    if (res.success) {
+      setAccounts(res.accounts || []);
+    } else {
+      setError(res.message || "Không thể tải danh sách tài khoản");
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await listAccount();
-      if (res.success) {
-        setAccounts(res.accounts || []);
-      } else {
-        setError(res.message || "Không thể tải danh sách tài khoản");
-      }
-      setLoading(false);
-    };
     fetchData();
   }, []);
 
-  const handleEdit = (record) => {
-    // Ví dụ điều hướng sang trang edit account
-    message.info(`Bạn chọn cập nhật account ID: ${record.account_id}`);
-    // navigate(`/admin/editAccount/${record.account_id}`);
+  // ✅ Khóa account
+  const handleLock = async (record) => {
+    const res = await softDeleteAccount(record.account_id);
+    if (res.success) {
+      message.success("Đã khóa tài khoản!");
+      fetchData();
+    } else {
+      message.error(res.message || "Không thể khóa tài khoản");
+    }
+  };
+
+  // ✅ Mở khóa account
+  const handleUnlock = async (record) => {
+    const res = await unlockDeleteAccount(record.account_id);
+    if (res.success) {
+      message.success("Đã mở khóa tài khoản!");
+      fetchData();
+    } else {
+      message.error(res.message || "Không thể mở khóa tài khoản");
+    }
+  };
+
+  // ✅ Xem chi tiết account
+  const handleDetail = async (record) => {
+    const res = await listAccountId(record.account_id);
+    if (res.success) {
+      setSelectedAccount(res.accounts[0]);
+      setIsModalOpen(true);
+    } else {
+      message.error(res.message || "Không thể tải thông tin tài khoản");
+    }
   };
 
   const handleDelete = (record) => {
-    // Gọi API xóa account
     message.success(`Đã xóa account ID: ${record.account_id}`);
     setAccounts(accounts.filter((a) => a.account_id !== record.account_id));
   };
 
   const columns = [
-    {
-      title: "ID",
-      dataIndex: "account_id",
-      key: "account_id",
-      width: 80,
-    },
+    { title: "ID", dataIndex: "account_id", key: "account_id", width: 80 },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Số điện thoại", dataIndex: "phone_number", key: "phone_number" },
-    {
-      title: "Giới tính",
-      dataIndex: "gender",
-      key: "gender",
-      render: (g) => g || "—",
-    },
+
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -69,27 +104,35 @@ function AdminAccount() {
               .join(", ")
           : "Chưa có",
     },
-    {
-      title: "Công ty ID",
-      dataIndex: "company_id",
-      key: "company_id",
-      render: (id) => id || "—",
-    },
+    { title: "Công ty ID", dataIndex: "company_id", key: "company_id" },
     {
       title: "Ngày cập nhật",
       dataIndex: "updated_at",
       key: "updated_at",
       render: (date) => new Date(date).toLocaleString(),
     },
-
-    // ✅ Cột hành động
     {
       title: "Hành động",
       key: "action",
       render: (_, record) => (
         <div style={{ display: "flex", gap: "8px" }}>
-          <Button type="primary" onClick={() => handleEdit(record)}>
-            Cập nhật
+          {record.status === "active" ? (
+            <Button
+              style={{ backgroundColor: "#faad14", color: "white" }}
+              onClick={() => handleLock(record)}
+            >
+              Khóa
+            </Button>
+          ) : (
+            <Button
+              style={{ backgroundColor: "#52c41a", color: "white" }}
+              onClick={() => handleUnlock(record)}
+            >
+              Mở khóa
+            </Button>
+          )}
+          <Button type="primary" onClick={() => handleDetail(record)}>
+            Chi tiết
           </Button>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa?"
@@ -97,7 +140,7 @@ function AdminAccount() {
             okText="Có"
             cancelText="Không"
           >
-            <Button type="danger">Xóa</Button>
+            <Button danger>Xóa</Button>
           </Popconfirm>
         </div>
       ),
@@ -117,6 +160,52 @@ function AdminAccount() {
         bordered
         pagination={{ pageSize: 10 }}
       />
+
+      {/* Modal chi tiết */}
+      <Modal
+        title="Chi tiết tài khoản"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+      >
+        {selectedAccount && (
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="ID">
+              {selectedAccount.account_id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Email">
+              {selectedAccount.email}
+            </Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại">
+              {selectedAccount.phone_number}
+            </Descriptions.Item>
+
+            <Descriptions.Item label="Số dư">
+              {selectedAccount.amount}
+            </Descriptions.Item>
+            <Descriptions.Item label="password">
+              {selectedAccount.password}
+            </Descriptions.Item>
+            <Descriptions.Item label="Giới tính">
+              {selectedAccount.gender || "—"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">
+              {selectedAccount.status}
+            </Descriptions.Item>
+            <Descriptions.Item label="Công ty ID">
+              {selectedAccount.company_id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cập nhật">
+              {new Date(selectedAccount.updated_at).toLocaleString()}
+            </Descriptions.Item>
+            <Descriptions.Item label="Quyền">
+              {selectedAccount.account_account_type
+                ?.map((a) => a.account_type.role_name)
+                .join(", ") || "Chưa có"}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
     </div>
   );
 }

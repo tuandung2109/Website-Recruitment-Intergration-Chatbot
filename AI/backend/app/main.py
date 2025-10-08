@@ -15,7 +15,7 @@ sys.path.insert(0, backend_path)
 
 from app.chatbot.AgentOllama import AgentOllama
 from setting import Settings
-from tool.embeddings import sync_company_embeddings
+from tool.embeddings import sync_entities_embeddings
 import logging
 
 # Determine template folder path based on environment
@@ -79,22 +79,35 @@ def initialize_llm_client():
 llm_client = initialize_llm_client()
 
 
-def sync_company_embeddings_on_startup():
-    """Ensure company embeddings are refreshed when the app starts."""
+def sync_embeddings_on_startup():
+    """Ensure embeddings are refreshed when the app starts."""
     try:
         settings = Settings.load_settings()
-        summary = sync_company_embeddings(settings=settings)
+        
+        # Sync unified entities collection (companies + job postings)
+        logger.info("Starting unified entities embedding sync...")
+        summary = sync_entities_embeddings(settings=settings, collection_name="entities")
         logger.info(
-            "Company embedding sync completed: status=%s collection=%s upserted=%s",
+            "Entities embedding sync completed: status=%s collection=%s companies=%s job_postings=%s upserted=%s",
             summary.get("status"),
             summary.get("collection"),
+            summary.get("companies"),
+            summary.get("job_postings"),
             summary.get("upserted"),
         )
+        
+        if summary.get("skipped_ids"):
+            logger.warning(
+                "Skipped %s records during sync: %s",
+                summary.get("skipped_count", 0),
+                summary.get("skipped_ids")[:5]  # Show first 5 skipped IDs
+            )
+            
     except Exception as exc:  # pragma: no cover - startup resilience
-        logger.warning("Company embedding sync skipped: %s", exc)
+        logger.warning("Entities embedding sync failed: %s", exc)
 
 
-sync_company_embeddings_on_startup()
+sync_embeddings_on_startup()
 
 # Dictionary to store chatbot instances for each user session
 user_chatbots = {}
@@ -532,6 +545,117 @@ def clear_cache():
     except Exception as e:
         return jsonify({
             "status": "error", 
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
+
+
+@app.route('/api/embeddings/sync', methods=['POST'])
+def sync_embeddings():
+    """Manually trigger embeddings sync to Qdrant"""
+    try:
+        settings = Settings.load_settings()
+        
+        # Get optional parameters from request
+        data = request.json or {}
+        collection_name = data.get('collection_name', 'entities')
+        batch_size = data.get('batch_size', 64)
+        limit = data.get('limit', None)
+        
+        logger.info(f"Manual embedding sync triggered for collection '{collection_name}'")
+        
+        # Sync unified entities collection
+        summary = sync_entities_embeddings(
+            settings=settings,
+            collection_name=collection_name,
+            batch_size=batch_size,
+            limit=limit
+        )
+        
+        return jsonify({
+            "status": "success",
+            "message": "Embeddings synced successfully",
+            "sync_summary": summary,
+            "timestamp": time.time()
+        })
+        
+    except Exception as e:
+        logger.error(f"Embedding sync failed: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
+
+
+@app.route('/api/embeddings/status', methods=['GET'])
+def embeddings_status():
+    """Get status of embeddings in Qdrant"""
+    try:
+        from tool.database import QDrant
+        
+        settings = Settings.load_settings()
+        qdrant = QDrant(Settings=settings)
+        qdrant_client = qdrant.get_client()
+        
+        collection_name = request.args.get('collection_name', 'entities')
+        
+        try:
+            collection_info = qdrant_client.get_collection(collection_name=collection_name)
+            
+            # Get collection statistics
+            points_count = collection_info.points_count
+            vectors_config = collection_info.config.params.vectors
+            
+            if isinstance(vectors_config, dict):
+                vector_size = vectors_config.get('size')
+                distance = vectors_config.get('distance')
+            else:
+                vector_size = getattr(vectors_config, 'size', None)
+                distance = getattr(vectors_config, 'distance', None)
+            
+            # Count entities by type
+            company_count = qdrant_client.count(
+                collection_name=collection_name,
+                count_filter={
+                    "must": [
+                        {"key": "entity_type", "match": {"value": "company"}}
+                    ]
+                }
+            ).count
+            
+            job_posting_count = qdrant_client.count(
+                collection_name=collection_name,
+                count_filter={
+                    "must": [
+                        {"key": "entity_type", "match": {"value": "job_posting"}}
+                    ]
+                }
+            ).count
+            
+            return jsonify({
+                "status": "success",
+                "collection": collection_name,
+                "total_points": points_count,
+                "companies": company_count,
+                "job_postings": job_posting_count,
+                "vector_size": vector_size,
+                "distance_metric": str(distance),
+                "timestamp": time.time()
+            })
+            
+        except Exception as e:
+            return jsonify({
+                "status": "not_found",
+                "collection": collection_name,
+                "error": f"Collection not found or error accessing: {str(e)}",
+                "timestamp": time.time()
+            }), 404
+        
+    except Exception as e:
+        logger.error(f"Failed to get embeddings status: {e}")
+        return jsonify({
+            "status": "error",
             "error": str(e),
             "timestamp": time.time()
         }), 500

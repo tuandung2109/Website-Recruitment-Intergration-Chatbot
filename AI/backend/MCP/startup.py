@@ -12,7 +12,7 @@ sys.path.insert(0, str(backend_dir))
 
 from setting import Settings
 from tool.model_manager import model_manager
-from tool.embeddings.company import sync_company_embeddings
+from tool.embeddings import sync_entities_embeddings
 from llms.ollama_llms import OllamaLLMs
 
 def startup_optimization():
@@ -32,15 +32,18 @@ def startup_optimization():
         # Preload embedding model và semantic router
         model_manager.preload_models()
 
-        # Đồng bộ embeddings công ty vào Qdrant
+        # Đồng bộ embeddings công ty và job postings vào Qdrant
         try:
-            sync_summary = sync_company_embeddings(
+            sync_summary = sync_entities_embeddings(
                 settings=settings,
+                collection_name="entities",
                 limit=settings.BATCH_SIZE * 10 if hasattr(settings, "BATCH_SIZE") else None,
             )
             upserted = sync_summary.get("upserted", 0)
             collection = sync_summary.get("collection")
-            print(f"✅ Company embeddings synced: {upserted} items into '{collection}'")
+            companies = sync_summary.get("companies", 0)
+            job_postings = sync_summary.get("job_postings", 0)
+            print(f"✅ Entities embeddings synced: {upserted} items ({companies} companies + {job_postings} job postings) into '{collection}'")
         except Exception as e:
             print(f"⚠️ Company embedding sync skipped: {e}")
         

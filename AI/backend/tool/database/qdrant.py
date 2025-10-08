@@ -93,8 +93,16 @@ class QDrant():
             print(f"📋 New IDs added: {[p.id for p in new_points]}")
         else:
             print(f"ℹ️  No new vectors to insert - all IDs already exist in collection")
-        
-    def search_vectors(self, collection_name: str, query_vector: list, top_k: int):
+
+    def search_vectors(self, Settings, query: str, collection_name: str, top_k: int):
+        from llms.llm_manager import llm_manager
+        embedding_model = llm_manager.get_embedding_model(Settings.EMBEDDING_MODE)
+        if embedding_model is None:
+            print("❌ Embedding model not available for search")
+            return []
+        query_vector = embedding_model.encode(query)
+        if hasattr(query_vector, "tolist"):
+            query_vector = query_vector.tolist()
         results = self.client.search(
         collection_name=collection_name,
         query_vector=query_vector,
@@ -115,8 +123,56 @@ class QDrant():
     
     def get_data_from_collection(self, collection_name: str):
         return self.client.scroll(collection_name=collection_name)
-        
-        
+    
+
+if __name__ == '__main__':
+    import sys
+    import os
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(backend_dir))
+    from setting import Settings
+    
+    print("=" * 80)
+    print("Testing Qdrant Semantic Search")
+    print("=" * 80)
+    
+    settings = Settings.load_settings()
+    qdrant = QDrant(Settings=settings)
+    
+    # Clear cache để đảm bảo load model mới
+    from tool.model_manager import model_manager
+    model_manager.clear_cache()
+    print("✅ Cleared model cache")
+    
+    query = "Tìm thông tin công ty TechCorp"
+    print(f"\n🔍 Query: {query}")
+    print(f"📊 Collection: entities")
+    print(f"🎯 Top K: 5")
+    print("\nSearching...")
+    
+    results = qdrant.search_vectors(settings, query, "entities", top_k=5)
+    
+    print(f"\n✅ Found {len(results)} results:")
+    print("=" * 80)
+    
+    for i, result in enumerate(results, 1):
+        print(f"\n🔹 Result {i}:")
+        print(f"   Score: {result.score:.4f}")
+        print(f"   Entity Type: {result.payload.get('entity_type')}")
+        if result.payload.get('entity_type') == 'company':
+            print(f"   Company: {result.payload.get('name')}")
+            print(f"   Description: {result.payload.get('description', '')[:100]}...")
+        else:
+            print(f"   Position: {result.payload.get('position_name')}")
+            print(f"   Company: {result.payload.get('name_of_company')}")
+            print(f"   Requirements: {result.payload.get('requirements', '')[:100]}...")
+    
+    print("\n" + "=" * 80)
+    print("Search completed!")
+    print("=" * 80)
+
+
 
 
     

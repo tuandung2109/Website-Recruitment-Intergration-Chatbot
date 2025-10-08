@@ -1,10 +1,10 @@
 from .sentenceTransformer import SentenceTransformerEmbedding
 from .base import BaseEmbedding, EmbeddingConfig
-from .company import sync_company_embeddings
+from .entities import sync_entities_embeddings
 
 __all__ = [
-	"SentenceTransformerEmbedding",
-	"BaseEmbedding",
-	"EmbeddingConfig",
-	"sync_company_embeddings",
+    "SentenceTransformerEmbedding",
+    "BaseEmbedding",
+    "EmbeddingConfig",
+    "sync_entities_embeddings",
 ]

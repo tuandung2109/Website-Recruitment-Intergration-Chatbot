@@ -65,7 +65,6 @@ class AgentOllama(BaseAI):
                 return result  # Return as dict - Flask will handle JSON serialization
         except Exception as e:
             error_msg = f"Error communicating with Ollama: {str(e)}"
-            self.add_assistant_message(error_msg)
             return error_msg
 
 

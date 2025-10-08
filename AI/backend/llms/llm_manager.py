@@ -108,7 +108,8 @@ class LLMManager:
         # Create new embedding model
         try:
             self.logger.info(f"🔥 Loading new embedding model: {model_name}")
-            model = SentenceTransformer(model_name)
+            # Add trust_remote_code=True for custom models like Vietnamese embedding
+            model = SentenceTransformer(model_name, trust_remote_code=True)
             self._embedding_models[model_name] = model
             self.logger.info(f"✅ Successfully loaded embedding model: {model_name}")
             return model
@@ -119,7 +120,7 @@ class LLMManager:
                 fallback_model = 'all-MiniLM-L6-v2'
                 if fallback_model != model_name and fallback_model not in self._embedding_models:
                     self.logger.info(f"🔄 Trying fallback model: {fallback_model}")
-                    model = SentenceTransformer(fallback_model)
+                    model = SentenceTransformer(fallback_model, trust_remote_code=True)
                     self._embedding_models[fallback_model] = model
                     self.logger.info(f"✅ Successfully loaded fallback model: {fallback_model}")
                     return model

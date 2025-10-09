@@ -35,40 +35,89 @@ const JobListings = () => {
   });
 
   // Load filter options and fetch jobs from backend API once on mount
-
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
         setError("");
-        const params = { page: 1, limit: 200 };
-        const json = await listJobsPosting(params);
+        const json = await listJobsPosting();
 
         console.log("json123:", json);
-        console.log("json11111111:", json);
 
-        // ✅ Kiểm tra đúng cấu trúc thực tế
         if (!json || !Array.isArray(json.jobs)) {
           throw new Error("Dữ liệu trả về không hợp lệ");
         }
 
-        const mapped = json.jobs.map((j) => ({
-          id: j.id,
-          title: j.title || "Untitled",
-          company: j.company?.name || "Công ty chưa xác định",
-          companyLogo: j.company?.logo_url || j.company?.logo || "",
-          location: j.company?.address?.[0]?.address_detail || "",
-          description: j.description || "",
-          skills: j.skills || [],
-          industries: j.industries || [],
-          type: j.workTypes?.join(", ") || "",
-          experienceYears: j.experienceYears || 0,
-          salary: j.salary || 0,
-          deadline: j.deadline || "",
-        }));
+        const mapped = json.jobs.map((j) => {
+          // debug nhanh: bật lên console để thấy key thật sự
+          console.log("DBG work keys:", {
+            workTypes: j.workTypes,
+            work_type: j.work_type,
+            workingTime: j.workingTime,
+            working_time: j.working_time,
+          });
 
-        console.log("✅ Dữ liệu sau khi map ở FE:", mapped);
+          // type: ưu tiên array -> map -> join, fallback sang string fields
+          const type =
+            Array.isArray(j.workTypes) && j.workTypes.length > 0
+              ? j.workTypes.join(", ")
+              : Array.isArray(j.work_type) && j.work_type.length > 0
+              ? j.work_type
+                  .map(
+                    (w) =>
+                      w.work_type_name ||
+                      w.name ||
+                      (w.work_type && w.work_type.work_type_name)
+                  )
+                  .filter(Boolean)
+                  .join(", ")
+              : typeof j.workingTime === "string" && j.workingTime.trim()
+              ? j.workingTime.trim()
+              : typeof j.working_time === "string" && j.working_time.trim()
+              ? j.working_time.trim()
+              : // đôi khi backend dùng workingTime là chuỗi, hoặc work_type là array, nên kiểm tra thêm
+              Array.isArray(j.work_types) && j.work_types.length > 0
+              ? j.work_types
+                  .map((w) => w.work_type_name || w.name)
+                  .filter(Boolean)
+                  .join(", ")
+              : "Không rõ";
 
+          return {
+            id: j.id ?? j.job_posting_id,
+            title: j.title ?? j.position_name ?? "Untitled",
+            company: j.company?.name || j.company || "Công ty chưa xác định",
+            companyLogo:
+              j.company?.logo || j.company?.logo_url || j.companyLogo || "",
+
+            location:
+              j.company?.address ||
+              j.company?.address_detail ||
+              j.company?.address?.[0]?.address_detail ||
+              "Không rõ địa điểm",
+            description: j.description || j.job_description || "",
+            skills: Array.isArray(j.skills)
+              ? j.skills
+              : Array.isArray(j.job_posting_skill)
+              ? j.job_posting_skill
+                  .map((s) => s.skill?.skill_name)
+                  .filter(Boolean)
+              : [],
+            industries: Array.isArray(j.industries)
+              ? j.industries
+              : Array.isArray(j.job_posting_industry)
+              ? j.job_posting_industry
+                  .map((i) => i.industry?.name)
+                  .filter(Boolean)
+              : [],
+            type,
+            experienceYears: j.experienceYears ?? j.experience_years ?? 0,
+            salary: j.salary ?? 0,
+            deadline: j.deadline || "",
+          };
+        });
+
+        console.log("✅ Dữ liệu sau khi map ở FE123:", mapped);
         setJobs(mapped);
       } catch (e) {
         console.error("❌ Lỗi khi fetch jobs:", e);
@@ -710,9 +759,10 @@ const JobListings = () => {
                                 Tên công việc:{job.title}
                               </h3>
                               <p className="text-sm text-gray-600 mb-3">
-                                Hình thức làm việc: {job.type}
-                                <br></br>
-                                <b>{job.company}</b>
+                                {job.type}
+                              </p>
+                              <p className="text-sm text-gray-600 mb-3">
+                                công ty: <b>{job.company}</b>
                               </p>
                               <p className="text-gray-700 mb-4 leading-relaxed">
                                 {job.description}
@@ -723,7 +773,7 @@ const JobListings = () => {
                                     key={`skill-${skillIndex}`}
                                     className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full font-medium"
                                   >
-                                    {skill}
+                                    Skill: {skill}
                                   </span>
                                 ))}
                                 {job.industries &&
@@ -763,7 +813,7 @@ const JobListings = () => {
                                       clipRule="evenodd"
                                     />
                                   </svg>
-                                  {job.experience}
+                                  Kinh nghiệm: {job.experienceYears}
                                 </span>
 
                                 <span className="flex items-center text-green-600 font-semibold">
@@ -779,18 +829,18 @@ const JobListings = () => {
                                       clipRule="evenodd"
                                     />
                                   </svg>
-                                  {job.salaryRange}
+                                  {job.salary}
                                 </span>
+
                                 <span className="flex items-center text-green-600 font-semibold">
                                   <svg
                                     className="w-4 h-4 mr-1"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                   >
-                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                                     <path
                                       fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+                                      d="M5.05 3.05a7 7 0 019.9 9.9l-4.243 4.243a1 1 0 01-1.414 0L5.05 12.95a7 7 0 010-9.9zm4.95 3.45a2 2 0 100 4 2 2 0 000-4z"
                                       clipRule="evenodd"
                                     />
                                   </svg>

@@ -23,7 +23,7 @@ const JobDetail = () => {
         const res = await fetch(
           `${process.env.REACT_APP_API_URL}/api/jobPosting/listJobPostingId/${id}`
         );
-        console.log("res", res);
+        console.log("res123123", res);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         console.log("data123123:", data);

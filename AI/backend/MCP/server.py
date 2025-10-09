@@ -99,27 +99,27 @@ def retrive_infor_company(query: str) -> List[Dict[str, Any]]:
         query: câu hỏi của user
     Returns:
         List[Dict]: danh sách công ty liên quan
-    from tool.model_manager import model_manager
+
     """
-    from tool.model_manager import model_manager
-    
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
     try:
-        # Lấy embedding model từ cache
-        embedding_model = model_manager.get_embedding_model()
-        
+
         # Lấy Qdrant client
         from tool.database import QDrant
         qdrant_client = QDrant(Settings=settings)
         
-        # Tạo vector từ câu hỏi
-        query_vector = embedding_model.encode(query)
-        
-        # Tìm kiếm trong Qdrant
-        results = qdrant_client.search_vectors(
-            collection_name="companies",
-            query_vector=query_vector,
-            top_k=5
+        scroll_filter = Filter(
+        must=[
+        FieldCondition(
+            key="entity_type",
+            match=MatchValue(value="company")
+        ),
+        ]
         )
+        
+
+        # Tìm kiếm trong Qdrant
+        results = qdrant_client.search_vectors_with_filter(settings, query, "entities", top_k=7, filter=scroll_filter)
         
         # Trích xuất thông tin công ty từ kết quả
         companies = []
@@ -133,6 +133,49 @@ def retrive_infor_company(query: str) -> List[Dict[str, Any]]:
         
     except Exception as e:
         print(f"❌ Error retrieving company info: {str(e)}")
+        return []
+    
+@server.tool()
+def retrive_infor_job_posting(query: str) -> List[Dict[str, Any]]:
+    """
+    Truy xuất thông tin job posting từ Qdrant dựa trên câu hỏi của user
+    Args:
+        query: câu hỏi của user
+    Returns:
+        List[Dict]: danh sách job posting liên quan
+
+    """
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
+    try:
+
+        # Lấy Qdrant client
+        from tool.database import QDrant
+        qdrant_client = QDrant(Settings=settings)
+        
+        scroll_filter = Filter(
+        must=[
+        FieldCondition(
+            key="entity_type",
+            match=MatchValue(value="job_posting")
+        ),
+        ]
+        )
+        
+        # Tìm kiếm trong Qdrant
+        results = qdrant_client.search_vectors_with_filter(settings, query, "entities", top_k=7, filter=scroll_filter)
+        
+        # Trích xuất thông tin job posting từ kết quả
+        job_postings = []
+        for res in results:
+            payload = res.payload
+            if payload:
+                job_postings.append(payload)
+        
+        print(f"✅ Retrieved {len(job_postings)} job postings related to the query.")
+        return job_postings
+        
+    except Exception as e:
+        print(f"❌ Error retrieving job posting info: {str(e)}")
         return []
 
 

@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from setting import Settings
 from llms.llm_manager import llm_manager
 from prompt.promt_config import PromptConfig
-from MCP import get_reflection, retrive_infor_company
+from MCP import get_reflection, retrive_infor_company, retrive_infor_job_posting
 
 
 class AgentOllama(BaseAI):
@@ -100,33 +100,12 @@ class AgentOllama(BaseAI):
                 return assistant_response
                 
             elif intent == "intent_jd":
-                try:
-                    # Extract job features from the user's message
-                    extracted_features = self.feature_extractor.extract(
-                        query=summarise_convervation,
-                        prompt_type="extract_features_question_about_job"
-                    )
-                    
-                    if extracted_features:
-                        # Process the extracted features and generate response
-                        features_text = self._format_extracted_features(extracted_features)
-                        assistant_response = f"Tôi đã hiểu yêu cầu của bạn:\n{features_text}\n\nTôi sẽ tìm kiếm các công việc phù hợp cho bạn."
-                        self.add_assistant_message(assistant_response)
-                        return assistant_response
-                    else:
-                        # Fallback if no features extracted
-                        incomplete_prompt = self.prompt_config.get_prompt("recruitment_incomplete", user_input=summarise_convervation)
-                        assistant_response = self._strip_think(self.client.generate_content([{"role": "user", "content": incomplete_prompt}]))
-                        self.add_assistant_message(assistant_response)
-                        return assistant_response
-                        
-                except Exception as extraction_error:
-                    logging.error(f"Error in feature extraction: {str(extraction_error)}")
-                    # Fallback to normal generation
-                    assistant_response = self._strip_think(self.client.generate_content(messages))
-                    self.add_assistant_message(assistant_response)
-                    return assistant_response
-
+                data_job_posting = retrive_infor_job_posting(summarise_convervation)
+                promt_job_posting = self.prompt_config.get_prompt("intent_jd", user_input=summarise_convervation, data = data_job_posting)
+                assistant_response = self._strip_think(self.client.generate_content([{"role": "user", "content": promt_job_posting}]))
+                self.add_assistant_message(assistant_response)
+                return assistant_response
+                
             elif intent == "intent_review_cv":
                 # Handle CV review requests
                 assistant_response = "Để review CV của bạn, hãy upload file CV hoặc paste nội dung CV vào chat. Tôi sẽ phân tích và đưa ra những lời khuyên cụ thể."

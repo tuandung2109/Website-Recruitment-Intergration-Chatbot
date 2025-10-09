@@ -114,6 +114,27 @@ class QDrant():
     )
         return results
     
+    def search_vectors_with_filter(self, Settings, query: str, collection_name: str, top_k: int, filter):
+        from llms.llm_manager import llm_manager
+        embedding_model = llm_manager.get_embedding_model(Settings.EMBEDDING_MODE)
+        if embedding_model is None:
+            print("❌ Embedding model not available for search")
+            return []
+        query_vector = embedding_model.encode(query)
+        if hasattr(query_vector, "tolist"):
+            query_vector = query_vector.tolist()
+        results = self.client.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            limit=top_k,
+            query_filter=filter,
+            search_params={
+                "hnsw_ef": 128,   # tăng độ chính xác (default thường 16-64)
+                "exact": False     # nếu True => brute-force, chính xác tuyệt đối nhưng chậm
+            }
+        )
+        return results
+    
     def delete_collection(self, collection_name: str):
         self.client.delete_collection(collection_name=collection_name)
         print(f"✅ Deleted collection '{collection_name}'")
@@ -123,6 +144,25 @@ class QDrant():
     
     def get_data_from_collection(self, collection_name: str):
         return self.client.scroll(collection_name=collection_name)
+    
+    def create_payload_index(self, collection_name: str, field_name: str, field_schema: str = "keyword"):
+        """
+        Create payload index for filtering
+        
+        Args:
+            collection_name: Name of the collection
+            field_name: Name of the field to index
+            field_schema: Type of index (keyword, integer, float, geo, text)
+        """
+        try:
+            self.client.create_payload_index(
+                collection_name=collection_name,
+                field_name=field_name,
+                field_schema=field_schema
+            )
+            print(f"✅ Created payload index for field '{field_name}' in collection '{collection_name}'")
+        except Exception as e:
+            print(f"⚠️  Index creation skipped for '{field_name}': {e}")
     
 
 if __name__ == '__main__':
@@ -144,32 +184,52 @@ if __name__ == '__main__':
     from tool.model_manager import model_manager
     model_manager.clear_cache()
     print("✅ Cleared model cache")
+    # print(qdrant.get_data_from_collection('entities'))
     
-    query = "Tìm thông tin công ty TechCorp"
+    query = "Tìm công ty TechCorp đang tuyển về gì"
     print(f"\n🔍 Query: {query}")
     print(f"📊 Collection: entities")
     print(f"🎯 Top K: 5")
     print("\nSearching...")
     
-    results = qdrant.search_vectors(settings, query, "entities", top_k=5)
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
     
+    scroll_filter = Filter(
+    must=[
+        FieldCondition(
+            key="entity_type",
+            match=MatchValue(value="job_posting")
+        ),
+        # FieldCondition(
+        #     key="name_of_company",
+        #     match=MatchValue(value="TechCorp")
+        # ),
+    ]
+)
+
+    results = qdrant.search_vectors_with_filter(settings, query, "entities", top_k=7, filter=scroll_filter)
+
+
     print(f"\n✅ Found {len(results)} results:")
     print("=" * 80)
+    
+
     
     for i, result in enumerate(results, 1):
         print(f"\n🔹 Result {i}:")
         print(f"   Score: {result.score:.4f}")
         print(f"   Entity Type: {result.payload.get('entity_type')}")
-        if result.payload.get('entity_type') == 'company':
-            print(f"   Company: {result.payload.get('name')}")
-            print(f"   Description: {result.payload.get('description', '')[:100]}...")
-        else:
+        if result.payload.get('entity_type') == 'job_posting':
             print(f"   Position: {result.payload.get('position_name')}")
             print(f"   Company: {result.payload.get('name_of_company')}")
             print(f"   Requirements: {result.payload.get('requirements', '')[:100]}...")
     
+    # Test filter by company name
     print("\n" + "=" * 80)
-    print("Search completed!")
+    print("Testing Filter by Company Name")
+    print("=" * 80)
+    
+    
     print("=" * 80)
 
 

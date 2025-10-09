@@ -177,7 +177,7 @@ Bạn là hệ thống phân loại intent cho chatbot tuyển dụng.
 Nhiệm vụ: ĐỌC tin nhắn của người dùng và trả về CHÍNH XÁC 1 (MỘT) intent (chỉ trả về key, không giải thích):
 
 Intent list:
-- intent_jd: Người dùng TÌM KIẾM CÔNG VIỆC với ÍT NHẤT MỘT thông tin CỤ THỂ (vd: vị trí cụ thể, kỹ năng cụ thể, địa điểm cụ thể, loại công việc rõ ràng).
+- intent_jd: Người dùng TÌM KIẾM CÔNG VIỆC với ÍT NHẤT MỘT thông tin CỤ THỂ (vd: vị trí cụ thể, kỹ năng cụ thể, địa điểm cụ thể, loại công việc rõ ràng) hoặc hỏi về công ty đó đang tuyển về những công việc nào.
 - intent_incomplete_recruitment_question: Câu hỏi LIÊN QUAN tuyển dụng nhưng QUÁ CHUNG CHUNG, THIẾU thông tin để xử lý (không nêu cụ thể vị trí / kỹ năng / địa điểm / nhu cầu rõ ràng).
 - intent_candidate: Tìm ỨNG VIÊN với tiêu chí cụ thể (vd: "Ứng viên biết Java", "Tìm tester manual 2 năm kinh nghiệm").
 - intent_review_cv: Yêu cầu đánh giá / nhận xét CV.
@@ -211,6 +211,7 @@ VÍ DỤ RÕ (phải học thuộc):
 - "Bạn review giúp CV này" → intent_review_cv.
 - "Dựa vào CV này gợi ý công việc giúp mình" → intent_suggest_job.
 - "Thông tin về công ty FPT" → intent_company_info.
+- "Công ty Viettel tuyển những vị trí nào" → intent_jd.
 - "Hướng dẫn tạo tài khoản" → intent_guide.
 - "Mình muốn phản hồi về tính năng đăng bài" → intent_feedback.
 - "Chào bạn" / "Trời hôm nay đẹp" → intent_chitchat.
@@ -248,9 +249,9 @@ Trả lời:
     Bạn được cung cấp một danh sách các công ty và ngành nghề tương ứng.
     Nhiệm vụ:
     - Xác định công ty phù hợp với câu hỏi của người dùng (dựa trên tên công ty hoặc ngành nghề).
-    - Trả về thông tin chi tiết về công ty đó với định dạng Markdown gọn gàng, dễ nhìn.
-    - Không dùng *** hoặc ** để in đậm.
+    - Trả về thông tin chi tiết về công ty đó với định dạng gọn gàng, dễ nhìn.
     - Luôn có phần mô tả tóm tắt cuối cùng.
+    - KHÔNG ĐƯỢC DÙNG *** 
 
     Dữ liệu công ty:
     {data}
@@ -260,6 +261,22 @@ Trả lời:
     ---
     """
 ),
+          "intent_jd": (
+            """
+            Bạn là một chatbot tuyển dụng. Người dùng hỏi về thông tin công việc hoặc là công việc của một công ty cụ thể.
+            Bạn được cung cấp một danh sách các công việc có liên quan:
+            Nhiệm vụ:
+            - Xác định công việc phù hợp với câu hỏi của người dùng (dựa trên tên công ty hoặc ngành nghề).
+            - Trả về thông tin chi tiết về công việc đó đó với định dạng gọn gàng, dễ nhìn.
+            - Luôn có phần mô tả tóm tắt cuối cùng.
+            - KHÔNG ĐƯỢC DÙNG *** 
+            
+             Dữ liệu công việc:
+            {data}
+
+            Người dùng: "{user_input}"
+            Nếu bạn muốn biết thêm thông tin về công ty khác hoặc tìm kiếm theo ngành nghề, hãy cho tôi biết!
+            """),
           "classification_agent_intent": (
     """
     Bạn là hệ thống phân loại intent cho chatbot tuyển dụng.

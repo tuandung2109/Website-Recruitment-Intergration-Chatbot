@@ -1,24 +1,36 @@
 # Core dependencies
-pytest==7.4.0
-requests==2.31.0
-flask==2.3.2
-python-dotenv==1.0.0
-gunicorn==21.2.0
-loguru
+requests==2.32.3
+flask==3.0.3
+flask-cors==5.0.0
+python-dotenv>=1.1.0
+gunicorn==23.0.0
+loguru==0.7.2
 
 # AI/ML dependencies
-ollama>=0.4.0
-qdrant-client
+ollama>=0.4.5  # Use latest version for httpx compatibility
+qdrant-client==1.12.1
+sentence-transformers==3.0.1
+torch==2.1.0
+transformers<4.45.0  # Pin to version compatible with torch 2.1.0
 
 # MCP (Model Context Protocol)
-fastmcp>=0.1.0
-mcp>=1.0.0
+fastmcp==2.9.1
+mcp==1.12.4
 
 # Data processing
-pymongo>=4.0.0
+pymongo==4.10.1
+numpy==1.26.4  # Pin to specific version - torch 2.1.0 requires numpy 1.x
 pandas>=2.0.0
 
 # Database client
-supabase>=2.0.0
+supabase>=2.10.0
 
-# Note: We don't use LangChain - direct integration with Ollama for simplicity
+# Additional utilities
+pydantic==2.10.3
+pydantic-settings==2.6.1
+httpx>=0.28.1
+pyyaml==6.0.2
+
+# Note: We use direct integration with Ollama for simplicity
+# Optional: Install CUDA support for GPU acceleration
+# torch-cuda (if using GPU)

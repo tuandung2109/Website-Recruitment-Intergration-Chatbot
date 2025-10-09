@@ -1,9 +1,5 @@
-// const API = `https://topcv-api.vercel.app/api` || "http://localhost:9000/api";
-// const API = process.env.NODE_ENV === "http://localhost:9000/api";
-const API =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:9000/api"
-    : "https://your-production-url.com/api";
+// Use REACT_APP_API_URL from environment variables
+const API = (process.env.REACT_APP_API_URL || "http://localhost:3001") + "/api";
 
 export const _get = async (path) => {
   const response = await fetch(API + path, {

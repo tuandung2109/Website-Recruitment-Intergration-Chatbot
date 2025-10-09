@@ -10,21 +10,16 @@ class Settings(BaseSettings):
     COLLECTION_JOB: str = ""
 
     # Supabase settings
-    SUPABASE_URL: str = "https://ahctwmizutnngwmswdbf.supabase.co"  # Thêm URL Supabase của bạn
-    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoY3R3bWl6dXRubmd3bXN3ZGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxMzY1OTIsImV4cCI6MjA3NDcxMjU5Mn0.PYeFefHRpoi-JcBUdX2An-qCyFe3s8lItX8vcjigWYc"  # Thêm anon key của bạn
+    SUPABASE_URL: str = "https://qchjxqztegziqllwgnwb.supabase.co"  # Thêm URL Supabase của bạn
+    SUPABASE_ANON_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjaGp4cXp0ZWd6aXFsbHdnbndiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNzQ1ODcsImV4cCI6MjA3NDk1MDU4N30.OYDnnwl16E6noozGMne71lH4Sdea-4q_9dV5VL8nbR4"  # Thêm anon key của bạn
 
     QDRANT_URL: str = "https://76be067b-34d1-4b20-8ea6-b8b2dcf182a0.europe-west3-0.gcp.cloud.qdrant.io:6333"
     QDRANT_API_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.xXuZydLh-KDtwCz562thgAXW0CAX-ILC933xztO2OIQ"
-    QDRANT_VECTOR_SIZE: int = 384  # for all-MiniLM-L6-v2
+    QDRANT_VECTOR_SIZE: int = 768  # for dangvantuan/vietnamese-document-embedding (384 for all-MiniLM-L6-v2)
     COLLECTION_JOB: str = "job_descriptions"
     COLLECTION_COMPANY: str = "companies"  # Collection cho công ty
 
-    # LLM and Embedding settings
-    TEXT_EMBEDDING_MODEL_ID: str = "dangvantuan/vietnamese-document-embedding"  # Model tiếng Việt tốt hơn
-    RERANKING_CROSS_ENCODER_MODEL_ID: str = "cross-encoder/ms-marco-MiniLM-L-4-v2"
     RAG_MODEL_DEVICE: str = "cpu"
-    RAG_MODEL_ID: str = "hf.co/unsloth/Qwen3-1.7B-GGUF:IQ4_XS"
-    OLLAMA_MODEL: str = "hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M"  # Add this field
     
     # Performance optimization settings
     OLLAMA_BASE_URL: str = "http://localhost:11434"
@@ -34,6 +29,8 @@ class Settings(BaseSettings):
     ENABLE_MODEL_PRELOAD: bool = True
     BATCH_SIZE: int = 32  # Batch size cho embedding
     MAX_WORKERS: int = 4  # Số threads cho parallel processing
+    
+    EMBEDDING_MODE: str = "dangvantuan/vietnamese-document-embedding"  # Mặc định sử dụng embedding tiếng Việt
     
     
     @classmethod

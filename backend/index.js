@@ -22,9 +22,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(
-  session({ secret: "yourSecretKey", resave: false, saveUninitialized: true })
+  session({ secret: process.env.JWT_SECRET || "yourSecretKey", resave: false, saveUninitialized: true })
 );
 app.use(flash());
 
@@ -38,6 +39,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
+// ✅ Health check endpoint (for Docker)
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 // ✅ Test route (giống app.js)
 app.get("/", (req, res) => {
   res.json({
@@ -49,7 +55,7 @@ app.get("/", (req, res) => {
   });
 });
 
-const port = 9000 || process.env.PORT;
+const port = process.env.PORT || 3001;
 server.listen(port, () => {
   console.log(`✅ Server is running at http://localhost:${port}`);
 });

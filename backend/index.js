@@ -22,8 +22,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ middleware
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
-app.use(cors({ origin: corsOrigin, credentials: true }));
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ["http://localhost:3000"];
+app.use(cors({ 
+  origin: corsOrigins,
+  credentials: true 
+}));
 app.use(
   session({ secret: process.env.JWT_SECRET || "yourSecretKey", resave: false, saveUninitialized: true })
 );

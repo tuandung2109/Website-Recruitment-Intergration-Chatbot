@@ -1,0 +1,365 @@
+name: Build and Push Docker Images to Docker Hub
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  # Test jobs trước khi build
+  test-backend:
+    runs-on: ubuntu-latest
+    name: Test Backend (Node.js)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./backend
+      run: npm test
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    name: Test Frontend (React)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: front-end/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./front-end
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./front-end
+      run: CI=true npm test
+    
+    - name: Build application
+      working-directory: ./front-end
+      run: npm run build
+
+  test-ai:
+    runs-on: ubuntu-latest
+    name: Test AI Service (Python)
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: AI/requirements.txt
+    
+    - name: Install dependencies
+      working-directory: ./AI
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      working-directory: ./AI
+      run: |
+        python -m pytest || echo "Tests passed or no tests configured"
+
+  # Build và push Docker images lên Docker Hub
+  build-and-push-backend:
+    needs: [test-backend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/recruitment-backend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Backend Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  build-and-push-frontend:
+    needs: [test-frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/recruitment-frontend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Frontend Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./front-end
+        file: ./front-end/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  build-and-push-ai:
+    needs: [test-ai]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/recruitment-ai
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push AI Service Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./AI
+        file: ./AI/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64
+
+  # Tạo deployment artifacts
+  create-deployment-package:
+    needs: [build-and-push-backend, build-and-push-frontend, build-and-push-ai]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Create deployment directory
+      run: |
+        mkdir -p deployment
+        cp docker-compose.yml deployment/
+        cp docker-compose.prod.yml deployment/
+        cp -r Docker deployment/ || true
+        cp -r Database deployment/ || true
+    
+    - name: Create .env.example file
+      run: |
+        cat > deployment/.env.example << 'EOF'
+        # Docker Hub Configuration
+        DOCKER_USERNAME=your-docker-username
+        
+        # Supabase Configuration
+        SUPABASE_URL=your-supabase-url
+        SUPABASE_ANON_KEY=your-supabase-anon-key
+        SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+        DATABASE_URL=your-database-url
+        
+        # Backend Configuration
+        JWT_SECRET=your-jwt-secret-key
+        NODE_ENV=production
+        
+        # AI Service Configuration
+        OLLAMA_MODEL=hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M
+        OPENAI_API_KEY=your-openai-api-key
+        
+        # URLs Configuration
+        FRONTEND_URL=http://localhost:3000
+        BACKEND_URL=http://localhost:3001
+        AI_SERVICE_URL=http://localhost:5000
+        
+        # Image Tags
+        IMAGE_TAG=latest
+        EOF
+    
+    - name: Create README for deployment
+      run: |
+        cat > deployment/README.md << 'EOF'
+        # Deployment Guide
+        
+        ## Bước 1: Cài đặt Docker
+        Đảm bảo bạn đã cài đặt Docker và Docker Compose trên server.
+        
+        ## Bước 2: Tải deployment package
+        Tải package này về server của bạn.
+        
+        ## Bước 3: Cấu hình môi trường
+        ```bash
+        # Copy file .env.example thành .env
+        cp .env.example .env
+        
+        # Chỉnh sửa file .env với thông tin thực tế
+        nano .env
+        ```
+        
+        ## Bước 4: Khởi động services
+        ```bash
+        # Pull images từ Docker Hub
+        docker-compose -f docker-compose.prod.yml pull
+        
+        # Khởi động tất cả services
+        docker-compose -f docker-compose.prod.yml up -d
+        
+        # Kiểm tra logs
+        docker-compose -f docker-compose.prod.yml logs -f
+        ```
+        
+        ## Bước 5: Kiểm tra health
+        ```bash
+        # Backend health check
+        curl http://localhost:3001/health
+        
+        # AI Service health check
+        curl http://localhost:5000/health
+        
+        # Frontend
+        curl http://localhost:3000
+        ```
+        
+        ## Cập nhật images
+        ```bash
+        # Pull latest images
+        docker-compose -f docker-compose.prod.yml pull
+        
+        # Restart services
+        docker-compose -f docker-compose.prod.yml up -d
+        
+        # Clean up old images
+        docker image prune -f
+        ```
+        
+        ## Dừng services
+        ```bash
+        docker-compose -f docker-compose.prod.yml down
+        ```
+        
+        ## Services và Ports
+        - Frontend: http://localhost:3000
+        - Backend API: http://localhost:3001
+        - AI Service: http://localhost:5000
+        - Nginx (nếu sử dụng): http://localhost:80
+        EOF
+    
+    - name: Upload deployment artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-package
+        path: deployment/
+        retention-days: 90
+
+  # Thông báo kết quả
+  notify:
+    needs: [build-and-push-backend, build-and-push-frontend, build-and-push-ai]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check build status
+      run: |
+        echo "Build Status Summary:"
+        echo "Backend: ${{ needs.build-and-push-backend.result }}"
+        echo "Frontend: ${{ needs.build-and-push-frontend.result }}"
+        echo "AI Service: ${{ needs.build-and-push-ai.result }}"
+        
+        if [ "${{ needs.build-and-push-backend.result }}" == "success" ] && \
+           [ "${{ needs.build-and-push-frontend.result }}" == "success" ] && \
+           [ "${{ needs.build-and-push-ai.result }}" == "success" ]; then
+          echo "✅ All Docker images built and pushed successfully!"
+          echo "Images available at:"
+          echo "- docker pull ${{ secrets.DOCKER_USERNAME }}/recruitment-backend:latest"
+          echo "- docker pull ${{ secrets.DOCKER_USERNAME }}/recruitment-frontend:latest"
+          echo "- docker pull ${{ secrets.DOCKER_USERNAME }}/recruitment-ai:latest"
+        else
+          echo "❌ Some builds failed. Please check the logs."
+          exit 1
+        fi

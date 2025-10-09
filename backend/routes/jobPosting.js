@@ -4,7 +4,7 @@ const controllerJobsPostings = require("../controllers/jobPosting");
 
 router.get("/listJobPosting", controllerJobsPostings.listJobPostings); //Lấy danh sách bài đăng
 router.get("/listJobPostingAdmin", controllerJobsPostings.listJobPostingsAdmin); //Lấy danh sách bài đăng
-router.get("/:id", controllerJobsPostings.listJobPostingId); // Chi tiết công việc
+router.get("/listJobPostingId/:id", controllerJobsPostings.listJobPostingId); // Chi tiết công việc
 
 router.get(
   "/listJobPostingDeleted",

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JobApplicationModal from "../../components/Modal/JobApplicationModal";
-import UseTitle from "../../hooks/useTitle";
+import { listJobPostingById } from "../../services/jobPosting";
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,20 +20,22 @@ const JobDetail = () => {
       try {
         setLoading(true);
         setError("");
-        const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/jobPosting/listJobPostingId/${id}`
-        );
-        console.log("res123123", res);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        console.log("data123123:", data);
-        const job = data.job_posting; // Lấy đúng đối tượng bên trong
-        console.log("job123", job);
-        console.log("Chi tiết job11111111:", job.company.logo_url);
+
+        // ✅ Gọi hàm lấy chi tiết job
+        const { success, job_posting } = await listJobPostingById(id);
+        if (!success || !job_posting) {
+          throw new Error("Không tìm thấy công việc");
+        }
+
+        const job = job_posting;
+
+        console.log("📦 Chi tiết job chuẩn:", job);
+
+        // ✅ Map dữ liệu giống format bạn muốn
         const mapped = {
-          id: job.job_posting_id,
-          title: job.position_name || "Untitled",
-          description: job.job_description || "",
+          id: job.id,
+          title: job.title || "Untitled",
+          description: job.description || "",
 
           // ✅ Công ty
           company: job.company?.name || "Công ty chưa xác định",
@@ -42,35 +44,25 @@ const JobDetail = () => {
             description: job.company?.description || "",
             size: job.company?.size || "",
             website: job.company?.website || "",
-            logo: job.company?.logo_url || "",
+            logo: job.company?.logo || "",
           },
 
           // ✅ Địa chỉ
-          location:
-            Array.isArray(job.company?.address) &&
-            job.company.address.length > 0
-              ? job.company.address[0].address_detail
-              : "",
+          location: job.company?.address || "",
 
           // ✅ Loại hình làm việc
-          workTypes: Array.isArray(job.work_type)
-            ? job.work_type.map((w) => w.work_type_name)
-            : [],
+          workTypes: Array.isArray(job.workTypes) ? job.workTypes : [],
 
           // ✅ Kỹ năng
-          skills: Array.isArray(job.job_posting_skill)
-            ? job.job_posting_skill.map((s) => s.skill.skill_name)
-            : [],
+          skills: Array.isArray(job.skills) ? job.skills : [],
 
           // ✅ Ngành nghề
-          industries: Array.isArray(job.job_posting_industry)
-            ? job.job_posting_industry.map((i) => i.industry.name)
-            : [],
+          industries: Array.isArray(job.industries) ? job.industries : [],
 
           salaryRange: job.salary ? `${job.salary}` : "",
           experience:
-            typeof job.experience_years === "number"
-              ? `${job.experience_years} năm`
+            typeof job.experienceYears === "number"
+              ? `${job.experienceYears} năm`
               : "",
           deadline: job.deadline || "",
           postedDate: job.created_at ? new Date(job.created_at) : new Date(),
@@ -80,7 +72,7 @@ const JobDetail = () => {
 
         setJob(mapped);
 
-        // Optionally fetch a few related jobs for the sidebar
+        // ✅ Optionally fetch related jobs
         const r = await fetch(
           `${process.env.REACT_APP_API_URL}/api/jobs?limit=3`
         );
@@ -98,6 +90,7 @@ const JobDetail = () => {
           setRelatedJobs(rel);
         }
       } catch (e) {
+        console.error("❌ Lỗi khi fetch chi tiết job:", e);
         setError("Không thể tải chi tiết công việc");
       } finally {
         setLoading(false);
@@ -362,39 +355,21 @@ const JobDetail = () => {
 
                 {activeTab === "requirements" && (
                   <ul className="space-y-3">
-                    {job.requirements.map((req, i) => (
-                      <li key={i} className="flex items-start">
-                        <svg
-                          className="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span className="text-gray-700">{req}</span>
-                      </li>
-                    ))}
+                    <div className="prose max-w-none">
+                      <p className="text-gray-700 leading-relaxed text-lg">
+                        {job.requirements}
+                      </p>
+                    </div>
                   </ul>
                 )}
 
                 {activeTab === "benefits" && (
                   <ul className="space-y-3">
-                    {job.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-start">
-                        <svg
-                          className="w-6 h-6 text-blue-500 mr-3 flex-shrink-0 mt-0.5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="text-gray-700">{benefit}</span>
-                      </li>
-                    ))}
+                    <div className="prose max-w-none">
+                      <p className="text-gray-700 leading-relaxed text-lg">
+                        {job.benefits}
+                      </p>
+                    </div>
                   </ul>
                 )}
               </div>

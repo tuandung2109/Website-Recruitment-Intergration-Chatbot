@@ -756,7 +756,7 @@ const JobListings = () => {
                                 onClick={() => navigate(`/job/${job.id}`)}
                                 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer transition-colors"
                               >
-                                Tên công việc:{job.title}
+                                {job.title}
                               </h3>
                               <p className="text-sm text-gray-600 mb-3">
                                 {job.type}

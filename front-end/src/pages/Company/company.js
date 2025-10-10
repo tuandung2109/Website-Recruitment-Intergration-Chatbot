@@ -372,6 +372,7 @@ function Company() {
 
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -414,6 +415,15 @@ function Company() {
   const filteredCompanies = useMemo(() => {
     let data = companies;
 
+      // 🔎 Lọc theo từ khóa (tên công ty hoặc mô tả)
+    if (searchText && searchText.trim()) {
+      const s = searchText.toLowerCase();
+      data = data.filter((c) =>
+        (c?.name || "").toLowerCase().includes(s)
+      );
+    }
+
+
     if (selectedIndustry) {
       data = data.filter((c) =>
         Array.isArray(c?.company_industry) &&
@@ -438,7 +448,7 @@ function Company() {
     }
 
     return data;
-  }, [companies, selectedIndustry, selectedAddress]);
+  }, [companies, selectedIndustry, selectedAddress , searchText]);
 
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -454,7 +464,7 @@ function Company() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedIndustry, selectedAddress]);
+  }, [selectedIndustry, selectedAddress , searchText]);
 
   if (loading)
     return (
@@ -510,57 +520,94 @@ function Company() {
             <p className="text-sm text-gray-600 mt-1">Tìm kiếm công ty phù hợp với bạn</p>
           </div>
           
-          <div className="p-6">
-            <div className="grid gap-5 md:grid-cols-3">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Lọc theo ngành nghề
-                </label>
-                <select
-                  value={selectedIndustry}
-                  onChange={(e) => setSelectedIndustry(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
-                >
-                  <option value="">Tất cả ngành</option>
-                  {industryOptions.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Lọc theo địa chỉ
-                </label>
-                <select
-                  value={selectedAddress}
-                  onChange={(e) => setSelectedAddress(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
-                >
-                  <option value="">Tất cả địa chỉ</option>
-                  {addressOptions.map((addr) => (
-                    <option key={addr} value={addr}>
-                      {addr}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setSelectedIndustry("");
-                    setSelectedAddress("");
-                  }}
-                  className="w-full px-5 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-md hover:shadow-xl"
-                >
-                  Xóa bộ lọc
-                </button>
+        <div className="p-6">
+          <div className="grid gap-5 md:grid-cols-4">
+            {/* Ô tìm kiếm */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Tìm kiếm công ty
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Nhập tên công ty hoặc mô tả..."
+                  className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+                  aria-label="Tìm kiếm công ty"
+                />
+                {/* Icon kính lúp (bên trái) */}
+                {/* <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 text-lg">🔎</span> */}
+                {/* Nút xóa nhanh (bên phải) */}
+                {searchText && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchText("")}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                    aria-label="Xóa tìm kiếm"
+                    title="Xóa tìm kiếm"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Lọc theo ngành */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Lọc theo ngành nghề
+              </label>
+              <select
+                value={selectedIndustry}
+                onChange={(e) => setSelectedIndustry(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+              >
+                <option value="">Tất cả ngành</option>
+                {industryOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Lọc theo địa chỉ */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Lọc theo địa chỉ
+              </label>
+              <select
+                value={selectedAddress}
+                onChange={(e) => setSelectedAddress(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+              >
+                <option value="">Tất cả địa chỉ</option>
+                {addressOptions.map((addr) => (
+                  <option key={addr} value={addr}>{addr}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Nút xóa bộ lọc */}
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setSearchText("");
+                  setSelectedIndustry("");
+                  setSelectedAddress("");
+                }}
+                className="w-full px-5 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-md hover:shadow-xl"
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
           </div>
+
+          {/* Dòng nhỏ hiển thị số kết quả (tuỳ chọn) */}
+          <p className="text-sm text-gray-500 mt-3">
+            Đang hiển thị {filteredCompanies.length} công ty
+          </p>
+        </div>
+
         </div>
       </div>
 

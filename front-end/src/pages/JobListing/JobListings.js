@@ -14,6 +14,7 @@ const JobListings = () => {
     keywords: "",
     location: "",
     distance: "",
+    skill: "",  // ✅ thêm dòng này nếu chưa có
   });
 
   const [activeFilters, setActiveFilters] = useState({
@@ -224,15 +225,20 @@ const JobListings = () => {
       );
     }
 
-    // 🔍 Lọc theo kỹ năng
-    if (searchData.skill && searchData.skill.trim()) {
-      const s = searchData.skill.toLowerCase();
-      filtered = filtered.filter(
-        (job) =>
-          Array.isArray(job.skills) &&
-          job.skills.some((x) => (x || "").toLowerCase().includes(s))
-      );
-    }
+  // 🔍 Lọc theo kỹ năng (hỗ trợ nhiều kỹ năng, ví dụ: "React, Node")
+  if (searchData.skill && searchData.skill.trim()) {
+    const querySkills = searchData.skill
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+
+    filtered = filtered.filter((job) => {
+      const jobSkills = (Array.isArray(job.skills) ? job.skills : [])
+        .map((x) => (x || "").toLowerCase());
+      return querySkills.some((q) => jobSkills.some((js) => js.includes(q)));
+    });
+  }
+
 
 
     // Lọc theo loại công việc (từ DB: work_types)
@@ -484,24 +490,51 @@ const JobListings = () => {
                   className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
                 />
               </div>
-<div className="relative">
-  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  </div>
-  <select
-    name="skill"
-    value={searchData.skill}
-    onChange={(e) => { handleInputChange(e); setCurrentPage(1); }}
-    className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all duration-300 hover:border-blue-400"
-  >
-    <option value="">Chọn kỹ năng</option>
-    {skillOptions.map((s) => (
-      <option key={s} value={s}>{s}</option>
-    ))}
-  </select>
-</div>
+
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+
+              {/* ✅ Ô nhập kỹ năng gõ tự do */}
+              <input
+                type="text"
+                name="skill"
+                placeholder="Nhập kỹ năng (vd: React, NodeJS...)"
+                value={searchData.skill}
+                onChange={(e) => { handleInputChange(e); setCurrentPage(1); }}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                list="skills-list"
+                className="w-full pl-10 pr-10 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+              />
+
+              {/* ✅ Danh sách gợi ý (autocomplete) */}
+              <datalist id="skills-list">
+                {skillOptions.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+
+              {/* ✅ Nút clear khi đã nhập */}
+              {searchData.skill && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchData(prev => ({ ...prev, skill: "" })); setCurrentPage(1); }}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  title="Xóa kỹ năng"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
 
               <button
                 onClick={handleSearch}

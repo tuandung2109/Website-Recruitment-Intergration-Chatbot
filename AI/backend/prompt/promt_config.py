@@ -357,17 +357,31 @@ Trả lời:
     - intent_jd → "/jobs" : Người dùng tìm kiếm công việc với ÍT NHẤT MỘT thông tin CỤ THỂ (vị trí, kỹ năng, địa điểm, loại công việc).
     - intent_company_info → "/companies" : Người dùng hỏi thông tin về một công ty cụ thể.
     - intent_chitchat → "/chat" : Người dùng chào hỏi, xã giao hoặc nội dung ngoài tuyển dụng.
+    - intent_login → "/login" : Người dùng muốn đăng nhập.
+    - intent_register → "/register" : Người dùng muốn đăng ký.
+    - intent_forgot-password → "/forgot-password" : Người dùng quên mật khẩu.
+    - intent_applications → "/applications" : Người dùng muốn xem hồ sơ ứng tuyển của họ.
+    
 
     QUY TẮC PHÂN LOẠI:
     1. Nếu người dùng có thông tin cụ thể về công việc (vị trí, kỹ năng, địa điểm) → intent_jd.
     2. Nếu người dùng hỏi về công ty cụ thể → intent_company_info.
     3. Nếu người dùng chỉ chào hỏi / xã giao / nói ngoài chủ đề → intent_chitchat.
+    4. Nếu người dùng muốn đăng nhập → intent_login.
+    5. Nếu người dùng muốn đăng ký → intent_register.
+    6. Nếu người dùng quên mật khẩu → intent_forgot-password.
+    7. Nếu người dùng muốn xem hồ sơ ứng tuyển của họ → intent_applications.
 
     VÍ DỤ:
     - "Công việc ở Hà Nội" → intent_jd
     - "Tìm job Java" → intent_jd
     - "Thông tin về công ty FPT" → intent_company_info
     - "Chào bạn" / "Trời hôm nay đẹp" → intent_chitchat
+    - "Tôi muốn đăng nhập" → intent_login
+    - "Tôi muốn tạo tài khoản" → intent_register
+    - "Tôi quên mật khẩu" → intent_forgot-password
+    - "Xem hồ sơ ứng tuyển của tôi" → intent_applications
+    
 
     Chỉ trả về DUY NHẤT 1 key intent.
     

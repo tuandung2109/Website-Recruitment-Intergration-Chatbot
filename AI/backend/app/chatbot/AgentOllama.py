@@ -75,6 +75,12 @@ class AgentOllama(BaseAI):
                 }
                 print(f"Extracted company info: {company_info}")
                 return result  # Return as dict - Flask will handle JSON serialization
+            elif intent in ["intent_login", "intent_register", "intent_forgot-password", "intent_applications"]:
+                # For these intents, just return the chat response
+                result = {
+                    "intent": intent,
+                }
+                return result
         except ConnectionError as e:
             error_msg = f"Cannot connect to Ollama server. Please ensure Ollama is running at {self.client.base_url}"
             logging.error(f"{error_msg}: {str(e)}")

@@ -60,16 +60,28 @@ export const handleIntent = (intent, navigate, filters = null) => {
       }, 100);
       break;
 
-    case "intent_cv":
-      // Intent về CV, hồ sơ cá nhân
-      console.log("✅ Navigating to /cv page...");
-      navigate("/cv");
+    case "intent_login":
+      // Intent về đăng nhập
+      console.log("✅ Navigating to /login page...");
+      navigate("/login");
       break;
 
-    case "intent_support":
-      // Intent hỗ trợ, tư vấn
-      console.log("✅ Opening support page...");
-      navigate("/support");
+    case "intent_register":
+      // Intent về đăng ký
+      console.log("✅ Navigating to /register page...");
+      navigate("/register");
+      break;
+
+    case "intent_forgot-password":
+      // Intent về quên mật khẩu
+      console.log("✅ Navigating to /forgot-password page...");
+      navigate("/forgot-password");
+      break;
+      
+    case "intent_applications":
+      // Intent về hồ sơ ứng tuyển
+      console.log("✅ Navigating to /applications page...");
+      navigate("/applications");
       break;
 
     default:

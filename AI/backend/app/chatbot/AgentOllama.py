@@ -18,8 +18,11 @@ class AgentOllama(BaseAI):
 
         super().__init__(model_name=resolved_model, **kwargs)
 
-        default_url = "http://host.docker.internal:11434" if os.getenv("DOCKER_ENV") == "true" else "http://localhost:11434"
-        ollama_url = os.getenv("OLLAMA_URL", settings.OLLAMA_BASE_URL or default_url)
+        # Always use localhost - no Docker support
+        default_url = "http://localhost:11434"
+        ollama_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
+        
+        logging.info(f"🔗 Connecting to Ollama at: {ollama_url}")
 
         # Sử dụng LLM Manager để tránh tạo multiple instances
         self.client = llm_manager.get_ollama_client(
@@ -63,8 +66,17 @@ class AgentOllama(BaseAI):
                 }
                 print(f"Extracted features: {extracted_features}")
                 return result  # Return as dict - Flask will handle JSON serialization
+        except ConnectionError as e:
+            error_msg = f"Cannot connect to Ollama server. Please ensure Ollama is running at {self.client.base_url}"
+            logging.error(f"{error_msg}: {str(e)}")
+            return error_msg
+        except TimeoutError as e:
+            error_msg = f"Connection to Ollama server timed out. Please check your network and Ollama service."
+            logging.error(f"{error_msg}: {str(e)}")
+            return error_msg
         except Exception as e:
             error_msg = f"Error communicating with Ollama: {str(e)}"
+            logging.error(error_msg)
             return error_msg
 
 

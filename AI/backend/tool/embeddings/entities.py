@@ -98,6 +98,10 @@ def _build_job_posting_text(record: Dict[str, Any]) -> str:
     skills = record.get("skills")
     if skills:
         parts.append(f"Kỹ năng: {skills}")
+        
+    addresses = record.get("addresses")
+    if addresses:
+        parts.append(f"Địa chỉ: {addresses}")
     
     return ". ".join(parts).strip()
 
@@ -254,9 +258,11 @@ def sync_entities_embeddings(
         
         for point in scroll_result[0]:
             point_id = str(point.id)
-            if point_id.startswith("company_"):
+            # Check entity_type in payload to determine if it's a company or job posting
+            entity_type = point.payload.get("entity_type") if point.payload else None
+            if entity_type == "company":
                 existing_company_ids.add(point_id)
-            elif point_id.startswith("job_posting_"):
+            elif entity_type == "job_posting":
                 existing_job_posting_ids.add(point_id)
         
         logger.info(f"Found {len(existing_company_ids)} existing companies and {len(existing_job_posting_ids)} existing job postings in Qdrant")
@@ -301,13 +307,9 @@ def sync_entities_embeddings(
             }
 
             # Create unique point ID - Qdrant accepts only UUID or int
-            # Convert company_id to UUID format
-            if company_id is None or (isinstance(company_id, str) and not company_id.strip()):
-                point_id = str(uuid.uuid4())
-            else:
-                # Generate deterministic UUID from company_id with namespace
-                namespace = uuid.UUID('00000000-0000-0000-0000-000000000001')  # Company namespace
-                point_id = str(uuid.uuid5(namespace, f"company_{company_id}"))
+            # Generate deterministic UUID from company_id with namespace
+            namespace = uuid.UUID('00000000-0000-0000-0000-000000000001')  # Company namespace
+            point_id = str(uuid.uuid5(namespace, f"company_{company_id}"))
             
             # Track new IDs
             new_company_ids.add(point_id)
@@ -360,16 +362,13 @@ def sync_entities_embeddings(
                 "name_of_company": record.get("name_of_company"),
                 "industries": record.get("industries"),
                 "skills": record.get("skills"),
+                "addresses": record.get("addresses"),
             }
 
             # Create unique point ID - Qdrant accepts only UUID or int
             # Generate deterministic UUID from job_posting_id with namespace
-            if job_posting_id is None or (isinstance(job_posting_id, str) and not job_posting_id.strip()):
-                point_id = str(uuid.uuid4())
-            else:
-                # Generate deterministic UUID from job_posting_id with namespace
-                namespace = uuid.UUID('00000000-0000-0000-0000-000000000002')  # Job posting namespace
-                point_id = str(uuid.uuid5(namespace, f"job_posting_{job_posting_id}"))
+            namespace = uuid.UUID('00000000-0000-0000-0000-000000000002')  # Job posting namespace
+            point_id = str(uuid.uuid5(namespace, f"job_posting_{job_posting_id}"))
             
             # Track new IDs
             new_job_posting_ids.add(point_id)
@@ -427,6 +426,9 @@ def sync_entities_embeddings(
     total_updated = 0
     total_inserted = 0
     
+    # Combine all existing IDs for easier lookup
+    all_existing_ids = existing_company_ids | existing_job_posting_ids
+    
     for start in range(0, len(points), batch_size):
         batch = points[start : start + batch_size]
         qdrant_client.upsert(collection_name=collection_name, points=batch)
@@ -434,7 +436,9 @@ def sync_entities_embeddings(
         
         # Count how many are updates vs inserts
         for point in batch:
-            if point.id in existing_company_ids or point.id in existing_job_posting_ids:
+            # Ensure both point.id and existing IDs are strings for comparison
+            point_id_str = str(point.id)
+            if point_id_str in all_existing_ids:
                 total_updated += 1
             else:
                 total_inserted += 1

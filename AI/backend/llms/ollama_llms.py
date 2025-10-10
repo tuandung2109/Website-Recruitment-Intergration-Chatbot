@@ -39,10 +39,12 @@ class OllamaLLMs(BaseLLM):
             self.logger = cached_client['logger']
             self.logger.info(f"♻️ Reusing cached Ollama client for {self.model_name}")
         else:
-            # Initialize new Ollama client with connection pooling
+            # Initialize new Ollama client with connection pooling and timeout
+            # Use longer timeout for large models (4B model needs more time)
+            timeout_seconds = getattr(settings, 'OLLAMA_TIMEOUT', 60)  # Increased default to 60s
             self.client = ollama.Client(
                 host=self.base_url,
-                timeout=120  # Tăng timeout cho models lớn
+                timeout=timeout_seconds  # Configurable timeout
             )
             
             # Tạo session với connection pooling cho HTTP requests
@@ -74,15 +76,25 @@ class OllamaLLMs(BaseLLM):
         Đảm bảo model đã được load vào memory (warm-up)
         """
         try:
-            # Gửi một request nhỏ để warm-up model
+            # Test connection first
+            import requests
+            response = requests.get(f"{self.base_url}/api/version", timeout=5)
+            if response.status_code != 200:
+                raise Exception(f"Ollama server not responding: {response.status_code}")
+            
+            # Warm-up với timeout dài hơn cho model lớn
             warmup_response = self.client.chat(
                 model=self.model_name,
                 messages=[{"role": "user", "content": "Hi"}],
-                options={"num_predict": 1}  # Chỉ generate 1 token
+                options={
+                    "num_predict": 1,  # Chỉ generate 1 token
+                    "timeout": 30  # 30 seconds timeout for warmup
+                }
             )
             self.logger.info(f"🔥 Model {self.model_name} warmed up successfully")
         except Exception as e:
             self.logger.warning(f"⚠️ Model warm-up failed: {e}")
+            # Not a critical error - continue without warm-up
     
     def keep_alive(self, duration: int = 300):
         """

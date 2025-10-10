@@ -45,7 +45,7 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       DATABASE_URL: ${DATABASE_URL}
       DOCKER_ENV: "true"
-      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_URL: ${OLLAMA_URL:-http://localhost:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       PORT: 5000
@@ -53,8 +53,8 @@ services:
       - "5000:5000"
     networks:
       - recruitment_network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"  # Commented out - using localhost instead
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s

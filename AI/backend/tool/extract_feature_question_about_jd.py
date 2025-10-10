@@ -14,8 +14,9 @@ class ExtractFeatureQuestion:
         self.valid_fields = validate_response
 
         settings = Settings.load_settings()
-        default_url = "http://host.docker.internal:11434" if os.getenv("DOCKER_ENV") == "true" else "http://localhost:11434"
-        ollama_url = os.getenv("OLLAMA_URL", settings.OLLAMA_BASE_URL or default_url)
+        # Always use localhost - no Docker support
+        default_url = "http://localhost:11434"
+        ollama_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
         resolved_model = model_name or settings.OLLAMA_MODEL
 
         self.llm = OllamaLLMs(base_url=ollama_url, model_name=resolved_model)

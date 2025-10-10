@@ -26,15 +26,22 @@ export const handleIntent = (intent, navigate, filters = null) => {
     case "intent_jd":
       // Intent tìm kiếm công việc (Job Description)
       console.log("✅ Navigating to /job page...");
-      
+
       // Nếu có filters, lưu vào sessionStorage để trang /job có thể đọc
       if (filters && Object.keys(filters).length > 0) {
         sessionStorage.setItem("agentFilters", JSON.stringify(filters));
         console.log("💾 Filters saved to sessionStorage");
       }
-      
+
       // Điều hướng đến trang danh sách công việc
       navigate("/job");
+
+      // Dispatch custom event to notify JobListings component about new filters
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('agentNavigation', {
+          detail: { filters, intent }
+        }));
+      }, 100);
       break;
 
     case "intent_company":
@@ -236,10 +243,21 @@ export const parseAIResponse = (aiResponse) => {
   let filters = {};
 
   try {
-    intent = aiResponse["intent"]
-    filters = aiResponse["extracted_features"]
+    intent = aiResponse["intent"];
+    const extractedFeatures = aiResponse["extracted_features"];
+
+    // Parse extracted_features if it's a string
+    if (typeof extractedFeatures === "string") {
+      filters = JSON.parse(extractedFeatures);
+    } else {
+      filters = extractedFeatures;
+    }
+
+    console.log("🎯 Parsed intent:", intent);
+    console.log("🔍 Parsed filters:", filters);
   } catch (error) {
     console.error("❌ Error parsing AI response:", error);
+    console.error("❌ AI response data:", aiResponse);
   }
 
   return { intent, filters };

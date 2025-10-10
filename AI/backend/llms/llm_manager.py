@@ -51,9 +51,11 @@ class LLMManager:
         settings = Settings.load_settings()
 
         # Use environment defaults if not provided
+        # Always use localhost - no Docker support
         if not base_url:
-            default_url = "http://host.docker.internal:11434" if os.getenv("DOCKER_ENV") == "true" else "http://localhost:11434"
-            base_url = os.getenv("OLLAMA_URL", settings.OLLAMA_BASE_URL or default_url)
+            default_url = "http://localhost:11434"
+            base_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
+            self.logger.info(f"🔗 Using Ollama URL: {base_url}")
         
         if not model_name:
             model_name = settings.OLLAMA_MODEL

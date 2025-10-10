@@ -73,8 +73,9 @@ def get_reflection(history: List[Dict[str, str]]) -> str:
     from llms.llm_manager import llm_manager
     
     # Sử dụng LLM Manager thay vì tạo instance mới
-    default_url = "http://host.docker.internal:11434" if os.getenv("DOCKER_ENV") == "true" else "http://localhost:11434"
-    ollama_url = os.getenv("OLLAMA_URL", settings.OLLAMA_BASE_URL or default_url)
+    # Always use localhost - no Docker support
+    default_url = "http://localhost:11434"
+    ollama_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
     ollama_model = settings.OLLAMA_MODEL
     
     # Reuse existing LLM instance từ manager

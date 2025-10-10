@@ -18,13 +18,8 @@ from setting import Settings
 from tool.embeddings import sync_entities_embeddings
 import logging
 
-# Determine template folder path based on environment
-if os.getenv("DOCKER_ENV") == "true":
-    # In Docker container
-    template_folder = '/app/frontend/templates'
-else:
-    # Local development
-    template_folder = '../../frontend/templates'
+# Template folder for local development only
+template_folder = '../../frontend/templates'
 
 app = Flask(__name__, template_folder=template_folder)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
@@ -44,8 +39,11 @@ def initialize_llm_client():
     from setting import Settings
 
     settings = Settings.load_settings()
-    default_url = "http://host.docker.internal:11434" if os.getenv("DOCKER_ENV") == "true" else "http://localhost:11434"
-    ollama_url = os.getenv("OLLAMA_URL", settings.OLLAMA_BASE_URL or default_url)
+    # Always use localhost - no Docker support
+    default_url = "http://localhost:11434"
+    ollama_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
+    
+    logger.info(f"🔗 Initializing Ollama client at: {ollama_url}")
 
     try:
         # Import LLM Manager

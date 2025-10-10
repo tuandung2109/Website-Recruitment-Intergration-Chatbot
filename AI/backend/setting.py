@@ -2,7 +2,11 @@ from loguru import logger
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra="ignore"  # Ignore extra fields from .env that are not defined in Settings
+    )
 
     # MongoDB settings
     DATABASE_HOST: str = "mongodb+srv://thanhthanh10012004:dH4KeOCy74suqJLk@rag-cluster.ssgkce4.mongodb.net/?retryWrites=true&w=majority&appName=rag-cluster"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { filterCategories as staticFilterCategories } from "../../data/jobsData";
 import { getAgentFilters } from "../../controller/agentController";
 import { listJobsPosting } from "../../services/jobPosting";
@@ -10,11 +10,12 @@ import { listSkills } from "../../services/skill";
 const JobListings = () => {
   UseTitle("JobVip - Việc làm");
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchData, setSearchData] = useState({
     keywords: "",
     location: "",
     distance: "",
-    skill: "",  // ✅ thêm dòng này nếu chưa có
+    skills: "",  // ✅ thêm dòng này nếu chưa có
   });
 
   const [activeFilters, setActiveFilters] = useState({
@@ -22,6 +23,7 @@ const JobListings = () => {
     salary: [],
     experience: [],
     industry: [],
+    skills: [],
   });
 
   const [isVisible, setIsVisible] = useState({});
@@ -152,11 +154,21 @@ const JobListings = () => {
 
       // Áp dụng filters vào activeFilters
       if (agentFilters.workType) {
-        setActiveFilters((prev) => ({
+        setActiveFilters((prev) => ({...prev,workType: [agentFilters.workType],}));
+      }
+
+      // Áp dụng filters vào skill
+      if (agentFilters.skills) {
+        setSearchData((prev) => ({
           ...prev,
-          workType: [agentFilters.workType],
+          skills: Array.isArray(agentFilters.skills)
+            ? agentFilters.skills.join(", ")
+            : agentFilters.skills,
         }));
       }
+
+      // Reset current page to 1 when new filters are applied
+      setCurrentPage(1);
 
       // Scroll to top để người dùng thấy kết quả filter
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -164,6 +176,67 @@ const JobListings = () => {
       console.log("✅ Agent filters applied successfully");
     }
   }, [jobs]); // Chạy khi jobs đã được load
+
+  // �� Add additional effect to handle navigation to same route
+  useEffect(() => {
+    // Check for agent filters on every render/mount or location change
+    const checkForNewFilters = () => {
+      const agentFilters = getAgentFilters();
+
+      if (agentFilters) {
+        console.log("🔄 New agent filters found on navigation check...");
+
+        // Apply filters with a slight delay to ensure state is ready
+        setTimeout(() => {
+          // Áp dụng filters vào searchData
+          if (agentFilters.title) {
+            setSearchData((prev) => ({ ...prev, keywords: agentFilters.title }));
+          }
+          if (agentFilters.location) {
+            setSearchData((prev) => ({ ...prev, location: agentFilters.location }));
+          }
+
+          // Áp dụng filters vào activeFilters
+          if (agentFilters.workType) {
+            setActiveFilters((prev) => ({
+              ...prev,
+              workType: [agentFilters.workType],
+            }));
+          }
+
+          if (agentFilters.skills) {
+            setSearchData((prev) => ({
+              ...prev,
+              skills: Array.isArray(agentFilters.skills)
+                ? agentFilters.skills.join(", ")
+                : agentFilters.skills,
+            }));
+          }
+
+          // Reset current page to 1 when new filters are applied
+          setCurrentPage(1);
+
+          // Scroll to top to show filtered results
+          window.scrollTo({ top: 0, behavior: "smooth" });
+
+          console.log("✅ Agent filters re-applied on navigation");
+        }, 100);
+      }
+    };
+
+    checkForNewFilters();
+
+    // Also listen for custom event when navigating from agent
+    const handleAgentNavigation = () => {
+      checkForNewFilters();
+    };
+
+    window.addEventListener('agentNavigation', handleAgentNavigation);
+
+    return () => {
+      window.removeEventListener('agentNavigation', handleAgentNavigation);
+    };
+  }, [location]); // Run on location change (same route navigation)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -226,8 +299,8 @@ const JobListings = () => {
     }
 
   // 🔍 Lọc theo kỹ năng (hỗ trợ nhiều kỹ năng, ví dụ: "React, Node")
-  if (searchData.skill && searchData.skill.trim()) {
-    const querySkills = searchData.skill
+  if (searchData.skills && searchData.skills.trim()) {
+    const querySkills = searchData.skills
       .split(",")
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean);
@@ -357,12 +430,13 @@ const JobListings = () => {
       salary: [],
       experience: [],
       industry: [],
+      skills: [],
     });
     setSearchData({
       keywords: "",
       location: "",
       distance: "",
-      skill: "",
+      skills: "",
     });
     setCurrentPage(1);
   };
@@ -506,10 +580,10 @@ const JobListings = () => {
               {/* ✅ Ô nhập kỹ năng gõ tự do */}
               <input
                 type="text"
-                name="skill"
+                name="skills"
                 placeholder="Nhập kỹ năng (vd: React, NodeJS...)"
-                value={searchData.skill}
-                onChange={(e) => { handleInputChange(e); setCurrentPage(1); }}
+                value={searchData.skills}
+                onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 list="skills-list"
                 className="w-full pl-10 pr-10 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
@@ -523,10 +597,10 @@ const JobListings = () => {
               </datalist>
 
               {/* ✅ Nút clear khi đã nhập */}
-              {searchData.skill && (
+              {searchData.skills && (
                 <button
                   type="button"
-                  onClick={() => { setSearchData(prev => ({ ...prev, skill: "" })); setCurrentPage(1); }}
+                  onClick={() => { setSearchData(prev => ({ ...prev, skills: "" })); setCurrentPage(1); }}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                   title="Xóa kỹ năng"
                 >

@@ -1,5 +1,5 @@
 // Use REACT_APP_API_URL from environment variables
-const API = (process.env.REACT_APP_API_URL || "http://localhost:3000") + "/api";
+const API = (process.env.REACT_APP_API_URL || "http://localhost:3001") + "/api";
 
 export const _get = async (path) => {
   const response = await fetch(API + path, {

@@ -45,7 +45,9 @@ const uploadCv = async (req, res) => {
     }
 
     // 🔹 Tạo đường dẫn lưu file local
-    const filePath = `/uploads/${file.filename}`;
+    const serverUrl = `${req.protocol}://${req.get("host")}`;
+    const filePath = `${serverUrl}/uploads/${file.filename}`;
+
 
     // 🔹 Lưu đường dẫn file vào bảng cv trong Supabase
     const { data, error } = await supabase

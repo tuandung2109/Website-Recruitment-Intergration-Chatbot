@@ -2,10 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { _get } from "../../utils/request";
-import { getCvDetail, deleteCv } from "../../services/CV";
-import UseTitle from "../../hooks/useTitle";
+import { getCvDetail, updateCvSkills, deleteCv } from "../../services/CV";
+
 const MyCV = () => {
-  UseTitle("JobVip - CV");
   const user = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user"));
@@ -13,6 +12,7 @@ const MyCV = () => {
       return null;
     }
   }, []);
+
   const navigate = useNavigate();
   const accountId = user?.id ?? user?.account_id ?? null;
 
@@ -25,6 +25,13 @@ const MyCV = () => {
   const [edu, setEdu] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // ✅ Hàm chuẩn hóa URL CV
+  const buildCvUrl = (link) => {
+    if (!link) return null;
+    if (/^https?:\/\//i.test(link)) return link; // đã là http/https
+    return link.startsWith("/") ? link : `/${link}`; // dạng /uploads/xxx.pdf
+  };
 
   const loadSkills = async () => {
     const res = await _get("/skill/listSkill");
@@ -73,15 +80,13 @@ const MyCV = () => {
 
       const newCvId = result.cv.cv_id;
       const skill_ids = selectedSkills.map((s) => s.value);
-      const resSkill = await fetch(
-        "http://localhost:9000/api/cv/updateSkills",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cv_id: newCvId, skill_ids }),
-        }
-      );
+      const resSkill = await fetch("http://localhost:9000/api/cv/updateSkills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cv_id: newCvId, skill_ids }),
+      });
       const dataSkill = await resSkill.json();
+
       if (dataSkill?.message) {
         alert("🎉 Tải CV thành công kèm kỹ năng!");
         setFile(null);
@@ -89,7 +94,9 @@ const MyCV = () => {
         setEdu("");
         setSelectedSkills([]);
         loadCv();
-      } else alert("CV đã lưu, nhưng cập nhật kỹ năng bị lỗi!");
+      } else {
+        alert("CV đã lưu, nhưng cập nhật kỹ năng bị lỗi!");
+      }
     } catch (err) {
       console.error("❌ Lỗi upload:", err);
       alert("Lỗi khi tải CV!");
@@ -135,16 +142,10 @@ const MyCV = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header gradient + blobs */}
+      {/* Header */}
       <section className="relative bg-gradient-to-br from-blue-300 via-purple-200 to-blue-100 text-gray-900 py-12 md:py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob" />
-          <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
-        </div>
         <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-sm">
+          <h1 className="text-3xl md:text-4xl font-extrabold drop-shadow-sm">
             📄 CV của tôi
           </h1>
           <p className="mt-3 text-gray-700">
@@ -158,26 +159,13 @@ const MyCV = () => {
       {/* Main */}
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left: Upload / Edit */}
+          {/* Left: Upload */}
           <div className="lg:col-span-5">
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    📝 {alreadyHasCV ? "Thay thế / cập nhật CV" : "Thêm CV mới"}
-                  </h2>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Chọn tệp, điền thông tin & gán kỹ năng
-                  </p>
-                </div>
-                {alreadyHasCV && (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-3 py-1">
-                    Hiện có {cvList.length} CV
-                  </span>
-                )}
-              </div>
+              <h2 className="text-xl font-semibold">
+                {alreadyHasCV ? "📝 Cập nhật CV" : "📝 Tải CV mới"}
+              </h2>
 
-              {/* Dropzone */}
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -185,38 +173,13 @@ const MyCV = () => {
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={onDrop}
-                className={[
-                  "mt-5 rounded-xl border-2 border-dashed p-5 transition",
+                className={`mt-5 rounded-xl border-2 border-dashed p-5 transition ${
                   dragOver
                     ? "border-blue-500 bg-blue-50/60"
-                    : "border-gray-300 bg-gray-50",
-                ].join(" ")}
+                    : "border-gray-300 bg-gray-50"
+                }`}
               >
                 <div className="flex flex-col items-center text-center gap-2">
-                  <div className="w-12 h-12 rounded-full bg-white border flex items-center justify-center shadow-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-6 h-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 7.5L12 3m0 0L7.5 7.5M12 3v13.5"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-gray-700">
-                    Kéo & thả CV vào đây, hoặc{" "}
-                    <span className="font-medium text-blue-600">
-                      chọn từ máy
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Hỗ trợ: PDF, DOC, DOCX
-                  </p>
                   <label className="mt-2 inline-flex items-center px-3 py-2 rounded-lg bg-white border text-sm cursor-pointer hover:bg-gray-50">
                     Chọn tệp
                     <input
@@ -234,11 +197,7 @@ const MyCV = () => {
                 </div>
               </div>
 
-              {/* Fields */}
-              <form
-                onSubmit={handleUpload}
-                className="mt-6 flex flex-col gap-4"
-              >
+              <form onSubmit={handleUpload} className="mt-6 flex flex-col gap-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
@@ -281,22 +240,6 @@ const MyCV = () => {
                     onChange={setSelectedSkills}
                     placeholder="Chọn kỹ năng..."
                     className="w-full"
-                    classNamePrefix="rs"
-                    styles={{
-                      control: (base) => ({
-                        ...base,
-                        borderRadius: 8,
-                        borderColor: "#e5e7eb",
-                      }),
-                      multiValue: (base) => ({
-                        ...base,
-                        backgroundColor: "#f3f4f6",
-                      }),
-                      multiValueLabel: (base) => ({
-                        ...base,
-                        color: "#111827",
-                      }),
-                    }}
                   />
                 </div>
 
@@ -306,41 +249,9 @@ const MyCV = () => {
                   className={`inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition ${
                     submitting ? "opacity-80 cursor-not-allowed" : ""
                   }`}
-                  title={
-                    alreadyHasCV
-                      ? "Nếu backend chỉ cho 1 CV, thao tác này sẽ thay thế."
-                      : "Tải CV mới"
-                  }
                 >
-                  {submitting && (
-                    <svg
-                      className="animate-spin -ml-1 mr-1 h-4 w-4"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4A4 4 0 004 12z"
-                      ></path>
-                    </svg>
-                  )}
-                  {alreadyHasCV ? "Cập nhật / Thay CV" : "Upload CV"}
+                  {submitting ? "Đang tải..." : "Upload CV"}
                 </button>
-
-                {alreadyHasCV && (
-                  <p className="text-xs text-gray-500">
-                    {/* Hệ thống có thể giới hạn mỗi tài khoản 1 CV. Nếu backend của bạn ép ràng buộc, thao tác upload sẽ ghi đè. */}
-                  </p>
-                )}
               </form>
             </div>
           </div>
@@ -361,27 +272,8 @@ const MyCV = () => {
 
               <div className="px-6 pb-6 pt-4 flex-1 overflow-y-auto space-y-4">
                 {cvList.length === 0 ? (
-                  <div className="h-full min-h-[40vh] flex flex-col items-center justify-center text-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-16 h-16 text-gray-300"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      strokeWidth="1.5"
-                    >
-                      <path
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 12h6M9 16h6M9 8h6M4 6a2 2 0 012-2h7.172a2 2 0 011.414.586l3.828 3.828A2 2 0 0120 9.828V18a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
-                      />
-                    </svg>
-                    <p className="mt-3 text-gray-700 font-medium">
-                      Chưa có CV nào
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Tải CV ở khung bên trái để bắt đầu.
-                    </p>
+                  <div className="h-full flex flex-col items-center justify-center text-center text-gray-600">
+                    <p>Chưa có CV nào</p>
                   </div>
                 ) : (
                   cvList.map((cv) => {
@@ -390,6 +282,7 @@ const MyCV = () => {
                       .map((cs) => cs.skill.skill_name);
 
                     const fileName = cv.cv_link?.split("/").pop();
+                    const cvUrl = buildCvUrl(cv.cv_link); // ✅ tính trong map
 
                     return (
                       <div
@@ -397,64 +290,46 @@ const MyCV = () => {
                         className="border border-gray-200 p-5 rounded-xl bg-white hover:shadow-md transition"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                          <div className="flex items-start gap-3">
-                            <div className="hidden sm:flex w-10 h-10 rounded-lg bg-blue-50 items-center justify-center shrink-0">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-5 h-5 text-blue-600"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                strokeWidth="1.5"
-                              >
-                                <path
-                                  stroke="currentColor"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
+                          <div>
+                            <a
+                              href={cvUrl || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-700 font-semibold hover:underline break-all"
+                              title={fileName}
+                            >
+                              {fileName}
+                            </a>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
+                              <span>
+                                Kinh nghiệm:{" "}
+                                <span className="font-medium">
+                                  {cv.years_experience ?? 0}
+                                </span>{" "}
+                                năm
+                              </span>
+                              <span>
+                                Trình độ:{" "}
+                                <span className="font-medium">
+                                  {cv.education_level || "-"}
+                                </span>
+                              </span>
+                              <span>Ngày tạo: {fmtDate(cv.created_at)}</span>
                             </div>
-                            <div className="space-y-1">
+                            <p className="text-sm mt-1">
+                              📎{" "}
                               <a
-                                href={`http://localhost:9000${cv.cv_link}`}
+                                href={cvUrl || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-700 font-semibold hover:underline break-all"
-                                title={fileName}
+                                className="text-blue-600 underline"
                               >
-                                {fileName}
+                                Xem CV
                               </a>
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
-                                <span>
-                                  Kinh nghiệm:{" "}
-                                  <span className="font-medium">
-                                    {cv.years_experience ?? 0}
-                                  </span>{" "}
-                                  năm
-                                </span>
-                                <span>
-                                  Trình độ:{" "}
-                                  <span className="font-medium">
-                                    {cv.education_level || "-"}
-                                  </span>
-                                </span>
-                                <span>Ngày tạo: {fmtDate(cv.created_at)}</span>
-                              </div>
-                              <p className="text-sm">
-                                📎{" "}
-                                <a
-                                  href={`http://localhost:9000${cv.cv_link}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 underline"
-                                >
-                                  Xem CV
-                                </a>
-                              </p>
-                            </div>
+                            </p>
                           </div>
 
-                          <div className="flex sm:flex-col gap-2 sm:gap-2 shrink-0">
+                          <div className="flex sm:flex-col gap-2">
                             <button
                               onClick={() => navigate(`/cv/${cv.cv_id}`)}
                               className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -500,7 +375,6 @@ const MyCV = () => {
           </div>
         </div>
 
-        {/* Tips nhỏ */}
         <div className="mt-8 text-xs text-gray-500 text-center">
           Gợi ý: dùng PDF để hiển thị ổn định hơn trên mọi thiết bị.
         </div>

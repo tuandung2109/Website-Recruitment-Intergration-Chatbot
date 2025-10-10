@@ -9,6 +9,13 @@ const CVDetail = () => {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const buildCvUrl = (link) => {
+  if (!link) return "";
+  if (/^https?:\/\//i.test(link)) return link;   // đã là http/https
+  return link.startsWith("/") ? link : `/${link}`; // /uploads/xxx.pdf
+};
+
+
   useEffect(() => {
     (async () => {
       try {
@@ -32,10 +39,11 @@ const CVDetail = () => {
     })();
   }, [id]);
 
-  const cvUrl = useMemo(
-    () => (cv?.cv_link ? `http://localhost:9000${cv.cv_link}` : ""),
-    [cv]
-  );
+  // const cvUrl = useMemo(
+  //   () => (cv?.cv_link ? `http://localhost:9000${cv.cv_link}` : ""),
+  //   [cv]
+  // );
+  const cvUrl = useMemo(() => buildCvUrl(cv?.cv_link || ""), [cv]);
   const isPdf = (cv?.cv_link || "").toLowerCase().endsWith(".pdf");
 
   if (loading) {

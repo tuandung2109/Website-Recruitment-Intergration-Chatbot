@@ -37,6 +37,8 @@ route(app);
 app.use("/api", jobPostingRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cv", cvRoutes);
+// ✅ Cấu hình cho phép truy cập file upload trực tiếp
+app.use("/uploads", express.static("uploads"));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.set("view engine", "ejs");
@@ -58,7 +60,8 @@ app.get("/", (req, res) => {
   });
 });
 
-const port = process.env.PORT || 3001;
+// const port = process.env.PORT || 3001;
+const port = process.env.PORT || 9000;
 server.listen(port, () => {
   console.log(`✅ Server is running at http://localhost:${port}`);
 });

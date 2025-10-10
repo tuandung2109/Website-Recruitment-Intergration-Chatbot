@@ -12,6 +12,8 @@ import Company from "./pages/Company/company";
 import CompanyDetail from "./pages/CompanyDetail/companydetail";
 import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
+import Applications from "./pages/Application/Applications";
+
 
 import "./App.css";
 import AdminCompany from "./pages/Admin/Company/company";
@@ -42,6 +44,8 @@ function App() {
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/cv" element={<CV />} />
           <Route path="/cv/:id" element={<CVDetail />} />
+          <Route path="/applications" element={<Applications />} />
+
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

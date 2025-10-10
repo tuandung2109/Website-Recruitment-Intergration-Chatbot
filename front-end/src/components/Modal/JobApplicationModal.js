@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { addJobApplication } from "../../services/jobApplication";
-
-// const EDU_OPTIONS = ["No Requirements", "High School", "College", "University"];
+import { listMyCVs } from "../../services/CV";
+import { uploadCvFile } from "../../services/CV"; 
 
 const JobApplicationModal = ({ open, onClose, job }) => {
   const [loading, setLoading] = useState(false);
@@ -11,20 +11,16 @@ const JobApplicationModal = ({ open, onClose, job }) => {
     phone: "",
     coverLetter: "",
     cvId: "",
-    cvLink: "",
-    yearsExp: "",
-    // eduLevel: EDU_OPTIONS[0],
     file: null,
     agree: false,
   });
   const [cvList, setCvList] = useState([]);
-  const [cvMode, setCvMode] = useState("select");
 
   // 🚫 Khóa scroll + ESC
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key == "Escape" && onClose();
+    const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
@@ -32,49 +28,98 @@ const JobApplicationModal = ({ open, onClose, job }) => {
     };
   }, [open, onClose]);
 
-  // 🧠 Lấy CV (demo)
+  // 🧠 Lấy danh sách CV thật của user
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const account_id = Number(localStorage.getItem("account_id"));
+      const user = JSON.parse(localStorage.getItem("user"));
+      const account_id = user?.id || user?.account_id;
       if (!account_id) return;
+
       try {
-        // const res = await listMyCVs(account_id);
-        // setCvList(res);
-        setCvList([
-          {
-            cv_id: 1,
-            cv_link: "https://drive.google.com/cv1",
-            years_experience: 2,
-            education_level: "College",
-          },
-        ]);
-      } catch {}
+        const res = await listMyCVs(account_id);
+        setCvList(res || []);
+      } catch {
+        setCvList([]);
+      }
     })();
   }, [open]);
 
-  const handleChange = (key, val) => setInfo((p) => ({ ...p, [key]: val }));
+  // 🧩 Khi chọn CV hoặc file
+  const handleChange = (key, val) => {
+    if (key === "cvId") {
+      // Khi chọn CV -> xoá file đã chọn
+      setInfo((p) => ({
+        ...p,
+        cvId: val,
+        file: null,
+      }));
+      return;
+    }
+    if (key === "file") {
+      // Khi chọn file -> bỏ chọn CV
+      setInfo((p) => ({
+        ...p,
+        file: val,
+        cvId: "",
+      }));
+      return;
+    }
+    setInfo((p) => ({ ...p, [key]: val }));
+  };
 
+  // 📨 Gửi đơn ứng tuyển
   const handleSubmit = async () => {
-    const account_id = Number(localStorage.getItem("account_id"));
+    const user = JSON.parse(localStorage.getItem("user"));
+    const account_id = user?.id || user?.account_id;
+
     if (!account_id) return alert("Bạn chưa đăng nhập");
     if (!job?.id) return alert("Thiếu thông tin công việc");
     if (!info.coverLetter.trim()) return alert("Nhập thư giới thiệu");
     if (!info.agree) return alert("Vui lòng đồng ý điều khoản");
-    // if (cvMode === "select" && !info.cvId) return alert("Chọn 1 CV trước khi nộp");
-
-    const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
-    const payload = {
-      account_id,
-      job_posting_id: job.id,
-      cv_id: info.cvId ? Number(info.cvId) : 0, // ✅ Nếu không có thì gửi 0
-      cover_letter: info.coverLetter,
-      file_upload: info.file?.name || "none.pdf",
-      file_url: pickedCV?.cv_link || info.cvLink || "N/A",
-    };
+    if (!info.cvId && !info.file)
+      return alert("Vui lòng chọn CV từ danh sách hoặc tải tệp mới");
 
     try {
       setLoading(true);
+
+      let cv_id = 0;
+      let file_url = "";
+      let file_upload = "";
+
+      if (info.cvId) {
+        // ✅ Trường hợp chọn từ danh sách
+        const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
+        if (!pickedCV) {
+          alert("CV đã chọn không hợp lệ");
+          setLoading(false);
+          return;
+        }
+        cv_id = Number(info.cvId);
+        file_url = pickedCV.cv_link;                 // link tuyệt đối từ backend
+        file_upload = pickedCV.cv_link?.split("/").pop() || `cv_${cv_id}.pdf`;
+      } else {
+        // ✅ Trường hợp tải tệp mới -> Upload trước để lấy link/id
+        const uploaded = await uploadCvFile({
+          account_id,
+          file: info.file,
+          years_experience: 0,            // tuỳ bạn muốn map info.yearsExp
+          education_level: "No Requirements",
+        });
+        cv_id = uploaded.cv_id;           // backend trả về
+        file_url = uploaded.cv_link;      // link tuyệt đối http://host/uploads/...
+        file_upload = info.file?.name || "uploaded_cv.pdf";
+      }
+
+      const payload = {
+        account_id,
+        job_posting_id: job.id,
+        cv_id,
+        cover_letter: info.coverLetter,
+        file_upload,
+        file_url,                         // ⬅️ Bây giờ luôn có URL hợp lệ
+      };
+
       await addJobApplication(payload);
       alert("Nộp đơn thành công!");
       onClose();
@@ -85,7 +130,6 @@ const JobApplicationModal = ({ open, onClose, job }) => {
     }
   };
 
-  // ❌ Bỏ conditional hook — chỉ render null sau hooks
   if (!open) return null;
 
   return (
@@ -102,7 +146,6 @@ const JobApplicationModal = ({ open, onClose, job }) => {
             </button>
           </header>
 
-          {/* Nội dung form */}
           <div className="p-5 space-y-6 text-sm">
             {/* Thông tin ứng viên */}
             <section>
@@ -127,50 +170,55 @@ const JobApplicationModal = ({ open, onClose, job }) => {
               </div>
             </section>
 
-            {/* Chọn CV */}
+            {/* CV: chọn 1 trong 2 */}
             <section>
-              <h4 className="font-semibold mb-2">Chọn CV</h4>
-              <div className="flex gap-3 mb-3">
-                {["select", "link"].map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setCvMode(mode)}
-                    className={`px-3 py-1.5 rounded-lg border ${
-                      cvMode === mode
-                        ? "bg-blue-50 border-blue-500 text-blue-700"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    {mode === "select" ? "Chọn từ danh sách" : "Dán link CV"}
-                  </button>
-                ))}
-              </div>
+              <h4 className="font-semibold mb-2">CV của bạn</h4>
 
-              {cvMode === "select" ? (
+              {/* Chọn từ danh sách */}
+              <div>
+                <label className="block mb-1 font-medium">
+                  Chọn từ danh sách có sẵn:
+                </label>
                 <select
                   className="w-full border rounded-lg px-3 py-2"
                   value={info.cvId}
                   onChange={(e) => handleChange("cvId", e.target.value)}
+                  disabled={!!info.file} // Nếu có file thì disable
                 >
-                  <option value="">Chọn CV</option>
-                  {cvList.map((cv) => (
-                    <option key={cv.cv_id} value={cv.cv_id}>
-                      CV #{cv.cv_id} — {cv.education_level} —{" "}
-                      {cv.years_experience} năm
-                    </option>
-                  ))}
+                  <option value="">-- Chọn CV --</option>
+                  {cvList.length > 0 ? (
+                    cvList.map((cv) => (
+                      <option key={cv.cv_id} value={cv.cv_id}>
+                        {cv.cv_link?.split("/").pop() ||
+                          `CV #${cv.cv_id} — ${cv.education_level} — ${cv.years_experience} năm`}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Không có CV nào</option>
+                  )}
                 </select>
-              ) : (
+              </div>
+
+              {/* <div className="my-3 text-center text-gray-500 font-medium">Hoặc</div> */}
+
+              {/* Tải tệp mới */}
+              <div>
+                <label className="block mb-1 font-medium">
+                  Tải tệp CV mới:
+                </label>
                 <input
-                  className="w-full border rounded-lg px-3 py-2"
-                  placeholder="https://drive.google.com/..."
-                  value={info.cvLink}
-                  onChange={(e) => handleChange("cvLink", e.target.value)}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) =>
+                    handleChange("file", e.target.files?.[0] || null)
+                  }
+                  className="border rounded-lg px-3 py-2 w-full"
+                  disabled={!!info.cvId} // Nếu đã chọn CV có sẵn thì disable
                 />
-              )}
+              </div>
             </section>
 
-            {/* Thư + File */}
+            {/* Thư giới thiệu */}
             <section>
               <h4 className="font-semibold mb-2">Thư giới thiệu</h4>
               <textarea
@@ -179,14 +227,6 @@ const JobApplicationModal = ({ open, onClose, job }) => {
                 placeholder="Giới thiệu bản thân, lý do ứng tuyển..."
                 value={info.coverLetter}
                 onChange={(e) => handleChange("coverLetter", e.target.value)}
-              />
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) =>
-                  handleChange("file", e.target.files?.[0] || null)
-                }
-                className="mt-2"
               />
             </section>
 

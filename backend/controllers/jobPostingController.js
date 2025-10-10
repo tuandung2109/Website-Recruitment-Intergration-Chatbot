@@ -296,7 +296,42 @@ async function getJobById(req, res) {
   }
 }
 
+// GET /api/filters
+async function getFilters(req, res) {
+  try {
+    const [{ data: wt, error: wtErr }, { data: ind, error: indErr }] =
+      await Promise.all([
+        supabase.from("work_type").select("work_type_name"),
+        supabase.from("industry").select("name"),
+      ]);
+
+    if (wtErr || indErr) {
+      const err = wtErr || indErr;
+      console.error("Supabase error (filters):", err);
+      return res
+        .status(500)
+        .json({ message: "Failed to load filters", error: err.message });
+    }
+
+    const workTypes = Array.from(
+      new Set((wt || []).map((w) => w.work_type_name))
+    ).filter(Boolean);
+
+    const industries = Array.from(
+      new Set((ind || []).map((i) => i.name))
+    ).filter(Boolean);
+
+    return res.json({ workTypes, industries });
+  } catch (e) {
+    console.error("Unexpected error (filters):", e);
+    return res
+      .status(500)
+      .json({ message: "Failed to load filters", error: e.message });
+  }
+}
+
 module.exports = {
   getJobs,
   getJobById,
+  getFilters,
 };

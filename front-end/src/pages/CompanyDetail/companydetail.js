@@ -1,5 +1,5 @@
 // src/pages/CompanyDetail/companydetail.js
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCompanyById } from "../../services/company";
 import { listJobsByCompany } from "../../services/jobPosting";
@@ -35,122 +35,267 @@ function CompanyDetail() {
     })();
   }, [id]);
 
+  // Chuẩn hoá dữ liệu ngành & địa chỉ để dễ render
+  const { industries, addresses } = useMemo(() => {
+    const inds =
+      Array.isArray(company?.company_industry)
+        ? company.company_industry
+            .map((ci) => ci?.industry?.name)
+            .filter(Boolean)
+        : [];
+    const addrs =
+      Array.isArray(company?.address)
+        ? company.address
+            .map((a) => a?.address_detail)
+            .filter(Boolean)
+        : [];
+    return { industries: inds, addresses: addrs };
+  }, [company]);
+
   if (loadingCompany) {
     return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="text-center">
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-gray-600 font-medium">Đang tải thông tin công ty...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !company) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 px-4 py-2 rounded-lg border hover:bg-gray-50"
-        >
-          ← Quay lại
-        </button>
-        <p className="text-red-500">{error || "Không tìm thấy công ty."}</p>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="group mb-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border-2 border-gray-200 hover:border-red-400 hover:shadow-lg transition-all duration-300"
+          >
+            <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+            <span className="font-medium">Quay lại</span>
+          </button>
+          
+          <div className="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-red-500">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Có lỗi xảy ra</h3>
+                <p className="text-red-600 font-medium">{error || "Không tìm thấy công ty."}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 px-4 py-2 rounded-lg border hover:bg-gray-50"
-        >
-          ← Quay lại
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header với gradient background */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-6 shadow-lg">
+        <div className="max-w-6xl mx-auto px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
+          >
+            <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+            <span className="font-medium">Quay lại</span>
+          </button>
+        </div>
+      </div>
 
-        {/* Thông tin công ty */}
-        <div className="bg-white rounded-2xl shadow p-6 md:p-8">
-          <div className="flex items-center gap-6">
-            <img
-              src={
-                company.logo_url || "https://via.placeholder.com/120?text=Logo"
-              }
-              alt={company.name}
-              className="w-24 h-24 object-contain rounded-full bg-gray-100 p-2"
-            />
-            <div>
-              <h1 className="text-2xl font-bold">{company.name}</h1>
-              <p className="text-gray-600 mt-1">Quy mô: {company.size}</p>
-              {company.website && (
-                <a
-                  href={company.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline mt-1 inline-block"
-                >
-                  {company.website}
-                </a>
-              )}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Company Info Card - Hero Section */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mb-8 hover:shadow-3xl transition-shadow duration-300">
+          {/* Decorative top border */}
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+          
+          <div className="p-8 md:p-10">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+              {/* Logo với hiệu ứng */}
+              <div className="flex-shrink-0">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full opacity-25 group-hover:opacity-40 blur transition duration-300"></div>
+                  <img
+                    src={company.logo_url || "https://via.placeholder.com/120?text=Logo"}
+                    alt={company.name}
+                    className="relative w-28 h-28 object-contain rounded-full bg-gradient-to-br from-gray-50 to-gray-100 p-3 ring-4 ring-white shadow-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Company Info */}
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-3">
+                  {company.name}
+                </h1>
+                
+                <div className="flex flex-wrap items-center gap-4 mb-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200">
+                    <span className="text-lg">👥</span>
+                    <span className="font-semibold text-gray-700">Quy mô: {company.size}</span>
+                  </div>
+                  
+                  {company.website && (
+                    <a
+                      href={company.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-full border border-green-200 hover:shadow-md transition-all duration-300 group"
+                    >
+                      <span className="text-lg">🌐</span>
+                      <span className="font-medium text-green-700 group-hover:text-green-800">Website</span>
+                      <span className="text-green-600 group-hover:translate-x-0.5 transition-transform">→</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Ngành nghề chips */}
+                {industries.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-semibold text-gray-600">🏢 Ngành nghề:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {industries.map((n, i) => (
+                        <span
+                          key={`ind-${i}`}
+                          className="px-4 py-1.5 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 rounded-full text-sm font-semibold ring-2 ring-purple-100 hover:ring-purple-300 hover:shadow-md transition-all duration-300 cursor-default"
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Địa chỉ chips */}
+                {addresses.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-semibold text-gray-600">📍 Địa điểm:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {addresses.map((a, i) => (
+                        <span
+                          key={`addr-${i}`}
+                          className="px-4 py-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 rounded-full text-sm font-semibold ring-2 ring-emerald-100 hover:ring-emerald-300 hover:shadow-md transition-all duration-300 cursor-default"
+                          title={a}
+                        >
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="mt-6 space-y-4">
-            <h2 className="text-lg font-semibold">Giới thiệu</h2>
-            <p className="text-gray-700">
-              {company.description || "Chưa có mô tả."}
-            </p>
+            {/* Giới thiệu */}
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+                <h2 className="text-xl font-bold text-gray-900">Giới thiệu công ty</h2>
+              </div>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                {company.description || "Chưa có mô tả."}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Danh sách job */}
-        <div className="mt-10">
-          <h2 className="text-xl font-semibold mb-4">
-            Tin tuyển dụng của {company.name}
-          </h2>
+        {/* Jobs Section */}
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Tin tuyển dụng của {company.name}
+              </h2>
+            </div>
+            {!loadingJobs && jobs.length > 0 && (
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">
+                {jobs.length} vị trí
+              </span>
+            )}
+          </div>
 
           {loadingJobs ? (
-            <div className="flex items-center gap-2 text-gray-500">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
-              Đang tải tin tuyển dụng...
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center border border-gray-100">
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative w-12 h-12">
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+                </div>
+                <p className="text-gray-600 font-medium">Đang tải tin tuyển dụng...</p>
+              </div>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="text-gray-600">
-              Hiện công ty chưa có tin tuyển dụng.
+            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100">
+              <div className="text-6xl mb-4">📭</div>
+              <p className="text-gray-600 text-lg font-medium">
+                Hiện công ty chưa có tin tuyển dụng.
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {jobs.map((job) => (
                 <div
                   key={job.job_posting_id}
-                  className="bg-white rounded-xl shadow p-5 border border-gray-100 hover:shadow-md transition"
+                  className="group bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-2xl hover:border-blue-200 transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                         {job.position_name}
                       </h3>
-                      <div className="text-sm text-gray-600">
-                        {job.salary
-                          ? `Mức lương: ${job.salary}`
-                          : "Mức lương: Thỏa thuận"}
-                        {" • "}
-                        {job.working_time || "Thời gian: Không rõ"}
-                        {job.experience_years != null
-                          ? ` • Kinh nghiệm: ${job.experience_years} năm`
-                          : ""}
+                      
+                      <div className="flex flex-wrap gap-3 mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">💰</span>
+                          <span className="text-sm font-semibold text-green-700">
+                            {job.salary || "Thỏa thuận"}
+                          </span>
+                        </div>
+                        
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-200">
+                          <span className="text-sm">⏰</span>
+                          <span className="text-sm font-semibold text-blue-700">
+                            {job.working_time || "Không rõ"}
+                          </span>
+                        </div>
+                        
+                        {job.experience_years != null && (
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 rounded-lg border border-purple-200">
+                            <span className="text-sm">📊</span>
+                            <span className="text-sm font-semibold text-purple-700">
+                              {job.experience_years} năm kinh nghiệm
+                            </span>
+                          </div>
+                        )}
                       </div>
+                      
                       {job.deadline && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          Hạn nộp: {new Date(job.deadline).toLocaleDateString()}
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-200">
+                          <span className="text-sm">📅</span>
+                          <span className="text-sm font-semibold text-orange-700">
+                            Hạn nộp: {new Date(job.deadline).toLocaleDateString('vi-VN')}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex-shrink-0">
                       <button
                         onClick={() => navigate(`/job/${job.job_posting_id}`)}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                        className="w-full lg:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                       >
-                        Xem chi tiết
+                        Xem chi tiết →
                       </button>
                     </div>
                   </div>

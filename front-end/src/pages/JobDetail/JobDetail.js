@@ -54,7 +54,16 @@ const JobDetail = () => {
           workTypes: Array.isArray(job.workTypes) ? job.workTypes : [],
 
           // ✅ Kỹ năng
-          skills: Array.isArray(job.skills) ? job.skills : [],
+          // skills: Array.isArray(job.skills) ? job.skills : [],
+
+            // ✅ Kỹ năng: lấy từ job_posting_skill → skill.skill_name (JOIN từ BE)
+          skills: Array.isArray(job.job_posting_skill)
+            ? job.job_posting_skill
+                .map((s) => s?.skill?.skill_name)
+                .filter(Boolean)
+            : Array.isArray(job.skills)
+            ? job.skills
+            : [],
 
           // ✅ Ngành nghề
           industries: Array.isArray(job.industries) ? job.industries : [],
@@ -241,6 +250,7 @@ const JobDetail = () => {
                     </svg>
                     {job.salaryRange}
                   </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
                   {job.workTypes && job.workTypes.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {job.workTypes.map((wt, i) => (
@@ -265,18 +275,20 @@ const JobDetail = () => {
                       ))}
                     </div>
                   )}
+                  {job.skills && job.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {job.skills.map((skill, i) => (
+                        <span
+                          key={`skill-${i}`}
+                          className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {job.skills.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
               </div>
 
               <div className="flex flex-wrap gap-6 text-sm text-gray-600 border-t pt-6">

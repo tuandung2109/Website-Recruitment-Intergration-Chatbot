@@ -4,6 +4,9 @@ import { filterCategories as staticFilterCategories } from "../../data/jobsData"
 import { getAgentFilters } from "../../controller/agentController";
 import { listJobsPosting } from "../../services/jobPosting";
 import UseTitle from "../../hooks/useTitle";
+import { listSkills } from "../../services/skill";
+
+
 const JobListings = () => {
   UseTitle("JobVip - Việc làm");
   const navigate = useNavigate();
@@ -24,6 +27,7 @@ const JobListings = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
   const jobsPerPage = 5;
+  const [skillOptions, setSkillOptions] = useState([]);
 
   // Data from API
   const [jobs, setJobs] = useState([]);
@@ -184,6 +188,18 @@ const JobListings = () => {
     searchData,
   ]);
 
+  useEffect(() => {
+    const fetchSkillList = async () => {
+      const res = await listSkills();
+      if (res.success) {
+        setSkillOptions(res.skills.map((s) => s.skill_name));
+      } else {
+        console.warn(res.message);
+      }
+    };
+    fetchSkillList();
+  }, []);
+
   // Hàm lọc công việc
   const filterJobs = () => {
     let filtered = [...jobs];
@@ -207,6 +223,17 @@ const JobListings = () => {
         job.location.toLowerCase().includes(location)
       );
     }
+
+    // 🔍 Lọc theo kỹ năng
+    if (searchData.skill && searchData.skill.trim()) {
+      const s = searchData.skill.toLowerCase();
+      filtered = filtered.filter(
+        (job) =>
+          Array.isArray(job.skills) &&
+          job.skills.some((x) => (x || "").toLowerCase().includes(s))
+      );
+    }
+
 
     // Lọc theo loại công việc (từ DB: work_types)
     if (activeFilters.workType.length > 0) {
@@ -329,6 +356,7 @@ const JobListings = () => {
       keywords: "",
       location: "",
       distance: "",
+      skill: "",
     });
     setCurrentPage(1);
   };
@@ -394,7 +422,7 @@ const JobListings = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
-            Tìm kiếm công việc mơ ước 123
+            Tìm kiếm công việc mơ ước
           </h1>
           <div className="bg-white bg-opacity-90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -456,35 +484,25 @@ const JobListings = () => {
                   className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
                 />
               </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <select
-                  name="distance"
-                  value={searchData.distance}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all duration-300 hover:border-blue-400"
-                >
-                  <option value="">Khoảng cách123</option>
-                  <option value="5">5 km</option>
-                  <option value="10">10 km</option>
-                  <option value="25">25 km</option>
-                  <option value="50">50 km</option>
-                </select>
-              </div>
+<div className="relative">
+  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  </div>
+  <select
+    name="skill"
+    value={searchData.skill}
+    onChange={(e) => { handleInputChange(e); setCurrentPage(1); }}
+    className="w-full pl-10 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white transition-all duration-300 hover:border-blue-400"
+  >
+    <option value="">Chọn kỹ năng</option>
+    {skillOptions.map((s) => (
+      <option key={s} value={s}>{s}</option>
+    ))}
+  </select>
+</div>
+
               <button
                 onClick={handleSearch}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold transform hover:scale-105 shadow-xl hover:shadow-2xl group backdrop-blur-sm"

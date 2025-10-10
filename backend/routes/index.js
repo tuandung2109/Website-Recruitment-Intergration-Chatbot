@@ -17,6 +17,7 @@ const routerCvSkill = require("./cv_skill.js");
 const routerJobPostingIndustry = require("./job_posting_industry");
 const routerJobPostingSkill = require("./job_posting_skill.js");
 const routerWordType = require("./work_type");
+const routerAddress = require("./address.js");
 
 module.exports = (app) => {
   app.use("/api/account", routerAccount);
@@ -38,4 +39,5 @@ module.exports = (app) => {
   app.use("/api/job_posting_industry", routerJobPostingIndustry);
   app.use("/api/job_posting_skill", routerJobPostingSkill);
   app.use("/api/work_type", routerWordType);
+  app.use("/api/address", routerAddress);
 };

@@ -12,6 +12,10 @@ const listCompany = async (req, res) => {
           industry_id,
           name
         )
+      ),
+      address(
+        address_id,
+        address_detail 
       )
       `
       )
@@ -25,6 +29,7 @@ const listCompany = async (req, res) => {
   }
 };
 
+
 // 📍 Lấy thông tin công ty theo ID
 const listCompanyId = async (req, res) => {
   try {
@@ -36,7 +41,20 @@ const listCompanyId = async (req, res) => {
 
     const { data: company, error } = await supabase
       .from("company")
-      .select("*")
+      // .select("*")
+        .select(`
+          *,
+          company_industry(
+            industry:industry_id(
+              industry_id,
+              name
+            )
+          ),
+          address(
+            address_id,
+            address_detail
+          )
+        `)
       .eq("company_id", company_id)
       .single();
 

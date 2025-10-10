@@ -44,10 +44,20 @@ export const handleIntent = (intent, navigate, filters = null) => {
       }, 100);
       break;
 
-    case "intent_company":
+    case "intent_company_info":
       // Intent tìm hiểu về công ty
+      if (filters && Object.keys(filters).length > 0) {
+        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
+        console.log("💾 Filters saved to sessionStorage");
+      }
       console.log("✅ Navigating to /company page...");
       navigate("/company");
+
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('agentNavigation', {
+          detail: { filters, intent }
+        }));
+      }, 100);
       break;
 
     case "intent_cv":

@@ -66,6 +66,15 @@ class AgentOllama(BaseAI):
                 }
                 print(f"Extracted features: {extracted_features}")
                 return result  # Return as dict - Flask will handle JSON serialization
+            elif intent == "intent_company_info":
+                company_info_prompt = self.prompt_config.get_prompt("extract_feature_question_about_company", user_input=message)
+                company_info = self._strip_think(self.client.generate_content([{"role": "user", "content": company_info_prompt}]))
+                result = {
+                    "intent": intent,
+                    "extracted_features": company_info
+                }
+                print(f"Extracted company info: {company_info}")
+                return result  # Return as dict - Flask will handle JSON serialization
         except ConnectionError as e:
             error_msg = f"Cannot connect to Ollama server. Please ensure Ollama is running at {self.client.base_url}"
             logging.error(f"{error_msg}: {str(e)}")

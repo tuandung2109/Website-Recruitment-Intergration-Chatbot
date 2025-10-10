@@ -27,6 +27,7 @@ import AdminSkill from "./pages/Admin/skill";
 import RecruiterLayout from "./layouts/RecruiterLayout";
 import CompanyInformation from "./pages/Arecruiter/companyInformation";
 import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
+import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
         <Route path="/companyAdmin" element={<RecruiterLayout />}>
           <Route path="companyInformation" element={<CompanyInformation />} />
           <Route path="companyJobPosting" element={<CompanyJobPosting />} />
+          <Route path="companyAddJobPosting" element={<AddJobPosting />} />
         </Route>
       </Routes>
     </Router>

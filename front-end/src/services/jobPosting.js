@@ -1,4 +1,5 @@
-import { _get, _patch } from "../utils/request";
+import { message } from "antd";
+import { _get, _patch, _post } from "../utils/request";
 
 const listJobsPosting = async (params = {}) => {
   try {
@@ -101,7 +102,6 @@ const listJobsPosting = async (params = {}) => {
     return { success: false, message: error.message || "Lỗi không xác định" };
   }
 };
-
 const listJobPostingById = async (id) => {
   try {
     const res = await _get(`/jobPosting/listJobPostingId/${id}`);
@@ -264,13 +264,35 @@ const softJobPosting = async (job_posting_id) => {
     return { success: false, message: error.message || "Lỗi" };
   }
 };
-
 const unlockJobPosting = async (job_posting_id) => {
   try {
     const res = await _patch(`/jobPosting/unlockJobPosting/${job_posting_id}`);
     return await res.json();
   } catch (error) {
     return { success: false, message: error.message || "Lỗi" };
+  }
+};
+
+const postJobPosting = async (jobs) => {
+  try {
+    const res = await _post(`/jobPosting/postJobPosting`, jobs);
+    const result = await res.json();
+    if (res.oke) {
+      return {
+        success: true,
+        account: result.account,
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Tạo thất bại",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lõi kết nối máy chủ",
+    };
   }
 };
 
@@ -281,4 +303,5 @@ export {
   listJobPostingById,
   listJobsByCompany,
   listJobPostingAdmin,
+  postJobPosting,
 };

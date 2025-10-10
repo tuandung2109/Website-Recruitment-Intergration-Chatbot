@@ -325,7 +325,6 @@ const unlockJobPosting = async (req, res) => {
 };
 
 // Thêm của Dũng ( lấy danh sách job theo companyId )
-// GET /api/jobPosting/byCompany/:companyId
 const listJobsByCompany = async (req, res) => {
   try {
     const { companyId } = req.params;

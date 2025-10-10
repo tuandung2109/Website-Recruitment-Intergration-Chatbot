@@ -31,7 +31,7 @@ function Recruiter() {
       icon: <SettingOutlined />,
       children: [
         { key: "companyJobPosting", label: "Danh sách công việc" },
-        { key: "10", label: "Thêm loại công việc" },
+        { key: "companyAddJobPosting", label: "Thêm loại công việc" },
       ],
     },
     {
@@ -70,6 +70,9 @@ function Recruiter() {
     }
     if (e.key === "companyJobPosting") {
       navigate("/companyAdmin/companyJobPosting");
+    }
+    if (e.key === "companyAddJobPosting") {
+      navigate("/companyAdmin/companyAddJobPosting");
     }
   };
 

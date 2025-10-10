@@ -12,5 +12,7 @@ router.patch("/unlockDeleteLogin/:id", controllerUsers.unlockDeleteAccount); // 
 router.post("/forgot", controllerUsers.userForgot); //Quên mật khẩu
 router.post("/otp", controllerUsers.userOtp); //Xác nhận OTP
 router.post("/resetPassword", controllerUsers.userResetPassword); //Đặt lại mật khẩu
+router.post("/getApiUser", controllerUsers.getApiUser);
+router.patch("/unlinkCompany/:id", controllerUsers.unlinkCompany);
 
 module.exports = router;

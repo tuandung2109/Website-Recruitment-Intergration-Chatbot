@@ -50,4 +50,11 @@ const postInvoice = async ({ username, password, email, phone }) => {
     };
   }
 };
-export { listInvoice, postInvoice };
+
+const createPayment = (user_id, amount) =>
+  _post("/invoice/create-qr", { user_id, amount });
+
+// Kiểm tra kết quả thanh toán
+const checkPayment = (query) => _get(`/invoice/check-payment-vnpay?${query}`);
+
+export { listInvoice, postInvoice, createPayment, checkPayment };

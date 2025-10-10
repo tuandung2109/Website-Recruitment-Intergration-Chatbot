@@ -9,6 +9,8 @@ const Home = ({ title }) => {
     distance: "",
   });
   const [isVisible, setIsVisible] = useState({});
+  const [userInfo, setUserInfo] = useState(null);
+
   const [stats, setStats] = useState({
     jobs: 0,
     companies: 0,
@@ -30,28 +32,6 @@ const Home = ({ title }) => {
     { name: "StartupHub", logo: "SH", jobs: 67, rating: 4.8 },
   ];
 
-  const faqs = [
-    {
-      question: "Tính năng AI matching việc làm hoạt động như thế nào?",
-      answer:
-        "AI của chúng tôi phân tích kỹ năng, kinh nghiệm và sở thích của bạn để kết nối bạn với các cơ hội việc làm phù hợp từ cơ sở dữ liệu hàng nghìn vị trí.",
-    },
-    {
-      question: "Có miễn phí không?",
-      answer:
-        "Có! Tìm kiếm việc làm cơ bản và tải CV hoàn toàn miễn phí. Các tính năng cao cấp có sẵn cho matching nâng cao và ứng tuyển ưu tiên.",
-    },
-    {
-      question: "Làm thế nào để tải CV video lên?",
-      answer:
-        "Chỉ cần vào hồ sơ của bạn, nhấp 'Tải CV Video', và quay video 2 phút giới thiệu bản thân và làm nổi bật các kỹ năng chính của bạn.",
-    },
-    {
-      question: "Nhà tuyển dụng có thể xem hồ sơ của tôi không?",
-      answer:
-        "Chỉ khi bạn chọn công khai. Bạn có toàn quyền kiểm soát cài đặt quyền riêng tư và có thể chọn ai được xem hồ sơ của bạn.",
-    },
-  ];
   // Animation on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -116,6 +96,16 @@ const Home = ({ title }) => {
       [e.target.name]: e.target.value,
     });
   };
+
+  const getUserInfo = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      console.log("📦 User từ localStorage:", user);
+    } catch (err) {
+      console.error("❌ Lỗi khi gọi API:", err);
+    }
+  };
+
   return (
     <>
       <div
@@ -147,6 +137,26 @@ const Home = ({ title }) => {
               <a href="/admin">
                 <button>Admin</button>
               </a>
+              <button>Nạp tiền</button>
+              <br></br>
+              <a href="/companyAdmin">
+                <button>companyAdmin</button>
+              </a>
+              <br></br>
+              <a href="/invoiceAdd">
+                <button>Nạp tiền</button>
+              </a>
+              <div className="p-6">
+                <h1 className="text-xl font-bold mb-4">Trang chủ</h1>
+
+                {/* 🔘 Nút lấy user */}
+                <button
+                  onClick={getUserInfo}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Lấy thông tin User
+                </button>
+              </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
                 Tham gia thế hệ người tìm việc mới và Tải CV của bạn ngay!
               </h1>

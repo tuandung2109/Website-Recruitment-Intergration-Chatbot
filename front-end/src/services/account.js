@@ -70,9 +70,9 @@ const listAccount = async () => {
   }
 };
 
-const listAccountId = async (account_id) => {
+const listAccountId = async (id) => {
   try {
-    const res = await _get(`/account/listAccountId/${account_id}`);
+    const res = await _get(`/account/listAccountId/${id}`);
     const result = await res.json();
 
     if (res.ok) {
@@ -90,6 +90,7 @@ const listAccountId = async (account_id) => {
     };
   }
 };
+
 const hardDeleteAccount = async () => {};
 // khóa
 const softDeleteAccount = async (account_id) => {
@@ -115,7 +116,18 @@ const unlockDeleteAccount = async (account_id) => {
     };
   }
 };
-
+const unlinkCompany = async (account_id) => {
+  try {
+    const res = await _patch(`/account/unlinkCompany/${account_id}`);
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi khi hủy liên kết công ty",
+    };
+  }
+};
 export {
   postRegister,
   loginAccount,
@@ -123,5 +135,6 @@ export {
   hardDeleteAccount,
   softDeleteAccount,
   unlockDeleteAccount,
+  unlinkCompany,
   listAccountId,
 };

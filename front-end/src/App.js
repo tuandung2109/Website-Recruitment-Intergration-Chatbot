@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import AdminLayout from "./layouts/AdminLayout";
+
 import Home from "./pages/Home/Home";
 import JobListings from "./pages/JobListing/JobListings";
 import JobDetail from "./pages/JobDetail/JobDetail";
@@ -14,7 +15,6 @@ import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
 import Applications from "./pages/Application/Applications";
 
-
 import "./App.css";
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
@@ -23,6 +23,10 @@ import AdminIndustry from "./pages/Admin/industry";
 import AdminWorkType from "./pages/Admin/wordType";
 import AdminJobPosting from "./pages/Admin/jobPosting";
 import AdminSkill from "./pages/Admin/skill";
+
+import RecruiterLayout from "./layouts/RecruiterLayout";
+import CompanyInformation from "./pages/Arecruiter/companyInformation";
+import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
 
 function App() {
   return (
@@ -45,7 +49,6 @@ function App() {
           <Route path="/cv" element={<CV />} />
           <Route path="/cv/:id" element={<CVDetail />} />
           <Route path="/applications" element={<Applications />} />
-
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
@@ -56,6 +59,10 @@ function App() {
           <Route path="adminWorkType" element={<AdminWorkType />} />
           <Route path="adminJobPosting" element={<AdminJobPosting />} />
           <Route path="adminSkills" element={<AdminSkill />} />
+        </Route>
+        <Route path="/companyAdmin" element={<RecruiterLayout />}>
+          <Route path="companyInformation" element={<CompanyInformation />} />
+          <Route path="companyJobPosting" element={<CompanyJobPosting />} />
         </Route>
       </Routes>
     </Router>

@@ -49,7 +49,10 @@ const listJobPostings = async (req, res) => {
       console.error("❌ Lỗi Supabase:", error);
       return res.status(400).json({ error: error.message });
     }
-    return res.status(200).json({ job_postings });
+    return res.status(200).json({
+      success: true,
+      job_postings: job_postings,
+    });
   } catch (error) {
     console.error("❌ Lỗi server:", error);
     return res.status(500).json({ error: "Lỗi server" });

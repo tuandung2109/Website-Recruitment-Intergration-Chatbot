@@ -169,16 +169,9 @@ const postLogin = async (req, res) => {
       return res
         .status(401)
         .json({ success: false, message: "Email hoặc password sai!" });
-    console.log("DEBUG: account.password =", account.password);
-    console.log("DEBUG: password nhập vào =", password);
-    // // So sánh password
-    // const isMatch = await bcrypt.compare(password, account.password);
-    // console.log("DEBUG: isMatch =", isMatch);
-    // if (!isMatch)
-    //   return res
-    //     .status(401)
-    //     .json({ success: false, message: "Email hoặc password sai!" });
-    // Nếu đăng nhập thành công
+    // console.log("DEBUG: account.id =", account.id);
+    // console.log("DEBUG: account.password =", account.password);
+    // console.log("DEBUG: password nhập vào =", password);
     return res.status(200).json({
       success: true,
       message: "Đăng nhập thành công!",
@@ -425,8 +418,88 @@ const userResetPassword = async (req, res) => {
   }
 };
 
+// ⚙️ Lấy thông tin user (ví dụ đơn giản, không có JWT)
+const getApiUser = async (req, res) => {
+  try {
+    const { user_id } = req.body;
+
+    if (!user_id || isNaN(user_id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu hoặc sai user_id",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("account")
+      .select(
+        `
+        account_id,
+        email,
+        gender,
+        phone_number,
+        status,
+        company_id,
+        deleted,
+        amount,
+        account_account_type(
+          account_type(
+            role_name,
+            account_type_id
+          )
+        )
+        `
+      )
+      .eq("account_id", user_id)
+      .single();
+
+    if (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    if (!data) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng" });
+    }
+
+    return res.json({
+      success: true,
+      user: data,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi getApiUser:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// 🧩 controllers/account.js
+const unlinkCompany = async (req, res) => {
+  try {
+    const account_id = req.params.id;
+    if (!account_id) {
+      return res.status(400).json({ error: "Thiếu account_id" });
+    }
+
+    const { data, error } = await supabase
+      .from("account")
+      .update({ company_id: null })
+      .eq("account_id", account_id)
+      .select();
+
+    if (error) throw error;
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Đã hủy liên kết công ty", data });
+  } catch (err) {
+    console.error("❌ Lỗi unlinkCompany:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 module.exports = {
   listAccount,
+  getApiUser,
   listAccountId,
   postRegister,
   postLogin,
@@ -436,4 +509,5 @@ module.exports = {
   hardDeleteAccount,
   softDeleteAccount,
   unlockDeleteAccount,
+  unlinkCompany,
 };

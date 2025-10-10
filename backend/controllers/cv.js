@@ -35,45 +35,7 @@ const listCvId = async (req, res) => {
 };
 
 // 📤 Upload CV thật (file + thông tin)
-const uploadCv = async (req, res) => {
-  try {
-    const { account_id, years_experience, education_level } = req.body;
-    const file = req.file;
 
-    if (!file || !account_id) {
-      return res.status(400).json({ error: "Thiếu account_id hoặc file" });
-    }
-
-    // 🔹 Tạo đường dẫn lưu file local
-    const serverUrl = `${req.protocol}://${req.get("host")}`;
-    const filePath = `${serverUrl}/uploads/${file.filename}`;
-
-
-    // 🔹 Lưu đường dẫn file vào bảng cv trong Supabase
-    const { data, error } = await supabase
-      .from("cv")
-      .insert([
-        {
-          account_id,
-          cv_link: filePath,
-          years_experience,
-          education_level,
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json({
-      message: "Tải CV thành công",
-      cv: data,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi uploadCv:", err);
-    res.status(500).json({ error: "Lỗi server khi upload CV" });
-  }
-};
 
 // 📍 Lấy tất cả CV + skill của 1 tài khoản
 const getCvWithSkills = async (req, res) => {
@@ -161,5 +123,64 @@ const deleteCv = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server khi xóa CV" });
   }
 };
+
+
+const uploadCv = async (req, res) => {
+  try {
+    const { account_id, years_experience, education_level } = req.body;
+    const file = req.file; // có buffer vì đang dùng memoryStorage
+
+    if (!file || !account_id) {
+      return res.status(400).json({ error: "Thiếu account_id hoặc file" });
+    }
+
+    // Tạo key/path trong bucket: cv/<account_id>/<timestamp>-<tên_gốc>
+    const ts = Date.now();
+    const safeName = (file.originalname || "cv.pdf").replace(/\s+/g, "_");
+    const objectKey = `cv/${account_id}/${ts}-${safeName}`;
+
+    // 1) Upload buffer lên Supabase Storage
+    const { error: uploadErr } = await supabase.storage
+      .from("cv-files") // 👈 bucket bạn đã tạo (public)
+      .upload(objectKey, file.buffer, {
+        contentType: file.mimetype || "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      console.error("Upload storage error:", uploadErr);
+      return res.status(500).json({ error: "Không upload được CV lên Storage" });
+    }
+
+    // 2) Lấy public URL
+    const { data: pub } = supabase.storage.from("cv-files").getPublicUrl(objectKey);
+    const publicUrl = pub?.publicUrl;
+
+    // 3) Lưu vào bảng `cv`
+    const { data, error: insertErr } = await supabase
+      .from("cv")
+      .insert([
+        {
+          account_id,
+          cv_link: publicUrl,       // 👈 lưu link public thay vì /uploads/...
+          years_experience,
+          education_level,
+        },
+      ])
+      .select()
+      .single();
+
+    if (insertErr) throw insertErr;
+
+    return res.status(201).json({
+      message: "Tải CV thành công",
+      cv: data,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi uploadCv:", err);
+    return res.status(500).json({ error: "Lỗi server khi upload CV" });
+  }
+};
+
 
 module.exports = { listCv, listCvId , uploadCv, getCvWithSkills, updateCvSkills , deleteCv};

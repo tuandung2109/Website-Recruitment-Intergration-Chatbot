@@ -242,7 +242,7 @@ function Company() {
             </div>
 
             {/* Lọc theo địa chỉ */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Lọc theo địa chỉ
               </label>
@@ -256,7 +256,41 @@ function Company() {
                   <option key={addr} value={addr}>{addr}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
+            <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Tìm kiếm theo địa chỉ
+        </label>
+        <div className="relative">
+          <input
+            list="address-list"
+            type="text"
+            value={selectedAddress}
+            onChange={(e) => setSelectedAddress(e.target.value)}
+            placeholder="Nhập địa chỉ công ty..."
+            className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+          />
+          <datalist id="address-list">
+            {addressOptions.map((addr) => (
+              <option key={addr} value={addr} />
+            ))}
+          </datalist>
+
+          {/* Nút xóa nhanh bên phải */}
+          {selectedAddress && (
+            <button
+              type="button"
+              onClick={() => setSelectedAddress("")}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+              aria-label="Xóa địa chỉ"
+              title="Xóa địa chỉ"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
 
             {/* Nút xóa bộ lọc */}
             <div className="flex items-end">

@@ -11,13 +11,13 @@ const Header = () => {
 
   useEffect(() => {
     // Kiểm tra thông tin user từ localStorage khi component mount
-    const userInfo = localStorage.getItem("user");
+    const userInfo = localStorage.getItem("account");
     if (userInfo) {
       try {
         setUser(JSON.parse(userInfo));
       } catch (error) {
         console.error("Error parsing user info:", error);
-        localStorage.removeItem("user");
+        localStorage.removeItem("account");
       }
     }
   }, []);
@@ -33,7 +33,7 @@ const Header = () => {
   const handleLogout = () => {
     // Xóa thông tin đăng nhập khỏi localStorage
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("account");
     setUser(null);
     setIsUserMenuOpen(false);
     navigate("/login");
@@ -140,9 +140,9 @@ const Header = () => {
                         <User className="h-4 w-4 mr-3" />
                         Thông tin cá nhân
                       </a>
-                      
-                      <a 
-                        href="/cv" 
+
+                      <a
+                        href="/cv"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <FileText className="h-4 w-4 mr-3" />

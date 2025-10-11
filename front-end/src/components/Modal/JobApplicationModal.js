@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { addJobApplication } from "../../services/jobApplication";
 import { listMyCVs } from "../../services/CV";
-import { uploadCvFile } from "../../services/CV"; 
+import { uploadCvFile } from "../../services/CV";
 
 const JobApplicationModal = ({ open, onClose, job }) => {
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ const JobApplicationModal = ({ open, onClose, job }) => {
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const user = JSON.parse(localStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("account"));
       const account_id = user?.id || user?.account_id;
       if (!account_id) return;
 
@@ -70,7 +70,7 @@ const JobApplicationModal = ({ open, onClose, job }) => {
 
   // 📨 Gửi đơn ứng tuyển
   const handleSubmit = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("account"));
     const account_id = user?.id || user?.account_id;
 
     if (!account_id) return alert("Bạn chưa đăng nhập");
@@ -96,18 +96,18 @@ const JobApplicationModal = ({ open, onClose, job }) => {
           return;
         }
         cv_id = Number(info.cvId);
-        file_url = pickedCV.cv_link;                 // link tuyệt đối từ backend
+        file_url = pickedCV.cv_link; // link tuyệt đối từ backend
         file_upload = pickedCV.cv_link?.split("/").pop() || `cv_${cv_id}.pdf`;
       } else {
         // ✅ Trường hợp tải tệp mới -> Upload trước để lấy link/id
         const uploaded = await uploadCvFile({
           account_id,
           file: info.file,
-          years_experience: 0,            // tuỳ bạn muốn map info.yearsExp
+          years_experience: 0, // tuỳ bạn muốn map info.yearsExp
           education_level: "No Requirements",
         });
-        cv_id = uploaded.cv_id;           // backend trả về
-        file_url = uploaded.cv_link;      // link tuyệt đối http://host/uploads/...
+        cv_id = uploaded.cv_id; // backend trả về
+        file_url = uploaded.cv_link; // link tuyệt đối http://host/uploads/...
         file_upload = info.file?.name || "uploaded_cv.pdf";
       }
 
@@ -117,7 +117,7 @@ const JobApplicationModal = ({ open, onClose, job }) => {
         cv_id,
         cover_letter: info.coverLetter,
         file_upload,
-        file_url,                         // ⬅️ Bây giờ luôn có URL hợp lệ
+        file_url, // ⬅️ Bây giờ luôn có URL hợp lệ
       };
 
       await addJobApplication(payload);

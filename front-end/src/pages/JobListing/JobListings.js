@@ -6,7 +6,6 @@ import { listJobsPosting } from "../../services/jobPosting";
 import UseTitle from "../../hooks/useTitle";
 import { listSkills } from "../../services/skill";
 
-
 const JobListings = () => {
   UseTitle("JobVip - Việc làm");
   const navigate = useNavigate();
@@ -15,7 +14,7 @@ const JobListings = () => {
     keywords: "",
     location: "",
     distance: "",
-    skills: "",  // ✅ thêm dòng này nếu chưa có
+    skills: "", // ✅ thêm dòng này nếu chưa có
   });
 
   const [activeFilters, setActiveFilters] = useState({
@@ -154,7 +153,10 @@ const JobListings = () => {
 
       // Áp dụng filters vào activeFilters
       if (agentFilters.workType) {
-        setActiveFilters((prev) => ({...prev,workType: [agentFilters.workType],}));
+        setActiveFilters((prev) => ({
+          ...prev,
+          workType: [agentFilters.workType],
+        }));
       }
 
       // Áp dụng filters vào skill
@@ -190,10 +192,16 @@ const JobListings = () => {
         setTimeout(() => {
           // Áp dụng filters vào searchData
           if (agentFilters.title) {
-            setSearchData((prev) => ({ ...prev, keywords: agentFilters.title }));
+            setSearchData((prev) => ({
+              ...prev,
+              keywords: agentFilters.title,
+            }));
           }
           if (agentFilters.location) {
-            setSearchData((prev) => ({ ...prev, location: agentFilters.location }));
+            setSearchData((prev) => ({
+              ...prev,
+              location: agentFilters.location,
+            }));
           }
 
           // Áp dụng filters vào activeFilters
@@ -231,10 +239,10 @@ const JobListings = () => {
       checkForNewFilters();
     };
 
-    window.addEventListener('agentNavigation', handleAgentNavigation);
+    window.addEventListener("agentNavigation", handleAgentNavigation);
 
     return () => {
-      window.removeEventListener('agentNavigation', handleAgentNavigation);
+      window.removeEventListener("agentNavigation", handleAgentNavigation);
     };
   }, [location]); // Run on location change (same route navigation)
 
@@ -298,21 +306,20 @@ const JobListings = () => {
       );
     }
 
-  // 🔍 Lọc theo kỹ năng (hỗ trợ nhiều kỹ năng, ví dụ: "React, Node")
-  if (searchData.skills && searchData.skills.trim()) {
-    const querySkills = searchData.skills
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
+    // 🔍 Lọc theo kỹ năng (hỗ trợ nhiều kỹ năng, ví dụ: "React, Node")
+    if (searchData.skills && searchData.skills.trim()) {
+      const querySkills = searchData.skills
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
 
-    filtered = filtered.filter((job) => {
-      const jobSkills = (Array.isArray(job.skills) ? job.skills : [])
-        .map((x) => (x || "").toLowerCase());
-      return querySkills.some((q) => jobSkills.some((js) => js.includes(q)));
-    });
-  }
-
-
+      filtered = filtered.filter((job) => {
+        const jobSkills = (Array.isArray(job.skills) ? job.skills : []).map(
+          (x) => (x || "").toLowerCase()
+        );
+        return querySkills.some((q) => jobSkills.some((js) => js.includes(q)));
+      });
+    }
 
     // Lọc theo loại công việc (từ DB: work_types)
     if (activeFilters.workType.length > 0) {
@@ -565,50 +572,57 @@ const JobListings = () => {
                 />
               </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4M7 20h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+
+                {/* ✅ Ô nhập kỹ năng gõ tự do */}
+                <input
+                  type="text"
+                  name="skills"
+                  placeholder="Nhập kỹ năng (vd: React, NodeJS...)"
+                  value={searchData.skills}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  list="skills-list"
+                  className="w-full pl-10 pr-10 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+                />
+
+                {/* ✅ Danh sách gợi ý (autocomplete) */}
+                <datalist id="skills-list">
+                  {skillOptions.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+
+                {/* ✅ Nút clear khi đã nhập */}
+                {searchData.skills && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchData((prev) => ({ ...prev, skills: "" }));
+                      setCurrentPage(1);
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    title="Xóa kỹ năng"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
-
-              {/* ✅ Ô nhập kỹ năng gõ tự do */}
-              <input
-                type="text"
-                name="skills"
-                placeholder="Nhập kỹ năng (vd: React, NodeJS...)"
-                value={searchData.skills}
-                onChange={handleInputChange}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                list="skills-list"
-                className="w-full pl-10 pr-10 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
-              />
-
-              {/* ✅ Danh sách gợi ý (autocomplete) */}
-              <datalist id="skills-list">
-                {skillOptions.map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-
-              {/* ✅ Nút clear khi đã nhập */}
-              {searchData.skills && (
-                <button
-                  type="button"
-                  onClick={() => { setSearchData(prev => ({ ...prev, skills: "" })); setCurrentPage(1); }}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  title="Xóa kỹ năng"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-
 
               <button
                 onClick={handleSearch}
@@ -890,7 +904,7 @@ const JobListings = () => {
                                 công ty: <b>{job.company}</b>
                               </p>
                               <p className="text-gray-700 mb-4 leading-relaxed">
-                                {job.description}
+                                {/* {job.description} */}
                               </p>
                               <div className="flex flex-wrap gap-2 mb-4">
                                 {job.skills.map((skill, skillIndex) => (

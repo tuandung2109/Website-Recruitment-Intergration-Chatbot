@@ -99,7 +99,7 @@ const Home = ({ title }) => {
 
   const getUserInfo = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("account"));
       console.log("📦 User từ localStorage:", user);
     } catch (err) {
       console.error("❌ Lỗi khi gọi API:", err);

@@ -1,22 +1,22 @@
 const supabase = require("../config/supabase");
 // Lấy danh sách account
-const listJobPostingSklill = async (req, res) => {
+const listJobPostingSkill = async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from("account")
-      .select("*, account_type(*)"); // JOIN 2 bảng
+      .from("job_posting_skill")
+      .select("*"); // JOIN 2 bảng
 
     if (error) return res.status(400).json({ error: error.message });
-    return res.status(200).json({ accounts: data });
+    return res.status(200).json({ job_posting_skill: data });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
 
-const listJobPostingSklillId = async (req, res) => {};
+const listJobPostingSkillId = async (req, res) => {};
 
 module.exports = {
-  listJobPostingSklill,
-  listJobPostingSklillId,
+  listJobPostingSkill,
+  listJobPostingSkillId,
 };

@@ -102,11 +102,6 @@ function AdminJobPosting() {
       render: (s) => s?.toLocaleString() || "—",
     },
     {
-      title: "Hạn nộp",
-      dataIndex: "deadline",
-      key: "deadline",
-    },
-    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",

@@ -3,12 +3,17 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { _get } from "../../utils/request";
 // import { getCvDetail, updateCvSkills, deleteCv } from "../../services/CV";
-import { getCvDetail, updateCvSkills, deleteCv, uploadCvFile } from "../../services/CV";
+import {
+  getCvDetail,
+  updateCvSkills,
+  deleteCv,
+  uploadCvFile,
+} from "../../services/CV";
 
 const MyCV = () => {
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("user"));
+      return JSON.parse(localStorage.getItem("account"));
     } catch {
       return null;
     }
@@ -52,61 +57,7 @@ const MyCV = () => {
     loadSkills();
     loadCv();
   }, [accountId]);
-
-  // const handleUpload = async (e) => {
-  //   e.preventDefault();
-  //   if (!file) return alert("Hãy chọn tệp CV!");
-  //   if (!exp) return alert("Nhập số năm kinh nghiệm!");
-  //   if (!edu) return alert("Chọn trình độ học vấn!");
-  //   if (selectedSkills.length === 0) return alert("Chọn ít nhất 1 kỹ năng!");
-
-  //   setSubmitting(true);
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-  //   formData.append("account_id", accountId);
-  //   formData.append("years_experience", exp);
-  //   formData.append("education_level", edu);
-
-  //   try {
-  //     const res = await fetch("http://localhost:9000/api/cv/upload", {
-  //       method: "POST",
-  //       body: formData,
-  //     });
-  //     const result = await res.json();
-  //     if (!result?.cv) {
-  //       alert(result?.error || "Lỗi khi tải CV!");
-  //       setSubmitting(false);
-  //       return;
-  //     }
-
-  //     const newCvId = result.cv.cv_id;
-  //     const skill_ids = selectedSkills.map((s) => s.value);
-  //     const resSkill = await fetch("http://localhost:9000/api/cv/updateSkills", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ cv_id: newCvId, skill_ids }),
-  //     });
-  //     const dataSkill = await resSkill.json();
-
-  //     if (dataSkill?.message) {
-  //       alert("🎉 Tải CV thành công kèm kỹ năng!");
-  //       setFile(null);
-  //       setExp("");
-  //       setEdu("");
-  //       setSelectedSkills([]);
-  //       loadCv();
-  //     } else {
-  //       alert("CV đã lưu, nhưng cập nhật kỹ năng bị lỗi!");
-  //     }
-  //   } catch (err) {
-  //     console.error("❌ Lỗi upload:", err);
-  //     alert("Lỗi khi tải CV!");
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
-
-    const handleUpload = async (e) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) return alert("Hãy chọn tệp CV!");
     if (!exp) return alert("Nhập số năm kinh nghiệm!");
@@ -140,7 +91,6 @@ const MyCV = () => {
       setSubmitting(false);
     }
   };
-
 
   const handleDelete = async (cv_id) => {
     if (!window.confirm("Bạn chắc chắn muốn xóa CV này?")) return;
@@ -234,7 +184,10 @@ const MyCV = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleUpload} className="mt-6 flex flex-col gap-4">
+              <form
+                onSubmit={handleUpload}
+                className="mt-6 flex flex-col gap-4"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">

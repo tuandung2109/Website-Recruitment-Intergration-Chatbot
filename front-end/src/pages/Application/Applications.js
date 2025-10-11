@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const Applications = () => {
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("user"));
+      return JSON.parse(localStorage.getItem("account"));
     } catch {
       return null;
     }

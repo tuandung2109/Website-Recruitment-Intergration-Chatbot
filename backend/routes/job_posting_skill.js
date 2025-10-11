@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const controllerJobPostingSklill = require("../controllers/job_posting_skill");
+const controllerJobPostingSkill = require("../controllers/job_posting_skill");
 
 router.get(
-  "/listAccountAccountType",
-  controllerJobPostingSklill.listJobPostingSklill
+  "/listJobPostingSkill",
+  controllerJobPostingSkill.listJobPostingSkill
 );
 router.get(
-  "/listJobPostingSklillId/:id",
-  controllerJobPostingSklill.listJobPostingSklillId
+  "/listJobPostingSkillId/:id",
+  controllerJobPostingSkill.listJobPostingSkillId
 );
 module.exports = router;

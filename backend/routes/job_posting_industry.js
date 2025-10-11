@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const controllerAccountAccountType = require("../controllers/account_account_type");
+const controllerJobPostingIndustry = require("../controllers/job_posting_industry");
 
 router.get(
-  "/listAccountAccountType",
-  controllerAccountAccountType.listAccountAccountType
+  "/listJobPostingIndustry",
+  controllerJobPostingIndustry.listJobPostingIndustry
 );
 router.get(
-  "/listAccountAccountTypeId/:id",
-  controllerAccountAccountType.listAccountAccountTypeId
+  "/listJobPostingIndustryId/:id",
+  controllerJobPostingIndustry.listJobPostingIndustryId
 );
 module.exports = router;

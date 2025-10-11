@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, Spin, Alert, Tag, Table, Button, message, Modal } from "antd";
-
 import UseTitle from "../../../hooks/useTitle";
 import { getCompanyById } from "../../../services/company";
 import { listJobsPosting } from "../../../services/jobPosting";
-
 function CompanyJobPosting() {
   UseTitle("JobVip - Company Job Postings");
   const [company, setCompany] = useState(null);
@@ -36,8 +34,8 @@ function CompanyJobPosting() {
 
       // 🔹 Lấy toàn bộ jobPosting rồi lọc theo company_id
       const resJobs = await listJobsPosting();
-      console.log("📋 Tất cả job posting:", resJobs);
-      console.log("🏢 company_id hiện tại:", userData.company_id);
+      console.log("📋 Tất cả job posting111111111:", resJobs);
+      console.log("🏢 company_id hiện tại22222222:", userData.company_id);
 
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
@@ -192,26 +190,20 @@ function CompanyJobPosting() {
               </p>
               <p>
                 <strong>Kỹ năng:</strong>{" "}
-                {selectedJob.job_posting_skill?.length
-                  ? selectedJob.job_posting_skill
-                      .map((s) => s.skill.skill_name)
-                      .join(", ")
+                {selectedJob.skills?.length
+                  ? selectedJob.skills.join(", ")
                   : "—"}
               </p>
               <p>
-                <strong>Loại hình:</strong>{" "}
-                {selectedJob.work_type?.length
-                  ? selectedJob.work_type
-                      .map((w) => w.work_type_name)
-                      .join(", ")
+                <strong>Hình thức làm việc:</strong>{" "}
+                {selectedJob.workTypes?.length
+                  ? selectedJob.workTypes.join(", ")
                   : "—"}
               </p>
               <p>
                 <strong>Ngành nghề:</strong>{" "}
-                {selectedJob.job_posting_industry?.length
-                  ? selectedJob.job_posting_industry
-                      .map((i) => i.industry.name)
-                      .join(", ")
+                {selectedJob.industries?.length
+                  ? selectedJob.industries.join(", ")
                   : "—"}
               </p>
               <p>
@@ -222,12 +214,7 @@ function CompanyJobPosting() {
                 <strong>Công ty:</strong> {selectedJob.company?.name || "—"}
               </p>
               <p>
-                <strong>Địa chỉ:</strong>{" "}
-                {Array.isArray(selectedJob.company?.address)
-                  ? selectedJob.company.address
-                      .map((a) => a.address_detail)
-                      .join(", ")
-                  : selectedJob.company?.address?.address_detail || "—"}
+                <strong>Địa chỉ:</strong> {selectedJob.company?.address || "—"}
               </p>
             </div>
           ) : (

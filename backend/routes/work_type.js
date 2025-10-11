@@ -7,4 +7,5 @@ router.get(
   "/listAccountWordTypeId/:id",
   controllerWordType.listAccountWordTypeId
 );
+router.post("/postAccountWordType", controllerWordType.postAccountWordType); //Đăng bài
 module.exports = router;

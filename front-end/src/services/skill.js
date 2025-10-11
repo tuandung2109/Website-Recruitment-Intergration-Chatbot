@@ -4,7 +4,6 @@ const listSkills = async () => {
   try {
     const res = await _get(`/skill/listSkill`);
     const result = await res.json();
-
     if (res.ok && result.skill) {
       return {
         success: true,

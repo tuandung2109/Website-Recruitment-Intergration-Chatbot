@@ -1,4 +1,4 @@
-import { message } from "antd";
+// import { message } from "antd";
 import { _get, _patch, _post } from "../utils/request";
 
 const listJobsPosting = async (params = {}) => {
@@ -277,10 +277,13 @@ const postJobPosting = async (jobs) => {
   try {
     const res = await _post(`/jobPosting/postJobPosting`, jobs);
     const result = await res.json();
-    if (res.oke) {
+
+    if (res.ok) {
+      // ✅ sửa oke → ok
       return {
         success: true,
-        account: result.account,
+        job_posting: result.job_posting,
+        message: result.message || "Tạo thành công",
       };
     } else {
       return {
@@ -291,7 +294,7 @@ const postJobPosting = async (jobs) => {
   } catch (error) {
     return {
       success: false,
-      message: error.message || "Lõi kết nối máy chủ",
+      message: error.message || "Lỗi kết nối máy chủ",
     };
   }
 };

@@ -36,7 +36,6 @@ const listCvId = async (req, res) => {
 
 // 📤 Upload CV thật (file + thông tin)
 
-
 // 📍 Lấy tất cả CV + skill của 1 tài khoản
 const getCvWithSkills = async (req, res) => {
   try {
@@ -70,7 +69,6 @@ const getCvWithSkills = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server khi lấy CV + skill" });
   }
 };
-
 
 // 📍 Cập nhật kỹ năng cho 1 CV cụ thể
 const updateCvSkills = async (req, res) => {
@@ -124,7 +122,6 @@ const deleteCv = async (req, res) => {
   }
 };
 
-
 const uploadCv = async (req, res) => {
   try {
     const { account_id, years_experience, education_level } = req.body;
@@ -146,14 +143,19 @@ const uploadCv = async (req, res) => {
         contentType: file.mimetype || "application/pdf",
         upsert: true,
       });
+    console.log("upload123: ", uploadErr);
 
     if (uploadErr) {
       console.error("Upload storage error:", uploadErr);
-      return res.status(500).json({ error: "Không upload được CV lên Storage" });
+      return res
+        .status(500)
+        .json({ error: "Không upload được CV lên Storage" });
     }
 
     // 2) Lấy public URL
-    const { data: pub } = supabase.storage.from("cv-files").getPublicUrl(objectKey);
+    const { data: pub } = supabase.storage
+      .from("cv-files")
+      .getPublicUrl(objectKey);
     const publicUrl = pub?.publicUrl;
 
     // 3) Lưu vào bảng `cv`
@@ -162,7 +164,7 @@ const uploadCv = async (req, res) => {
       .insert([
         {
           account_id,
-          cv_link: publicUrl,       // 👈 lưu link public thay vì /uploads/...
+          cv_link: publicUrl, // 👈 lưu link public thay vì /uploads/...
           years_experience,
           education_level,
         },
@@ -182,5 +184,11 @@ const uploadCv = async (req, res) => {
   }
 };
 
-
-module.exports = { listCv, listCvId , uploadCv, getCvWithSkills, updateCvSkills , deleteCv};
+module.exports = {
+  listCv,
+  listCvId,
+  uploadCv,
+  getCvWithSkills,
+  updateCvSkills,
+  deleteCv,
+};

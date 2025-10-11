@@ -29,10 +29,7 @@ function AdminPage() {
       key: "sub4",
       label: "Quản lý loại công việc",
       icon: <SettingOutlined />,
-      children: [
-        { key: "jobPosting", label: "Danh sách loại công việc" },
-        { key: "10", label: "Thêm loại công việc" },
-      ],
+      children: [{ key: "jobPosting", label: "Danh sách loại công việc" }],
     },
     {
       key: "sub24",

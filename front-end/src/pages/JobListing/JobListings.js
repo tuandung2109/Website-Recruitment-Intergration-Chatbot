@@ -291,10 +291,10 @@ const JobListings = () => {
       const keyword = searchData.keywords.toLowerCase();
       filtered = filtered.filter(
         (job) =>
-          job.title.toLowerCase().includes(keyword) ||
-          job.company.toLowerCase().includes(keyword) ||
-          job.description.toLowerCase().includes(keyword) ||
-          job.skills.some((skill) => skill.toLowerCase().includes(keyword))
+          job.title.toLowerCase().includes(keyword) 
+          // job.company.toLowerCase().includes(keyword) ||
+          // job.description.toLowerCase().includes(keyword) ||
+          // job.skills.some((skill) => skill.toLowerCase().includes(keyword))
       );
     }
 

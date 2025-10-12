@@ -104,7 +104,8 @@ const softDeleteAccount = async (account_id) => {
     };
   }
 };
-// bỏ khóa
+
+// Bỏ khóa
 const unlockDeleteAccount = async (account_id) => {
   try {
     const res = await _patch(`/account/unlockDeleteLogin/${account_id}`);

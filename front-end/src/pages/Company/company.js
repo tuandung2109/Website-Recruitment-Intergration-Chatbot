@@ -36,17 +36,11 @@ function Company() {
     if (agentFillters) {
       console.log("🎯 Company Page - Received agent filters:", agentFillters);
 
-      if (agentFillters.name) {
-        setSearchText(agentFillters.name);
-      }
 
-      if (agentFillters.industry) {
-        setSelectedIndustry(agentFillters.industry);
-      }
-
-      if (agentFillters.location) {
-        setSelectedAddress(agentFillters.location);
-      }
+      setSearchText(agentFillters.name);
+      setSelectedIndustry(agentFillters.industry);
+      setSelectedAddress(agentFillters.location);
+      
        setCurrentPage(1);
 
       // Scroll to top để người dùng thấy kết quả filter

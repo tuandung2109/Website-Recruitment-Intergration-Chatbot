@@ -361,6 +361,7 @@ Trả lời:
     - intent_register → "/register" : Người dùng muốn đăng ký.
     - intent_forgot-password → "/forgot-password" : Người dùng quên mật khẩu.
     - intent_applications → "/applications" : Người dùng muốn xem hồ sơ ứng tuyển của họ.
+    - intent_review_cv → "/review-cv" : Người dùng muốn đánh giá hoặc nhận xét về CV.
     
 
     QUY TẮC PHÂN LOẠI:
@@ -371,6 +372,7 @@ Trả lời:
     5. Nếu người dùng muốn đăng ký → intent_register.
     6. Nếu người dùng quên mật khẩu → intent_forgot-password.
     7. Nếu người dùng muốn xem hồ sơ ứng tuyển của họ → intent_applications.
+    8. Nếu người dùng muốn đánh giá hoặc nhận xét về CV → intent_review_cv.
 
     VÍ DỤ:
     - "Công việc ở Hà Nội" → intent_jd
@@ -381,6 +383,7 @@ Trả lời:
     - "Tôi muốn tạo tài khoản" → intent_register
     - "Tôi quên mật khẩu" → intent_forgot-password
     - "Xem hồ sơ ứng tuyển của tôi" → intent_applications
+    - "Bạn review giúp CV này" → intent_review_cv
     
 
     Chỉ trả về DUY NHẤT 1 key intent.

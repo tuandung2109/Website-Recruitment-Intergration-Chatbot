@@ -20,6 +20,8 @@ const Chatbot = () => {
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Khóa scroll nền khi fullscreen
   useEffect(() => {
@@ -350,12 +352,53 @@ const Chatbot = () => {
           },
         ]);
         setInputValue("");
+        setUploadedFile(null);
       } else {
         console.error("Failed to clear chat history");
       }
     } catch (error) {
       console.error("Error clearing chat:", error);
     }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (file.type !== "application/pdf") {
+        alert("Chỉ chấp nhận file PDF!");
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File không được vượt quá 10MB!");
+        return;
+      }
+      
+      setUploadedFile(file);
+      
+      // Add message showing file attached
+      const fileMessage = {
+        id: Date.now(),
+        text: `📎 Đã đính kèm file: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`,
+        sender: "user",
+        timestamp: new Date(),
+        isFileAttachment: true,
+      };
+      setMessages((prev) => [...prev, fileMessage]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -722,13 +765,37 @@ const Chatbot = () => {
 
           {/* Input */}
           <div className="p-4 bg-white border-t border-gray-200">
+            {/* File Upload Preview - Only show in agent mode */}
+            {chatMode === "agent" && uploadedFile && (
+              <div className="mb-3 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2zm0-4h5v2H8V7z"/>
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">{uploadedFile.name}</p>
+                    <p className="text-xs text-gray-500">{(uploadedFile.size / 1024).toFixed(2)} KB</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveFile}
+                  className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
+                  title="Xóa file"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleInputKeyDown} // <— dùng onKeyDown thay onKeyPress
+                  onKeyDown={handleInputKeyDown}
                   placeholder={
                     chatMode === "agent"
                       ? "Hỏi hoặc yêu cầu thực hiện..."
@@ -759,6 +826,39 @@ const Chatbot = () => {
                   )}
                 </div>
               </div>
+
+              {/* File Upload Button - Only in agent mode */}
+              {chatMode === "agent" && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={handleFileUpload}
+                    title="Upload CV (PDF)"
+                    className="bg-purple-100 hover:bg-purple-200 text-purple-600 hover:text-purple-800 p-2 rounded-full transition-colors duration-300 transform hover:scale-105"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                      />
+                    </svg>
+                  </button>
+                </>
+              )}
+
               {/* Clear Button */}
               <button
                 onClick={handleClearChat}

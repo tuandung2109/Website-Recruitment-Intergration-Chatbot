@@ -102,20 +102,38 @@ const Chatbot = () => {
   }, [messages]);
 
   // Get AI bot response from backend with retry logic
-  const getAIResponse = async (userMessage, retryCount = 0) => {
+  const getAIResponse = async (userMessage, retryCount = 0, fileData = null) => {
     const maxRetries = 2;
 
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
-        method: "POST",
-        headers: API_HEADERS,
-        mode: "cors",
-        credentials: "include",
-        body: JSON.stringify({
-          message: userMessage,
-          mode: chatMode,
-        }),
-      });
+      let response;
+      
+      // If file is attached, use FormData
+      if (fileData) {
+        const formData = new FormData();
+        formData.append("message", userMessage);
+        formData.append("mode", chatMode);
+        formData.append("file", fileData);
+
+        response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
+          method: "POST",
+          mode: "cors",
+          credentials: "include",
+          body: formData,
+        });
+      } else {
+        // Regular JSON request without file
+        response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
+          method: "POST",
+          headers: API_HEADERS,
+          mode: "cors",
+          credentials: "include",
+          body: JSON.stringify({
+            message: userMessage,
+            mode: chatMode,
+          }),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -141,7 +159,7 @@ const Chatbot = () => {
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (retryCount + 1))
         );
-        return getAIResponse(userMessage, retryCount + 1);
+        return getAIResponse(userMessage, retryCount + 1, fileData);
       }
       setIsConnected(false);
       throw error;
@@ -168,9 +186,9 @@ const Chatbot = () => {
   };
 
   const handleSendMessage = async () => {
-    if (inputValue.trim() === "") return;
+    if (inputValue.trim() === "" && !uploadedFile) return;
 
-    const userMessageText = inputValue.trim();
+    const userMessageText = inputValue.trim() || "Xin hãy phân tích CV của tôi";
 
     const userMessage = {
       id: Date.now(),
@@ -184,7 +202,8 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      const aiResponse = await getAIResponse(userMessageText);
+      // Send message with file if available
+      const aiResponse = await getAIResponse(userMessageText, 0, uploadedFile);
 
       let botMessageText = aiResponse;
       let agentData = null;
@@ -228,6 +247,14 @@ const Chatbot = () => {
       };
 
       setMessages((prev) => [...prev, botResponse]);
+
+      // Clear uploaded file after successful send
+      if (uploadedFile) {
+        setUploadedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
 
       if (chatMode === "agent" && agentData) {
         const intent = agentData.intent;

@@ -35,3 +35,4 @@ pyyaml==6.0.2
 # Optional: Install CUDA support for GPU acceleration
 # torch-cuda (if using GPU)
 openai==2.3.0
+PyMuPDF==1.22.0

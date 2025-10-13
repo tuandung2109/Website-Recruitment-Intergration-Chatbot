@@ -34,3 +34,4 @@ pyyaml==6.0.2
 # Note: We use direct integration with Ollama for simplicity
 # Optional: Install CUDA support for GPU acceleration
 # torch-cuda (if using GPU)
+openai==2.3.0

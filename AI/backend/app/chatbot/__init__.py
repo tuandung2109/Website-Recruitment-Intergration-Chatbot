@@ -1,2 +1,3 @@
 from .AgentOllama import AgentOllama
-__all__ = ["AgentOllama"]
+from .AgentKatCoder import AgentKatCoder
+__all__ = ["AgentOllama", "AgentKatCoder"]

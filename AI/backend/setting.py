@@ -35,8 +35,11 @@ class Settings(BaseSettings):
     MAX_WORKERS: int = 4  # Số threads cho parallel processing
     
     EMBEDDING_MODE: str = "dangvantuan/vietnamese-document-embedding"  # Mặc định sử dụng embedding tiếng Việt
-    
-    
+    BASE_URL_OPENAI: str = "https://vanchin.streamlake.ai/api/gateway/v1/endpoints"
+    API_KEY_OPENAI: str = "UoMaZSDIoUhEHNAJIqzszg_xqwyZ5gOaGebPE7c2EA4"
+    MODE_KAT_CODER: str = "ep-4gojfr-1760317712505142118"
+
+
     @classmethod
     def load_settings(cls) -> "Settings":
         """

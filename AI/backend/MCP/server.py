@@ -91,6 +91,56 @@ def get_reflection(history: List[Dict[str, str]]) -> str:
     except Exception as e:
         print(f"❌ Error in reflection process: {str(e)}")
         return "Error in reflection process."
+
+@server.tool()
+def get_reflection_openai(history: List[Dict[str, str]]) -> str:
+    """
+    Sử dụng Reflection với OpenAI API để tự đánh giá và cải thiện câu trả lời
+    Args:
+        history: lịch sử hội thoại
+    Returns:
+        str: câu trả lời đã được cải thiện
+    """
+    from tool.reflection import Reflection
+    from openai import OpenAI
+    
+    # Tạo OpenAI client với settings
+    client = OpenAI(
+        base_url=settings.BASE_URL_OPENAI,
+        api_key=settings.API_KEY_OPENAI
+    )
+    
+    # Tạo wrapper class để tương thích với Reflection
+    class OpenAIWrapper:
+        def __init__(self, client, model_name):
+            self.client = client
+            self.model_name = model_name
+        
+        def generate_content(self, messages):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=messages
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                print(f"❌ Error generating content with OpenAI: {str(e)}")
+                raise
+    
+    # Tạo wrapper với model từ settings
+    openai_wrapper = OpenAIWrapper(client, settings.MODE_KAT_CODER)
+    reflection = Reflection(llm=openai_wrapper)
+    
+    try:
+        improved_answer = reflection.__call__(history)
+        if "<think>" in improved_answer:
+                improved_answer = improved_answer.split("</think>")[-1].strip()
+        print("OpenAI Reflection completed.", {"improved_answer": improved_answer})
+        return improved_answer
+    except Exception as e:
+        print(f"❌ Error in OpenAI reflection process: {str(e)}")
+        return "Error in OpenAI reflection process."
+    
     
 @server.tool()
 def retrive_infor_company(query: str) -> List[Dict[str, Any]]:

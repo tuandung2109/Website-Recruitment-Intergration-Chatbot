@@ -9,5 +9,6 @@ router.post("/login", authController.login);
 
 // Protected routes
 router.get("/profile", verifyToken, authController.getProfile);
+router.get("/me", verifyToken, authController.getCurrentUserId);
 
 module.exports = router;

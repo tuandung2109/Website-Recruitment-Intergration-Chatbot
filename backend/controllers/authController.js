@@ -167,6 +167,33 @@ const authController = {
         error: error.message
       });
     }
+  },
+
+  // Lấy account_id từ token (sau khi đăng nhập)
+  getCurrentUserId: (req, res) => {
+    try {
+      if (!req.user || !req.user.account_id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Không xác định được người dùng'
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          account_id: req.user.account_id
+        }
+      });
+
+    } catch (error) {
+      console.error('Get current user id error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Lỗi server',
+        error: error.message
+      });
+    }
   }
 };
 

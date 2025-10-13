@@ -150,6 +150,21 @@ const Chatbot = () => {
     return "Xin lỗi, hệ thống AI hiện tại đang gặp sự cố. Vui lòng thử lại sau ít phút hoặc liên hệ bộ phận hỗ trợ để được trợ giúp trực tiếp.";
   };
 
+  // Clean markdown formatting from AI response
+  const cleanMarkdownText = (text) => {
+    if (typeof text !== "string") return text;
+    
+    return text
+      // Remove bold markdown (**text**)
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      // Remove remaining asterisks
+      .replace(/\*/g, "")
+      // Remove heading markdown (# text)
+      .replace(/^#+\s+/gm, "")
+      // Clean up extra spaces
+      .trim();
+  };
+
   const handleSendMessage = async () => {
     if (inputValue.trim() === "") return;
 
@@ -200,9 +215,12 @@ const Chatbot = () => {
         }
       }
 
+      // Clean markdown formatting from bot message
+      const cleanedText = cleanMarkdownText(botMessageText);
+
       const botResponse = {
         id: Date.now() + 1,
-        text: botMessageText,
+        text: cleanedText,
         sender: "bot",
         timestamp: new Date(),
       };
@@ -278,9 +296,12 @@ const Chatbot = () => {
     try {
       const aiResponse = await getAIResponse(userMessage.text);
       setTimeout(() => {
+        // Clean markdown formatting from AI response
+        const cleanedResponse = cleanMarkdownText(aiResponse);
+        
         const botResponse = {
           id: Date.now() + 1,
-          text: aiResponse,
+          text: cleanedResponse,
           sender: "bot",
           timestamp: new Date(),
         };
@@ -306,6 +327,34 @@ const Chatbot = () => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleClearChat = async () => {
+    try {
+      const response = await fetch(`${AI_API_BASE_URL}/api/chat/clear`, {
+        method: "POST",
+        headers: API_HEADERS,
+        mode: "cors",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // Reset messages to initial state
+        setMessages([
+          {
+            id: 1,
+            text: "Xin chào! Tôi là trợ lý tuyển dụng AI của bạn. Tôi có thể giúp bạn tìm việc, tư vấn nghề nghiệp và hỗ trợ về CV. Bạn cần hỗ trợ gì hôm nay?",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+        setInputValue("");
+      } else {
+        console.error("Failed to clear chat history");
+      }
+    } catch (error) {
+      console.error("Error clearing chat:", error);
     }
   };
 
@@ -710,6 +759,27 @@ const Chatbot = () => {
                   )}
                 </div>
               </div>
+              {/* Clear Button */}
+              <button
+                onClick={handleClearChat}
+                title="Xóa lịch sử chat"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 p-2 rounded-full transition-colors duration-300 transform hover:scale-105"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+              {/* Send Button */}
               <button
                 onClick={handleSendMessage}
                 className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors duration-300 transform hover:scale-105"

@@ -12,50 +12,26 @@ import './EvaluateCV.css';
 const EvaluateCV = () => {
   // Dữ liệu mẫu - bạn có thể thay thế bằng API call
   const [cvEvaluation] = useState({
-    summary: "Nguyễn Thế Thành là một sinh viên chuyên ngành Công nghệ phần mềm tại Đại học Mở Hà Nội, có định hướng rõ ràng trở thành Game Developer với nền tảng kỹ thuật tốt trong Unity, C# và các công cụ phát triển game. CV thể hiện nhiệt huyết, kinh nghiệm thực hành qua nhiều dự án cá nhân và khả năng ứng dụng các nguyên lý lập trình hướng đối tượng, thiết kế phần mềm. Tuy nhiên, CV cần cải thiện về cấu trúc, ngôn ngữ chuyên nghiệp và chi tiết hóa đóng góp cụ thể trong từng dự án.",
+    summary: "",
     scores: {
-      clarity: 6,
-      relevance: 7,
-      skills: 7,
-      projects: 7,
-      professionalism: 5,
-      overall: 6
+      clarity: 0,
+      relevance: 0,
+      skills: 0,
+      projects: 0,
+      professionalism: 0,
+      overall: 0
     },
     strengths: [
-      "Có định hướng nghề nghiệp rõ ràng: trở thành Game Developer chuyên nghiệp",
-      "Kinh nghiệm thực tế với nhiều dự án game đa dạng (3D, 2D, mobile, AI)",
-      "Sử dụng tốt các công cụ và công nghệ phổ biến trong ngành: Unity, C#, UI Toolkit, Firebase, Git",
-      "Áp dụng các Design Pattern và nguyên lý thiết kế (MVC, Pooling, State Machine, SOLID, OOP)",
-      "Có kiến thức về Machine Learning với dự án NLP sử dụng ML.NET",
-      "Đã hoàn thành nhiều dự án cá nhân, thể hiện tinh thần tự học và sáng tạo",
-      "Có thành tích học tập và giải thưởng học thuật (Học bổng Giỏi/Khá, giải Vật lý cấp tỉnh)"
+  
     ],
     weaknesses: [
-      "Thiếu thông tin về kinh nghiệm làm việc chuyên nghiệp hoặc thực tập (chỉ ghi 'Unity Developer Intern' mà không có chi tiết)",
-      "Liên kết dự án đều ghi 'Link' thay vì URL thực tế, làm giảm độ tin cậy",
-      "Ngôn ngữ không nhất quán (lẫn tiếng Việt và tiếng Anh), cấu trúc CV chưa chuyên nghiệp",
-      "Thiếu mô tả chi tiết về vai trò, trách nhiệm và kết quả cụ thể trong từng dự án",
-      "Không có thông tin về kỹ năng mềm, ngoại ngữ, hoạt động ngoại khóa hoặc làm việc nhóm",
-      "Thiếu phần chứng chỉ, kỹ năng ngoại ngữ hoặc đóng góp cộng đồng",
-      "Thông tin liên hệ bị phân mảnh, không theo chuẩn quốc tế"
+
     ],
     recommendations: [
-      "Chuẩn hóa CV bằng tiếng Anh hoặc tiếng Việt hoàn toàn, ưu tiên tiếng Anh để phù hợp ngành công nghệ toàn cầu",
-      "Bổ sung mô tả chi tiết cho từng dự án: vai trò, thời gian, công nghệ sử dụng, kết quả đạt được (số lượng người chơi, lượt tải, hiệu suất cải thiện...)",
-      "Thay thế 'Link' bằng URL thật hoặc ghi rõ 'Private Repository' nếu chưa công khai",
-      "Thêm phần kinh nghiệm thực tập: công ty, thời gian, nhiệm vụ, sản phẩm đã đóng góp",
-      "Tổ chức lại cấu trúc CV theo thứ tự: Thông tin cá nhân → Mục tiêu nghề nghiệp → Kinh nghiệm → Dự án → Kỹ năng → Giáo dục → Giải thưởng",
-      "Bổ sung kỹ năng mềm: làm việc nhóm, giao tiếp, quản lý thời gian, ngoại ngữ (TOEIC, IELTS...)",
-      "Tạo portfolio website hoặc LinkedIn để tăng độ chuyên nghiệp",
-      "Tham gia các cuộc thi game jam, đóng góp mã nguồn mở để mở rộng mạng lưới và kinh nghiệm"
+   
     ],
     suggested_job_roles: [
-      "Junior Game Developer (Unity)",
-      "Gameplay Programmer",
-      "Mobile Game Developer (2D/3D)",
-      "Unity Intern",
-      "AI Programmer (với nền tảng ML và NLP)",
-      "Frontend Developer (Blazor, Web UI với C#)"
+  
     ]
   });
 

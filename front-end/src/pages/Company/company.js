@@ -158,8 +158,11 @@ function Company() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
+      {/* <section className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-24 overflow-hidden"> */}
+        {/* <div className="absolute inset-0 bg-black opacity-10"></div> */}
+        <section className="relative bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 text-white py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-5"></div>
+        
         
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse"></div>

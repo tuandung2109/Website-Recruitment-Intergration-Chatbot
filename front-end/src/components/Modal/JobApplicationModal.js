@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { addJobApplication } from "../../services/jobApplication";
 import { listMyCVs } from "../../services/CV";
-import { uploadCvFile } from "../../services/CV";
+// import { uploadCvFile } from "../../services/CV";
+import { addJobApplicationWithFile } from "../../services/jobApplication";
 
 const JobApplicationModal = ({ open, onClose, job }) => {
   const [loading, setLoading] = useState(false);
@@ -83,44 +84,72 @@ const JobApplicationModal = ({ open, onClose, job }) => {
     try {
       setLoading(true);
 
-      let cv_id = 0;
-      let file_url = "";
-      let file_upload = "";
+      // let cv_id = 0;
+      // let file_url = "";
+      // let file_upload = "";
 
+      // if (info.cvId) {
+      //   // ✅ Trường hợp chọn từ danh sách
+      //   const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
+      //   if (!pickedCV) {
+      //     alert("CV đã chọn không hợp lệ");
+      //     setLoading(false);
+      //     return;
+      //   }
+      //   cv_id = Number(info.cvId);
+      //   file_url = pickedCV.cv_link; // link tuyệt đối từ backend
+      //   file_upload = pickedCV.cv_link?.split("/").pop() || `cv_${cv_id}.pdf`;
+      // } else {
+      //   // ✅ Trường hợp tải tệp mới -> Upload trước để lấy link/id
+      //   const uploaded = await uploadCvFile({
+      //     account_id,
+      //     file: info.file,
+      //     years_experience: 0, // tuỳ bạn muốn map info.yearsExp
+      //     education_level: "No Requirements",
+      //   });
+      //   cv_id = uploaded.cv_id; // backend trả về
+      //   file_url = uploaded.cv_link; // link tuyệt đối http://host/uploads/...
+      //   file_upload = info.file?.name || "uploaded_cv.pdf";
+      // }
+
+      // const payload = {
+      //   account_id,
+      //   job_posting_id: job.id,
+      //   cv_id,
+      //   cover_letter: info.coverLetter,
+      //   file_upload,
+      //   file_url, // ⬅️ Bây giờ luôn có URL hợp lệ
+      // };
+
+      // await addJobApplication(payload);
       if (info.cvId) {
-        // ✅ Trường hợp chọn từ danh sách
-        const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
-        if (!pickedCV) {
-          alert("CV đã chọn không hợp lệ");
-          setLoading(false);
-          return;
-        }
-        cv_id = Number(info.cvId);
-        file_url = pickedCV.cv_link; // link tuyệt đối từ backend
-        file_upload = pickedCV.cv_link?.split("/").pop() || `cv_${cv_id}.pdf`;
-      } else {
-        // ✅ Trường hợp tải tệp mới -> Upload trước để lấy link/id
-        const uploaded = await uploadCvFile({
-          account_id,
-          file: info.file,
-          years_experience: 0, // tuỳ bạn muốn map info.yearsExp
-          education_level: "No Requirements",
-        });
-        cv_id = uploaded.cv_id; // backend trả về
-        file_url = uploaded.cv_link; // link tuyệt đối http://host/uploads/...
-        file_upload = info.file?.name || "uploaded_cv.pdf";
-      }
+  // 💾 Dùng CV có sẵn: gửi JSON như cũ
+  const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
+  if (!pickedCV) {
+    alert("CV đã chọn không hợp lệ");
+    setLoading(false);
+    return;
+  }
+  const payload = {
+    account_id,
+    job_posting_id: job.id,
+    cv_id: Number(info.cvId),
+    cover_letter: info.coverLetter,
+    // Có thể gửi luôn 2 field dưới (tùy BE có yêu cầu hay không)
+    file_upload: pickedCV.cv_link?.split("/").pop() || `cv_${info.cvId}.pdf`,
+    file_url: pickedCV.cv_link,
+  };
+  await addJobApplication(payload);
+} else {
+  // 📎 Tải tệp mới: gửi multipart, KHÔNG tạo bản ghi CV
+  const form = new FormData();
+  form.append("account_id", account_id);
+  form.append("job_posting_id", job.id);
+  form.append("cover_letter", info.coverLetter);
+  form.append("file", info.file); // <- file gốc
+  await addJobApplicationWithFile(form); // endpoint mới multipart
+}
 
-      const payload = {
-        account_id,
-        job_posting_id: job.id,
-        cv_id,
-        cover_letter: info.coverLetter,
-        file_upload,
-        file_url, // ⬅️ Bây giờ luôn có URL hợp lệ
-      };
-
-      await addJobApplication(payload);
       alert("Nộp đơn thành công!");
       onClose();
     } catch (err) {

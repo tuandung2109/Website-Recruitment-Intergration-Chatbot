@@ -96,15 +96,15 @@ function CompanyDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header với gradient background */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-6 shadow-lg">
+      {/* Line 99 omitted */}
+      <div className="py-4">
         <div className="max-w-6xl mx-auto px-4">
           <button
             onClick={() => navigate(-1)}
-            className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white transition-all duration-300"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
-            <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
-            <span className="font-medium">Quay lại</span>
+            <span>←</span>
+            <span>Quay lại</span>
           </button>
         </div>
       </div>

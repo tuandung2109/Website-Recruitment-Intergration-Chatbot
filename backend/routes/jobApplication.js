@@ -24,4 +24,10 @@ router.delete(
   controllerJobsApplication.deleteApplication
 );
 
+// thêm hàm mới : Backend: thêm endpoint upload-file-cho-đơn (không đụng bảng cv)
+router.post(
+  "/addApplicationFile",
+  controllerJobsApplication.addApplicationFile
+);
+
 module.exports = router;

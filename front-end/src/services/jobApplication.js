@@ -1,5 +1,7 @@
 import { _get, _patch, _post } from "../utils/request";
 
+const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
+
 const listJobApplication = async () => {
   try {
     const res = await _get(`/jobsApplication/listApplication`);
@@ -86,9 +88,19 @@ const updateApplicationStatus = async (job_application_id, status) => {
   }
 };
 
+const addJobApplicationWithFile = async (formData) => {
+  // _post đã tự nhận FormData và prepend API base URL
+  const res = await _post(`/jobsApplication/addApplicationFile`, formData);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || "Nộp đơn thất bại");
+  return data;
+};
+
 export {
   listJobApplication,
   addJobApplication,
   listJobApplicationId,
   updateApplicationStatus,
+  addJobApplicationWithFile,
 };
+

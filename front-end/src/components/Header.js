@@ -148,6 +148,13 @@ const Header = () => {
                         <FileText className="h-4 w-4 mr-3" />
                         CV của tôi
                       </a>
+                      <a
+                        href="/addCompany"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FileText className="h-4 w-4 mr-3" />
+                        Đăng ký công ty
+                      </a>
 
                       <div className="border-t border-gray-200 my-2"></div>
 

@@ -1,5 +1,4 @@
 const supabase = require("../config/supabase");
-
 // 📍 Lấy danh sách tất cả công ty
 const listCompany = async (req, res) => {
   try {
@@ -28,8 +27,6 @@ const listCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
-
 // 📍 Lấy thông tin công ty theo ID
 const listCompanyId = async (req, res) => {
   try {
@@ -42,7 +39,8 @@ const listCompanyId = async (req, res) => {
     const { data: company, error } = await supabase
       .from("company")
       // .select("*")
-        .select(`
+      .select(
+        `
           *,
           company_industry(
             industry:industry_id(
@@ -54,7 +52,8 @@ const listCompanyId = async (req, res) => {
             address_id,
             address_detail
           )
-        `)
+        `
+      )
       .eq("company_id", company_id)
       .single();
 
@@ -65,7 +64,6 @@ const listCompanyId = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 // 📍 Khóa / Mở khóa công ty (status = 'active' hoặc 'locked')
 const lockCompany = async (req, res) => {
   try {
@@ -116,7 +114,6 @@ const unlockCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 // 📍 Cập nhật thông tin công ty
 const updateCompany = async (req, res) => {
   try {
@@ -142,7 +139,6 @@ const updateCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 // 📍 Xóa công ty
 const deleteCompany = async (req, res) => {
   try {
@@ -165,6 +161,84 @@ const deleteCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+const postCompany = async (req, res) => {
+  try {
+    const {
+      account_id,
+      name,
+      website,
+      logo_url,
+      size,
+      description,
+      industry_ids,
+      address_detail,
+    } = req.body;
+
+    if (!account_id || !name || !industry_ids?.length)
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc!",
+      });
+
+    // 1️⃣ Kiểm tra account có công ty chưa
+    const { data: account } = await supabase
+      .from("account")
+      .select("*")
+      .eq("account_id", account_id)
+      .maybeSingle();
+
+    if (account?.company_id)
+      return res.status(400).json({
+        success: false,
+        message: "Tài khoản này đã có công ty!",
+      });
+
+    // 2️⃣ Tạo company
+    const { data: newCompany, error: companyError } = await supabase
+      .from("company")
+      .insert([
+        { name, website, logo_url, size, description, status: "active" },
+      ])
+      .select()
+      .single();
+
+    if (companyError)
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi tạo công ty!",
+      });
+
+    // 3️⃣ Thêm địa chỉ (nếu có)
+    if (address_detail) {
+      await supabase
+        .from("address")
+        .insert([{ address_detail, company_id: newCompany.company_id }]);
+    }
+
+    // 4️⃣ Gắn nhiều industry
+    const industryRecords = industry_ids.map((id) => ({
+      company_id: newCompany.company_id,
+      industry_id: id,
+    }));
+
+    await supabase.from("company_industry").insert(industryRecords);
+
+    // 5️⃣ Cập nhật account có company_id
+    await supabase
+      .from("account")
+      .update({ company_id: newCompany.company_id })
+      .eq("account_id", account_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Tạo công ty thành công!",
+      company_id: newCompany.company_id,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi tạo công ty:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
 
 module.exports = {
   listCompany,
@@ -173,4 +247,5 @@ module.exports = {
   lockCompany,
   updateCompany,
   unlockCompany,
+  postCompany,
 };

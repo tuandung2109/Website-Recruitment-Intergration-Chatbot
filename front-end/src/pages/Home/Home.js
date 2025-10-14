@@ -137,7 +137,6 @@ const Home = ({ title }) => {
               <a href="/admin">
                 <button>Admin</button>
               </a>
-              <button>Nạp tiền</button>
               <br></br>
               <a href="/companyAdmin">
                 <button>companyAdmin</button>

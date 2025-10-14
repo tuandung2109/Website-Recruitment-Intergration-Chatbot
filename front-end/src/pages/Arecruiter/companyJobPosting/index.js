@@ -63,31 +63,6 @@ function CompanyJobPosting() {
   return (
     <div className="p-6 flex flex-col items-center gap-8">
       {/* 🏢 Thông tin công ty */}
-      <Card
-        style={{
-          maxWidth: 800,
-          width: "100%",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          borderRadius: 12,
-        }}
-        title={`🏢 ${company?.name || "Công ty"}`}
-      >
-        <p>
-          <strong>Website:</strong>{" "}
-          <a href={company?.website} target="_blank" rel="noreferrer">
-            {company?.website}
-          </a>
-        </p>
-        <p>
-          <strong>Địa chỉ:</strong>{" "}
-          {company?.address?.map((a) => a.address_detail).join(", ") || "—"}
-        </p>
-        <p>
-          <strong>Ngành nghề:</strong>{" "}
-          {company?.company_industry?.map((i) => i.industry?.name).join(", ") ||
-            "—"}
-        </p>
-      </Card>
 
       {/* 💼 Danh sách bài đăng tuyển */}
       <Card

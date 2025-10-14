@@ -4,20 +4,21 @@ const controllerJobsApplication = require("../controllers/jobApplicaton");
 
 router.get("/listApplication", controllerJobsApplication.listApplication);
 
-router.post("/addApplication", controllerJobsApplication.addApplication);
-
 router.get(
   "/listApplicationId/:id",
   controllerJobsApplication.listApplicationId
 );
+router.post("/addApplication", controllerJobsApplication.addApplication);
+
 router.patch(
   "/unlockApplication/:id",
-  controllerJobsApplication.unlockApplication
+  controllerJobsApplication.acceptApplication
 );
 router.patch(
-  "/updateApplication/:id",
-  controllerJobsApplication.updateApplication
+  "/updateApplicationStatus/:id",
+  controllerJobsApplication.updateApplicationStatus
 );
+
 router.delete(
   "/deleteApplication/:id",
   controllerJobsApplication.deleteApplication

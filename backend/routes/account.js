@@ -14,5 +14,9 @@ router.post("/otp", controllerUsers.userOtp); //Xác nhận OTP
 router.post("/resetPassword", controllerUsers.userResetPassword); //Đặt lại mật khẩu
 router.post("/getApiUser", controllerUsers.getApiUser);
 router.patch("/unlinkCompany/:id", controllerUsers.unlinkCompany);
+router.get("/getAccount", controllerUsers.getAccount);
+
+router.post("/checkEmailAndSendOtp", controllerUsers.sendOtpRegister);
+router.post("/verifyOtp", controllerUsers.verifyOtpRegister);
 
 module.exports = router;

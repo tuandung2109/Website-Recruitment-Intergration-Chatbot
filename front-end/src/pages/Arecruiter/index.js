@@ -38,10 +38,7 @@ function Recruiter() {
       key: "sub42",
       label: "Quản lý đơn ứng tuyển",
       icon: <SettingOutlined />,
-      children: [
-        { key: "jobPosting", label: "Danh sách Đơn ứng tuyển" },
-        { key: "10", label: "Thêm công việc" },
-      ],
+      children: [{ key: "job_application", label: "Danh sách Đơn ứng tuyển" }],
     },
     {
       key: "sub422",
@@ -73,6 +70,9 @@ function Recruiter() {
     }
     if (e.key === "companyAddJobPosting") {
       navigate("/companyAdmin/companyAddJobPosting");
+    }
+    if (e.key === "job_application") {
+      navigate("/companyAdmin/companyListJobPosting");
     }
   };
 

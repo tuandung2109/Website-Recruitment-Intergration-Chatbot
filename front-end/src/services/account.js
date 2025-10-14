@@ -1,12 +1,12 @@
 import { _get, _patch, _post } from "../utils/request";
 
-const postRegister = async ({ username, password, email, phone }) => {
+const postRegister = async ({ username, password, email, phone_number }) => {
   try {
     const res = await _post(`/account/postRegister`, {
       username,
       password,
       email,
-      phone,
+      phone_number,
     });
     const result = await res.json();
     if (res.ok) {
@@ -34,7 +34,7 @@ const loginAccount = async ({ email, password }) => {
     const result = await res.json();
 
     if (res.ok && result.success) {
-      return { success: true, account: result.account }; // ✅ đổi 'user' → 'account'
+      return { success: true, account: result.account };
     } else {
       return {
         success: false,
@@ -90,7 +90,6 @@ const listAccountId = async (id) => {
     };
   }
 };
-
 const hardDeleteAccount = async () => {};
 // khóa
 const softDeleteAccount = async (account_id) => {
@@ -104,7 +103,6 @@ const softDeleteAccount = async (account_id) => {
     };
   }
 };
-
 // Bỏ khóa
 const unlockDeleteAccount = async (account_id) => {
   try {
@@ -129,6 +127,82 @@ const unlinkCompany = async (account_id) => {
     };
   }
 };
+const userForgot = async (email) => {
+  try {
+    const res = await _post(`/account/resetPassword`, { email });
+    const result = await res.json();
+    if (result.success) {
+      alert("Vui lòng kiểm tra email để nhập mã OTP");
+    } else {
+      alert(result.message || "Đã xảy ra lỗi.");
+    }
+    return result;
+  } catch (error) {
+    alert(error.message || "Lỗi kết nối máy chủ.");
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối máy chủ.",
+    };
+  }
+};
+
+const userOtp = async ({ email, otp }) => {
+  try {
+    const res = await _post(`/account/otp`, { email, otp });
+    const result = await res.json();
+    if (result.success) {
+      alert("OTP hợp lệ. Đang chuyển đến trang đặt lại mật khẩu...");
+      localStorage.setItem("tokenUser", result.tokenUser);
+    } else {
+      alert(result.message || "Mã OTP không hợp lệ.");
+    }
+    console.log(result);
+    return result;
+  } catch (error) {
+    alert(error.message || "Lỗi xác minh OTP");
+    return { success: false };
+  }
+};
+const userResetPassword = async ({ email, password }) => {
+  const tokenUser = localStorage.getItem("tokenUser");
+  try {
+    const res = await _post(`/account/resetPassword`, {
+      email,
+      password,
+      tokenUser,
+    });
+    const rawText = await res.text(); // luôn đọc dưới dạng text để debug lỗi JSON
+    console.log("Raw response text:", rawText);
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch (err) {
+      console.error("Lỗi parse JSON:", err);
+      return { success: false, message: "Server không trả về JSON." };
+    }
+    // console.log("resulttttt:", result);
+    if (result.success) {
+      alert("Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.");
+      window.location.href = "/login";
+    } else {
+      alert(result.message || "Không thể đặt lại mật khẩu.");
+    }
+    return result;
+  } catch (error) {
+    alert(error.message || "Lỗi kết nối khi đặt lại mật khẩu.");
+    return { success: false };
+  }
+};
+const sendOtpRegister = async (email) => {
+  const res = await _post("/account/checkEmailAndSendOtp", { email });
+  const data = await res.json();
+  return data;
+};
+const verifyOtpRegister = async (email, otp) => {
+  const res = await _post("/account/verifyOtp", { email, otp });
+  const data = await res.json();
+  return data;
+};
 export {
   postRegister,
   loginAccount,
@@ -138,4 +212,9 @@ export {
   unlockDeleteAccount,
   unlinkCompany,
   listAccountId,
+  userResetPassword,
+  userOtp,
+  userForgot,
+  sendOtpRegister,
+  verifyOtpRegister,
 };

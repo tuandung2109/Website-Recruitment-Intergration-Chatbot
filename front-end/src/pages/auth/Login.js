@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, Briefcase, Loader2 } from "lucide-react";
 import { authAPI } from "../../services/api";
 import UseTitle from "../../hooks/useTitle";
+import { loginAccount } from "../../services/account";
 const Login = () => {
   UseTitle("JobVip - Đăng nhập");
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const Login = () => {
           const { token, account } = response.data;
           localStorage.setItem("token", token);
           localStorage.setItem("account", JSON.stringify(account));
-          localStorage.setItem("account_id", String(account.account_id)); // ✅
+          localStorage.setItem("account_id", String(account.account_id));
           navigate("/");
         }
       } catch (error) {
@@ -109,7 +110,7 @@ const Login = () => {
             <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
               Chào mừng
               <br />
-              trở lại!
+              trở lại!123
             </h1>
             <p className="text-blue-100 text-lg leading-relaxed max-w-md">
               Khám phá hàng ngàn cơ hội việc làm từ các công ty hàng đầu. Bắt

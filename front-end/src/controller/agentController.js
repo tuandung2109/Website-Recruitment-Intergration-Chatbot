@@ -83,7 +83,26 @@ export const handleIntent = (intent, navigate, filters = null) => {
       console.log("✅ Navigating to /applications page...");
       navigate("/applications");
       break;
-
+    
+    case "evaluate_cv":
+      // Intent về đánh giá CV
+      console.log("✅ Navigating to /evaluate_cv page...");
+      
+      // Lưu dữ liệu đánh giá CV vào sessionStorage
+      if (filters && Object.keys(filters).length > 0) {
+        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
+        console.log("💾 CV Evaluation data saved to sessionStorage");
+      }
+      
+      navigate("/evaluate_cv");
+      
+      // Dispatch custom event to notify EvaluateCV component
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('agentNavigation', {
+          detail: { filters, intent }
+        }));
+      }, 100);
+      break;
     default:
       // Intent không được xử lý
       console.log("⚠️ Intent not handled:", intent);

@@ -127,6 +127,7 @@ def get_user_chatbot(session_id):
                 'chatbot': chatbot,
                 'created_at': datetime.now(),
                 'last_activity': datetime.now()
+                ,'filepath': ""  # Track uploaded file per session
             }
             logger.info(f"Created new chatbot for session: {session_id}")
         except Exception as e:
@@ -187,13 +188,45 @@ def test_endpoint():
 def chat():
     """Chat endpoint for recruitment conversations using ChatbotOllama"""
     try:
-        data = request.get_json()
-        
-        if not data or 'message' not in data:
-            return jsonify({"error": "Message is required"}), 400
-        
-        user_message = data['message']
-        mode = data['mode']
+        # Support both JSON requests and multipart/form-data uploads (PDF)
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            user_message = request.form.get('message', '')
+            mode = request.form.get('mode', 'chat')
+            uploaded_file = request.files.get('file')
+
+            if uploaded_file:
+                # Validate file type (case-insensitive)
+                filename_lower = uploaded_file.filename.lower()
+                if not filename_lower.endswith('.pdf'):
+                    return jsonify({
+                        "error": "Only PDF files are allowed",
+                        "status": "error"
+                    }), 400
+
+                # Save file temporarily
+                upload_folder = os.path.join(backend_path, 'uploads')
+                os.makedirs(upload_folder, exist_ok=True)
+
+                session_id = get_session_id()
+                # Ensure chatbot/session entry exists
+                get_user_chatbot(session_id)
+
+                filename = f"{session_id}_{int(time.time())}_{uploaded_file.filename}"
+                filepath = os.path.join(upload_folder, filename)
+                uploaded_file.save(filepath)
+                # Store file path in session data
+                user_chatbots[session_id]['filepath'] = filepath
+
+                logger.info(f"📄 File uploaded: {filename} ({os.path.getsize(filepath)} bytes)")
+        else:
+            data = request.get_json()
+            
+            if not data or 'message' not in data:
+                return jsonify({"error": "Message is required"}), 400
+            
+            user_message = data['message']
+            mode = data.get('mode', 'chat')
 
 
 

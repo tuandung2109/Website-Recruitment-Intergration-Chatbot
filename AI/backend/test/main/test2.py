@@ -1,33 +1,99 @@
-
 import sys
 from pathlib import Path
+import os
+
+# Set UTF-8 encoding for Windows console
+os.system('chcp 65001 >nul')
+
+from flask import logging
+from openai import OpenAI
 
 
-# Add backend to path
-backend_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(backend_dir))
+# Ensure the backend package is discoverable when running the test directly
+backend_dir = Path(__file__).resolve().parents[2]
+if str(backend_dir) not in sys.path:
+	sys.path.insert(0, str(backend_dir))
 
 
-if __name__ == "__main__":
-    from tool.database import PostgreSQLClient
-    from setting import Settings
-    settings = Settings.load_settings()
-    # postgreSQL_client = PostgreSQLClient(Settings=settings)
-    # print(postgreSQL_client.get_data_from_procedures('get_company_infor'))
-    from tool.database import QDrant
-    from tool.embeddings import SentenceTransformerEmbedding, EmbeddingConfig
 
-    settings = Settings.load_settings()
+cv = """
+Projects
+Skills
+Unity Developer Intern
+Education
+AwardsLà một sinh viên đam mê lập trình,
+nhiệt huyết và trách nhiệm, luôn nỗ lực
+phát triển bản thân để đạt mục tiêu.
+Trong 2 năm tới, tôi mong muốn trở
+thành Game Developer và sẽ không
+ngừng học hỏi thêm kiến thức và kinh
+nghiệm. Mục tiêu dài hạn là trở thành
+một Game Developer chuyên nghiệp.
+About Me
+tthanh.fesh@gmail.com
+0859215819
+Shooter Zombie Top down 3d
+Hoang Liet, Hoang Mai, Ha Noi
+Là thể loại game góc nhìn từ trên xuống, trong đó người chơi vào
+vai một nhân vật dùng các kỹ năng và súng để phòng thủ qua các
+đợt tấn công của zombie.
+Game sử dụng UI Toolkit  và Unity UI để tạo giao diện người dùng
+Game có sử dụng một số các mẫu thiết kế như MVC, Pooling
+object, State Machine, ...
+Linh demo: Link
+Link Githup: Link
+Unity 3D/2D, Unreal
+C#, Java, Kotlin, C++, SQL, HTML, CSS,
+JavaScript, HLSL
+OOP, Design Pattern, SOLID, ASP.Net
+Core MVC 
+UI Toolkit, Unity UI, Dotween, Firebase,
+Google Admob SDK
+Git, Githup
+NGUYỄN THẾ THÀNH
+11/2024 - NOW
+TREASURE RUNNER 2D
+Là thể loại game chạy vô tận. Người chơi nhập vai vào một cướp
+biển phiêu lưu qua các vùng đất, vượt qua các vật cản để đạt được
+kho báu.
+Game sử dụng UI Toolkit  và Unity UI để tạo giao diện người dùng 
+Linh demo: Link
+Link Githup: Link
+10/2024-11/2024
+PAIN HIT 3D
+Mục tiêu là ném bóng vào các vòng tròn đang quay vào thời điểm
+hoàn hảo để tô màu hoàn toàn cho chúng. Người chơi phải tránh
+các chấm đen và các khu vực đã đánh trước đó.
+Linh demo: Link
+Link Githup: Link
+09/2024
+OTHER PROJECT
+Dự đoán cảm xúc của người dùng dựa trên đánnh giá
+Sử dụng ML.net c# để xử lý ngôn ngữ NLP và xây dựng mô hình
+máy học.
+Sử dụng các công cụ để tiền xử lý ngôn ngữ người sang máy học
+giúp môn hình dự đoán chính xác 75%
+Tích hợp vào blazor web để dự đoán cảm xúc người dùng
+Link Githup: Link
+09/2024
+Đại học mở Hà Nội (2022 - 2025)
+Chuyên ngành công nghệ phần mềm
+GPA 3.0
+Học bổng Giỏi và Khá của trường
+Giải khuyến khích tỉnh môn vật lý 2021
+nGuyễn Thế
+Trang 1/1
+"""
 
-    # Construct EmbeddingConfig with the model name from settings
-    config = EmbeddingConfig(name=settings.TEXT_EMBEDDING_MODEL_ID)
-    embedding_model = SentenceTransformerEmbedding(config)
-    query = embedding_model.encode("Tìm có ngành Software.")
+from prompt.promt_config import PromptConfig
+prompt_config = PromptConfig()
+prompt = prompt_config.get_prompt("extract_features_cvssss", user_input=cv)
+from setting import Settings
+settings = Settings()
+client = OpenAI(base_url=settings.BASE_URL_OPENAI,api_key=settings.API_KEY_OPENAI)
 
-    qdrant_client = QDrant(Settings=settings)
-    print(qdrant_client.search_vectors("companies", query, 3))
-        
+print("prompt:", prompt )
 
+response = client.chat.completions.create(model=settings.MODE_KAT_CODER, messages=[{"role": "user", "content": prompt}])
 
-   
-
+print("response:", response.choices[0].message.content)

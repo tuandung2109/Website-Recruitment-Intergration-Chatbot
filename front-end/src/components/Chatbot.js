@@ -189,6 +189,12 @@ const Chatbot = () => {
     if (inputValue.trim() === "" && !uploadedFile) return;
 
     const userMessageText = inputValue.trim() || "Xin hãy phân tích CV của tôi";
+    // if (inputValue == "Đánh giá CV cho tôi")
+    // {
+    //   setTimeout(() => {
+    //         handleIntent("evaluate_cv", navigate);
+    //   }, 1000);
+    // }
 
     const userMessage = {
       id: Date.now(),
@@ -222,14 +228,22 @@ const Chatbot = () => {
             typeof extracted_features === "string"
               ? JSON.parse(extracted_features)
               : extracted_features || {};
-          botMessageText = `Tôi hiểu bạn đang tìm công việc với các yêu cầu sau:\n`;
-          if (featuresObj.title)
-            botMessageText += `• Vị trí: ${featuresObj.title}\n`;
-          if (featuresObj.location)
-            botMessageText += `• Địa điểm: ${featuresObj.location}\n`;
-          if (featuresObj.salary)
-            botMessageText += `• Mức lương: ${featuresObj.salary}\n`;
-          botMessageText += `\nĐang chuyển đến trang tìm kiếm...`;
+          
+          // Kiểm tra nếu intent là evaluate_cv
+          if (intent === "evaluate_cv") {
+            botMessageText = `✅ Đã phân tích CV của bạn thành công!\n\n`;
+            botMessageText += `📊 Điểm tổng quát: ${featuresObj.scores?.overall || 0}/10\n`;
+            botMessageText += `\nĐang chuyển đến trang đánh giá chi tiết...`;
+          } else {
+            botMessageText = `Tôi hiểu bạn đang tìm công việc với các yêu cầu sau:\n`;
+            if (featuresObj.title)
+              botMessageText += `• Vị trí: ${featuresObj.title}\n`;
+            if (featuresObj.location)
+              botMessageText += `• Địa điểm: ${featuresObj.location}\n`;
+            if (featuresObj.salary)
+              botMessageText += `• Mức lương: ${featuresObj.salary}\n`;
+            botMessageText += `\nĐang chuyển đến trang tìm kiếm...`;
+          }
         } catch {
           botMessageText =
             "Đã hiểu yêu cầu của bạn. Đang tìm kiếm công việc phù hợp...";
@@ -405,6 +419,9 @@ const Chatbot = () => {
       
       setUploadedFile(file);
       
+      // Set input value to fixed text when file is attached
+      setInputValue("Đánh giá CV cho tôi");
+      
       // Add message showing file attached
       const fileMessage = {
         id: Date.now(),
@@ -419,6 +436,8 @@ const Chatbot = () => {
 
   const handleRemoveFile = () => {
     setUploadedFile(null);
+    // Clear input value when file is removed
+    setInputValue("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -821,14 +840,26 @@ const Chatbot = () => {
                 <input
                   type="text"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow editing if no file is attached
+                    if (!uploadedFile) {
+                      setInputValue(e.target.value);
+                    }
+                  }}
                   onKeyDown={handleInputKeyDown}
                   placeholder={
-                    chatMode === "agent"
+                    uploadedFile
+                      ? "Đánh giá CV cho tôi (đã khóa)"
+                      : chatMode === "agent"
                       ? "Hỏi hoặc yêu cầu thực hiện..."
                       : "Đặt câu hỏi..."
                   }
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  disabled={uploadedFile !== null}
+                  className={`w-full px-4 py-2 pr-10 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                    uploadedFile
+                      ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-600"
+                      : "border-gray-300 bg-white"
+                  }`}
                 />
                 {/* Mode Indicator Badge */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">

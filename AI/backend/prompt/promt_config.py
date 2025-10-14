@@ -203,43 +203,59 @@ User: "{user_input}"
 Trả lời:"""
           ),
           
-          "extract_features_cv": (
-            """Bạn là chuyên gia phân tích CV.
-
-Nhiệm vụ:
-Đọc CV dưới đây và trả về **JSON hợp lệ** với format:
-
-{{
-  "skills": ["skill1", "skill2", ...],
-  "experience_years": <tổng số năm kinh nghiệm> (int),
-  "experience_detail": [
-      {{"domain": "<lĩnh vực/loại công việc>", "years": <số năm kinh nghiệm> (int)}},
-      ...
-  ],
-  "education_level": "Bachelor/Master/PhD/College/Other",
-  "location": "<Thành phố hoặc tỉnh>",
-  "ielts": <điểm IELTS hoặc null>,
-  "certs": ["cert1", "cert2"]
-}}
-
-HƯỚNG DẪN:
-- skills: Liệt kê tất cả kỹ năng lập trình, công nghệ, framework.
-- experience_years: Tổng số năm kinh nghiệm làm việc (tính từ thời gian các vị trí ghi rõ trong CV).
-- experience_detail: Mỗi phần tử ghi rõ lĩnh vực (ví dụ: "AI/ML", "Game Development", "Blockchain", "Web/Mobile", "Khác") và số năm kinh nghiệm trong lĩnh vực đó.
-- education_level: Bachelor/Master/PhD/College/Other.
-- location: Thành phố/tỉnh từ địa chỉ.
-- ielts: Điểm IELTS nếu CV ghi rõ, nếu không có thì null (không được suy đoán).
-- certs: Danh sách chứng chỉ nếu có.
-
-QUAN TRỌNG:
-- Chỉ tính số năm kinh nghiệm khi CV có mốc thời gian rõ ràng.
-- Nếu thiếu thông tin → years = 0.
-- Không tự sáng tạo hoặc suy đoán thông tin không có.
-
-CV CONTENT:
+          "extract_features_cvssss": (
+            """
+            You are an expert career advisor and AI recruiter specializing in evaluating professional resumes for job readiness and suitability.  
+Your goal is to analyze the candidate's CV and produce a structured, insightful evaluation.
+---
+### Input:
+The following text is the candidate's CV:
 {user_input}
+---
+### Instructions:
+1. **Identify key information** from the CV:
+   - Full name (if available)
+   - Contact information
+   - Summary or objective
+   - Skills (group them into technical, soft, and other relevant categories)
+   - Work experience (list company, position, duration, and key responsibilities)
+   - Education
+   - Projects or research
+   - Certifications or awards
+   - Languages and tools used
 
-CHỈ TRẢ VỀ JSON, KHÔNG VIẾT THÊM BẤT KỲ TEXT NÀO KHÁC"""
+2. **Evaluate the CV** on the following dimensions (give 0–10 score for each):
+   - Clarity and formatting
+   - Relevance to tech industry (especially AI, data, or blockchain if applicable)
+   - Skill depth and variety
+   - Project or work impact
+   - Professional tone and structure
+   - Overall job-readiness
+
+3. **Generate feedback and suggestions:**
+   - What’s strong in this CV?
+   - What’s missing or weak?
+   - What to improve (specific actions)?
+   - Suggest potential **job roles** suitable for this candidate.
+
+4. **Output structure (JSON format):**
+   {{
+     "summary": "Short summary of the candidate and first impression",
+     "scores": {{
+       "clarity": 0,
+       "relevance": 0,
+       "skills": 0,
+       "projects": 0,
+       "professionalism": 0,
+       "overall": 0
+     }},
+     "strengths": ["..."],
+     "weaknesses": ["..."],
+     "recommendations": ["..."],
+     "suggested_job_roles": ["..."]
+   }}
+
+            """
           ),
           
           "classification_chat_intent": (

@@ -93,6 +93,38 @@ def get_reflection(history: List[Dict[str, str]]) -> str:
         return "Error in reflection process."
 
 @server.tool()
+def extract_features_cv(user_input: str) -> str:
+    """
+    Trích xuất thông tin từ CV và phát hiện gian lận
+    Args:
+        user_input: văn bản CV
+    Returns:
+        str: JSON hợp lệ với các trường thông tin và danh sách red_flags (nếu có)
+    """
+    from llms.llm_manager import llm_manager
+    from prompt.promt_config import PromptConfig
+    
+    # Sử dụng LLM Manager thay vì tạo instance mới
+    # Always use localhost - no Docker support
+    default_url = "http://localhost:11434"
+    ollama_url = os.getenv("OLLAMA_URL") or settings.OLLAMA_BASE_URL or default_url
+    ollama_model = settings.OLLAMA_MODEL
+    
+    # Reuse existing LLM instance từ manager
+    llm = llm_manager.get_ollama_client(base_url=ollama_url, model_name=ollama_model)
+    
+    try:
+        prompt_config = PromptConfig()
+        prompt = prompt_config.get_prompt("extract_features_cv", user_input=user_input)
+        print(f"\n🔍 Extracting features from CV...")
+        response = llm.generate_content([{"role": "user", "content": prompt}])
+        print("✅ Feature extraction completed.")
+        return response
+    except Exception as e:
+        print(f"❌ Error in feature extraction: {str(e)}")
+        return "Error in feature extraction."
+
+@server.tool()
 def get_reflection_openai(history: List[Dict[str, str]]) -> str:
     """
     Sử dụng Reflection với OpenAI API để tự đánh giá và cải thiện câu trả lời

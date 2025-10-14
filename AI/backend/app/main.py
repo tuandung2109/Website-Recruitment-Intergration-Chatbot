@@ -212,13 +212,22 @@ def chat():
                 # Ensure chatbot/session entry exists
                 get_user_chatbot(session_id)
 
-                filename = f"{session_id}_{int(time.time())}_{uploaded_file.filename}"
+                filename = f"{session_id}_cv.pdf"
                 filepath = os.path.join(upload_folder, filename)
                 uploaded_file.save(filepath)
+                
+                # Verify file was saved correctly
+                if not os.path.exists(filepath):
+                    logger.error(f"❌ File was not saved correctly: {filepath}")
+                    return jsonify({
+                        "error": "Failed to save uploaded file",
+                        "status": "error"
+                    }), 500
+                
                 # Store file path in session data
                 user_chatbots[session_id]['filepath'] = filepath
-
                 logger.info(f"📄 File uploaded: {filename} ({os.path.getsize(filepath)} bytes)")
+                logger.info(f"✅ File path stored in session: {filepath}")
         else:
             data = request.get_json()
             
@@ -244,9 +253,13 @@ def chat():
         try:
             # Generate response using chatbot
             if mode == "agent":
-                print("Using agent mode for response")
-                response = bot.chat_with_agent(user_message)
-                print("response:", response)
+                logger.info("Using agent mode for response")
+                filepath = user_chatbots[session_id].get('filepath', '')
+                logger.info(f"📂 Filepath from session: '{filepath}'")
+                logger.info(f"📝 User message: '{user_message}'")
+                
+                response = bot.chat_with_agent(user_message, filepath=filepath)
+                logger.info(f"✅ Agent response type: {type(response)}")
                 
                 # Check if response is a dictionary (structured agent response)
                 if isinstance(response, dict):

@@ -10,6 +10,7 @@ from setting import Settings
 from llms.llm_manager import llm_manager
 from prompt.promt_config import PromptConfig
 from MCP import get_reflection, retrive_infor_company, retrive_infor_job_posting
+from app.chatbot.AgentKatCoder import AgentKatCoder
 
 
 class AgentOllama(BaseAI):
@@ -50,68 +51,28 @@ class AgentOllama(BaseAI):
 
     def add_assistant_message(self, message: str):  # override to clean
         super().add_assistant_message(self._strip_think(message))
-    
-    
-    def chat_with_agent(self, message: str) -> str:
+        
+   
+
+
+    def chat_with_agent(self, message: str, **kwargs) -> str:
         try:
-            # Handle CV evaluation request with hardcoded data (for testing)
+            # Handle CV evaluation request
             if message == "Đánh giá CV cho tôi":
-                print("🎯 CV Evaluation request detected - returning hardcoded data")
-                time.sleep(2)  # Simulate processing time
+                from tool.extract_cv_to_json import extract_cv_to_json_by_openai
                 
-                extract_features_cv = {
-                    "summary": "Nguyễn Thế Thành là một sinh viên ngành Công nghệ Phần mềm tại Đại học Mở Hà Nội, có định hướng rõ ràng trở thành Game Developer với nền tảng kỹ thuật tốt trong Unity, C# và các công cụ phát triển game. Anh có kinh nghiệm thực tế qua nhiều dự án cá nhân sử dụng các mẫu thiết kế và công nghệ hiện đại như UI Toolkit, MVC, Object Pooling, State Machine, đồng thời thể hiện sự đa dạng khi tham gia cả lĩnh vực AI với dự án xử lý ngôn ngữ tự nhiên. Tuy nhiên, CV còn thiếu cấu trúc chuyên nghiệp và chi tiết cụ thể về đóng góp cá nhân trong từng dự án.",
-                    "scores": {
-                        "clarity": 5,
-                        "relevance": 7,
-                        "skills": 7,
-                        "projects": 7,
-                        "professionalism": 5,
-                        "overall": 6
-                    },
-                    "strengths": [
-                        "Có mục tiêu nghề nghiệp rõ ràng và thể hiện đam mê với phát triển game",
-                        "Kỹ năng công nghệ đa dạng: thành thạo Unity 3D/2D, C#, các design pattern (MVC, State Machine, Object Pooling)",
-                        "Thực hành tốt với nhiều dự án cá nhân: từ game 2D/3D đến ứng dụng AI sử dụng ML.NET",
-                        "Sử dụng các công cụ chuyên nghiệp: Git, Firebase, Google AdMob SDK, DOTween, UI Toolkit",
-                        "Có kiến thức nền tảng về cả web (Blazor, HTML, CSS, JS) và mobile (Kotlin)",
-                        "Từng nhận học bổng và giải thưởng học thuật, cho thấy tinh thần học hỏi và năng lực",
-                        "Thể hiện tư duy kỹ thuật qua việc áp dụng OOP, SOLID, Design Patterns"
-                    ],
-                    "weaknesses": [
-                        "CV thiếu cấu trúc rõ ràng, trình bày lộn xộn, không theo chuẩn nghề nghiệp",
-                        "Thiếu thông tin chi tiết về vai trò, trách nhiệm và kết quả cụ thể trong từng dự án",
-                        "Không có kinh nghiệm làm việc nhóm, thực tập hay đóng góp cộng đồng (như GitHub hoạt động thực sự)",
-                        "Thiếu phần kỹ năng mềm (giao tiếp, làm việc nhóm, tiếng Anh...)",
-                        "Liên kết demo và GitHub đều ghi là 'Link' – không có link thực tế, làm giảm độ tin cậy",
-                        "Thiếu thông tin ngôn ngữ (tiếng Anh trình độ gì?), sở thích, hoặc hoạt động ngoại khóa",
-                        "Không có phần chứng chỉ hoặc khóa học bổ trợ"
-                    ],
-                    "recommendations": [
-                        "Tái cấu trúc CV theo thứ tự chuẩn: Thông tin cá nhân → Mục tiêu nghề nghiệp → Kỹ năng → Dự án → Học vấn → Giải thưởng",
-                        "Thay thế các 'Link' bằng liên kết thật tới GitHub và demo game để tăng độ tin cậy",
-                        "Bổ sung mô tả chi tiết vai trò, trách nhiệm, công nghệ sử dụng và kết quả đạt được trong từng dự án (ví dụ: 'Tự phát triển toàn bộ gameplay và UI, tối ưu hiệu năng bằng Object Pooling, giảm 40% lag khi spawn zombie')",
-                        "Thêm phần kỹ năng mềm và trình độ ngoại ngữ",
-                        "Ghi rõ thời gian chính xác (ngày bắt đầu/kết thúc) cho từng dự án",
-                        "Cân nhắc tham gia thực tập hoặc đóng góp open-source để tăng kinh nghiệm làm việc nhóm",
-                        "Tạo portfolio cá nhân hoặc trang web giới thiệu dự án để gây ấn tượng với nhà tuyển dụng"
-                    ],
-                    "suggested_job_roles": [
-                        "Unity Game Developer (Intern/Junior)",
-                        "Gameplay Programmer",
-                        "Mobile Game Developer (Unity)",
-                        "Junior Software Developer (C#/.NET)",
-                        "AI Developer (ML.NET, NLP - entry level)",
-                        "Full-stack Developer (nếu phát triển thêm web)"
-                    ]
-                }
+                # Get filepath from kwargs
+                filepath = kwargs.get('filepath', '')
                 
-                result = {
-                    "intent": "evaluate_cv",
-                    "extracted_features": extract_features_cv
-                }
+                # Call the function with filepath
+                result = extract_cv_to_json_by_openai(filepath)
                 
-                print(f"✅ Returning CV evaluation result: {result}")
+                # Check if there was an error
+                if "error" in result:
+                    print(f"❌ Error in CV evaluation: {result['error']}")
+                    return result
+                
+                print(f"✅ Returning CV evaluation result")
                 return result
             
             # Continue with normal agent flow for other messages

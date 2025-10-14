@@ -1,0 +1,94 @@
+```json
+{
+  "id": null,
+  "label": "FAKE",
+  "overall_confidence": 0.65,
+  "personal": {
+    "name": "NGUYỄN THẾ THÀNH",
+    "emails": ["tthanh.fesh@gmail.com"],
+    "phones": ["0859215819"],
+    "locations": ["Hoang Liet, Hoang Mai, Ha Noi"],
+    "headline": "Sinh viên đam mê lập trình, nhiệt huyết và trách nhiệm, mong muốn trở thành Game Developer chuyên nghiệp trong tương lai."
+  },
+  "skills": ["Unity 3D/2D", "Unreal", "C#", "Java", "Kotlin", "C++", "SQL", "HTML", "CSS", "JavaScript", "HLSL", "OOP", "Design Pattern", "SOLID", "ASP.Net Core MVC", "UI Toolkit", "Unity UI", "Dotween", "Firebase", "Google Admob SDK", "Git", "Githup"],
+  "years_experience": {
+    "value": 0.5,
+    "confidence": 0.4
+  },
+  "experience": [
+    {
+      "company": null,
+      "title": "Unity Developer Intern",
+      "start": "2024-11",
+      "end": "present",
+      "description": "Thực tập phát triển game với các dự án như Shooter Zombie Top down 3D, sử dụng UI Toolkit, Unity UI và các design pattern như MVC, Object Pooling, State Machine.",
+      "confidence": 0.7
+    },
+    {
+      "company": null,
+      "title": "Game Developer",
+      "start": "2024-09",
+      "end": "2024-11",
+      "description": "Phát triển các game 2D và 3D bao gồm Treasure Runner 2D, Pain Hit 3D và dự án dự đoán cảm xúc người dùng bằng ML.NET.",
+      "confidence": 0.6
+    }
+  ],
+  "education": [
+    {
+      "institution": "Đại học mở Hà Nội",
+      "degree": "Chuyên ngành công nghệ phần mềm",
+      "year": "2025",
+      "confidence": 0.8
+    }
+  ],
+  "certifications": [],
+  "claims": [
+    {
+      "text": "Game có sử dụng một số các mẫu thiết kế như MVC, Pooling object, State Machine, ...",
+      "numeric_value": null,
+      "plausibility": "plausible",
+      "reason": "MVC, Object Pooling, State Machine là các design pattern phổ biến trong game development."
+    },
+    {
+      "text": "Sử dụng các công cụ để tiền xử lý ngôn ngữ người sang máy học giúp môn hình dự đoán chính xác 75%",
+      "numeric_value": 75,
+      "plausibility": "questionable",
+      "reason": "Độ chính xác 75% trong NLP là khả thi nhưng thiếu dẫn chứng như dataset, phương pháp đánh giá."
+    },
+    {
+      "text": "Link demo: Link",
+      "numeric_value": null,
+      "plausibility": "implausible",
+      "reason": "Các link demo và GitHub đều ghi là 'Link' thay vì URL thực tế — thiếu bằng chứng xác minh."
+    }
+  ],
+  "red_flags": [
+    {
+      "code": "UNVERIFIED_LINKS",
+      "reason": "Tất cả các dự án đều có 'Link demo: Link' và 'Link Githup: Link' — không có URL thật, không thể xác minh tính tồn tại của sản phẩm.",
+      "severity": "high"
+    },
+    {
+      "code": "OVERLAPPING_JOBS",
+      "reason": "Có 4 dự án được liệt kê trong khoảng thời gian rất ngắn (09/2024 - 11/2024), bao gồm cả game 3D và dự án ML — không khả thi về mặt thời gian và chuyên môn.",
+      "severity": "high"
+    },
+    {
+      "code": "UNREALISTIC_TIMELINE",
+      "reason": "Phát triển game 3D, tích hợp UI Toolkit, design pattern, NLP với ML.NET, và Blazor trong vòng 2-3 tháng là quá tải so với thực tế.",
+      "severity": "high"
+    },
+    {
+      "code": "TYPOGRAPHY_ISSUES",
+      "reason": "Lặp tên 'nGuyễn Thế' ở cuối CV, 'Githup' thay vì 'GitHub', 'Linh demo' thay vì 'Link demo' — dấu hiệu gõ nhầm hoặc làm giả.",
+      "severity": "medium"
+    },
+    {
+      "code": "NO_EVIDENCE",
+      "reason": "Không có bằng chứng công khai (GitHub, portfolio, video demo) cho các dự án lớn như game 3D và hệ thống ML.",
+      "severity": "medium"
+    }
+  ],
+  "notes": "CV có dấu hiệu gian lận do thiếu link xác minh, timeline bất khả thi và nhiều lỗi chính tả."
+}
+```

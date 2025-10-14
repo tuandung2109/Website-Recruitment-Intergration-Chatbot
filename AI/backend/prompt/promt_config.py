@@ -237,6 +237,8 @@ The following text is the candidate's CV:
    - What’s missing or weak?
    - What to improve (specific actions)?
    - Suggest potential **job roles** suitable for this candidate.
+   
+5. **Translate into Vietnamese** if the CV is in Vietnamese; otherwise, respond in English.
 
 4. **Output structure (JSON format):**
    {{
@@ -254,6 +256,8 @@ The following text is the candidate's CV:
      "recommendations": ["..."],
      "suggested_job_roles": ["..."]
    }}
+   
+  
 
             """
           ),

@@ -48,10 +48,26 @@ class AgentKatCoder(BaseAI):
         except Exception as e:
             logging.error(f"Error generating content: {str(e)}")
             raise
-    
-    
-    def chat_with_agent(self, message: str) -> str:
+
+
+    def chat_with_agent(self, message: str, **kwargs) -> str:
         try:
+            if message == "Đánh giá CV cho tôi":
+                from tool.extract_cv_to_json import extract_cv_to_json_by_openai
+
+                # Get filepath from kwargs
+                filepath = kwargs.get('filepath', '')
+                
+                # Call the function with filepath
+                result = extract_cv_to_json_by_openai(filepath)
+                
+                # Check if there was an error
+                if "error" in result:
+                    print(f"❌ Error in CV evaluation: {result['error']}")
+                    return result
+                
+                print(f"✅ Returning CV evaluation result")
+                return result
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
             intent = self._strip_think(self.generate_content([{"role": "user", "content": classification_prompt}]))
             print(f"Intent classified as: {intent}")

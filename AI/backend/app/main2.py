@@ -177,47 +177,57 @@ def test_endpoint():
 def chat():
     """Chat endpoint for recruitment conversations using AgentKatCoder (OpenAI)"""
     try:
-        # Check if request has file upload
+        # Support both JSON requests and multipart/form-data uploads (PDF)
         if request.content_type and 'multipart/form-data' in request.content_type:
             # Handle file upload
             user_message = request.form.get('message', '')
             mode = request.form.get('mode', 'chat')
             uploaded_file = request.files.get('file')
-            
+
             if uploaded_file:
-                # Validate file type
-                if not uploaded_file.filename.endswith('.pdf'):
+                # Validate file type (case-insensitive)
+                filename_lower = uploaded_file.filename.lower()
+                if not filename_lower.endswith('.pdf'):
                     return jsonify({
                         "error": "Only PDF files are allowed",
                         "status": "error"
                     }), 400
-                
+
                 # Save file temporarily
                 upload_folder = os.path.join(backend_path, 'uploads')
                 os.makedirs(upload_folder, exist_ok=True)
-                
+
                 session_id = get_session_id()
-                filename = f"{session_id}_{int(time.time())}_{uploaded_file.filename}"
+                # Ensure chatbot/session entry exists
+                get_user_chatbot(session_id)
+
+                filename = f"{session_id}_cv.pdf"
                 filepath = os.path.join(upload_folder, filename)
                 uploaded_file.save(filepath)
-                user_chatbots[session_id]['filepath'] = filepath  # Store file path in session data
                 
+                # Verify file was saved correctly
+                if not os.path.exists(filepath):
+                    logger.error(f"❌ File was not saved correctly: {filepath}")
+                    return jsonify({
+                        "error": "Failed to save uploaded file",
+                        "status": "error"
+                    }), 500
+                
+                # Store file path in session data
+                user_chatbots[session_id]['filepath'] = filepath
                 logger.info(f"📄 File uploaded: {filename} ({os.path.getsize(filepath)} bytes)")
-                
-                # Add file info to message context
-                if not user_message:
-                    user_message = f"Tôi đã upload CV của mình ({uploaded_file.filename}). Hãy phân tích và tư vấn cho tôi."
-                else:
-                    user_message += f" [File đính kèm: {uploaded_file.filename}]"
+                logger.info(f"✅ File path stored in session: {filepath}")
         else:
-            # Handle regular JSON request
             data = request.get_json()
             
             if not data or 'message' not in data:
                 return jsonify({"error": "Message is required"}), 400
             
             user_message = data['message']
-            mode = data.get('mode', 'chat')  # Default to 'chat' if not specified
+            mode = data.get('mode', 'chat')
+
+
+
 
         # Get user's session and chatbot
         session_id = get_session_id()
@@ -232,9 +242,13 @@ def chat():
         try:
             # Generate response using chatbot
             if mode == "agent":
-                logger.info(f"🤖 Using agent mode for response")
-                response = bot.chat_with_agent(user_message)
-                logger.info(f"📤 Agent response: {response}")
+                logger.info("Using agent mode for response")
+                filepath = user_chatbots[session_id].get('filepath', '')
+                logger.info(f"📂 Filepath from session: '{filepath}'")
+                logger.info(f"📝 User message: '{user_message}'")
+                
+                response = bot.chat_with_agent(user_message, filepath=filepath)
+                logger.info(f"✅ Agent response type: {type(response)}")
                 
                 # Check if response is a dictionary (structured agent response)
                 if isinstance(response, dict):
@@ -608,6 +622,64 @@ def embeddings_status():
         logger.error(f"❌ Failed to get embeddings status: {e}")
         return jsonify({
             "status": "error",
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
+
+
+@app.route('/api/cache/status', methods=['GET'])
+def cache_status():
+    """Get cache status and statistics for AgentKatCoder"""
+    try:
+        manager_info = {
+            "active_sessions": len(user_chatbots),
+            "sessions": []
+        }
+        
+        for session_id, data in user_chatbots.items():
+            history_length = len(data['chatbot'].get_history())
+            manager_info["sessions"].append({
+                "session_id": session_id[:8] + "...",
+                "history_length": history_length,
+                "has_file": bool(data.get('filepath'))
+            })
+        
+        return jsonify({
+            "status": "success",
+            "cache_info": manager_info,
+            "agent_type": "OpenAI",
+            "timestamp": time.time()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
+
+
+@app.route('/api/cache/clear', methods=['POST'])
+def clear_cache():
+    """Clear all caches for AgentKatCoder"""
+    try:
+        # Optional: Clear user chatbots
+        clear_sessions = request.json.get('clear_sessions', False) if request.json else False
+        if clear_sessions:
+            user_chatbots.clear()
+            logger.info("🧹 Cleared user chatbot sessions")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Cache cleared successfully",
+            "cleared_sessions": clear_sessions,
+            "agent_type": "OpenAI",
+            "timestamp": time.time()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error", 
             "error": str(e),
             "timestamp": time.time()
         }), 500

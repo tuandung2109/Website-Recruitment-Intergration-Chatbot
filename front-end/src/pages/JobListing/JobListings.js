@@ -41,6 +41,15 @@ const JobListings = () => {
   });
 
   // Load filter options and fetch jobs from backend API once on mount
+  // Nhận searchData từ Header khi navigate
+  useEffect(() => {
+    if (location.state?.searchData) {
+      setSearchData(location.state.searchData);
+      // Clear state sau khi đã sử dụng
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {

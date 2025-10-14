@@ -56,7 +56,6 @@ const listAccountId = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 // Đăng ký account mới
 const postRegister = async (req, res) => {
   try {
@@ -146,7 +145,6 @@ const postRegister = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 // Đăng nhập
 const postLogin = async (req, res) => {
   try {
@@ -187,7 +185,6 @@ const postLogin = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 // Xóa cứng account
 const hardDeleteAccount = async (req, res) => {
   try {
@@ -289,7 +286,7 @@ const unlockDeleteAccount = async (req, res) => {
     .status(200)
     .json({ success: true, message: "Mở khóa tài khoản thành công" });
 };
-
+//
 const userForgot = async (req, res) => {
   try {
     const email = req.body.email || req.body.email?.email;
@@ -371,6 +368,7 @@ const userOtp = async (req, res) => {
       .json({ success: false, message: "Lỗi server khi xác minh OTP" });
   }
 };
+//
 const userResetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -491,6 +489,7 @@ const unlinkCompany = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+// 🧩 controllers/account.js
 const getAccount = async (req, res) => {
   try {
     const accountId = req.query.account_id; // hoặc req.user.account_id nếu có JWT
@@ -585,6 +584,75 @@ const verifyOtpRegister = async (req, res) => {
   }
 };
 
+const updateAccount = async (req, res) => {
+  try {
+    const { account_id, gender, phone_number, date_of_birth, status, amount } =
+      req.body;
+    if (!account_id) {
+      return res.status(400).json({ error: "Thiếu account_id" });
+    }
+    // ⚙️ Cập nhật thông tin trong bảng account
+    const { data, error } = await supabase
+      .from("account")
+      .update({
+        gender,
+        phone_number,
+        date_of_birth,
+        status,
+        amount,
+        updated_at: new Date(),
+      })
+      .eq("account_id", account_id)
+      .select("*");
+    if (error) {
+      console.error("❌ Lỗi Supabase:", error);
+      return res.status(400).json({ error: error.message });
+    }
+    return res.status(200).json({
+      message: "Cập nhật thông tin thành công",
+      account: data[0],
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
+// PATCH /changePassword
+const changePassword = async (req, res) => {
+  try {
+    const { account_id, old_password, new_password } = req.body;
+
+    if (!account_id || !old_password || !new_password)
+      return res.status(400).json({ error: "Thiếu thông tin cần thiết" });
+
+    // 🔎 Lấy tài khoản hiện tại
+    const { data, error: getError } = await supabase
+      .from("account")
+      .select("password")
+      .eq("account_id", account_id)
+      .single();
+
+    if (getError) return res.status(400).json({ error: getError.message });
+    if (!data || data.password !== old_password)
+      return res.status(400).json({ error: "Mật khẩu cũ không đúng" });
+
+    // ✅ Cập nhật mật khẩu mới
+    const { error: updateError } = await supabase
+      .from("account")
+      .update({ password: new_password, updated_at: new Date() })
+      .eq("account_id", account_id);
+
+    if (updateError)
+      return res.status(400).json({ error: updateError.message });
+
+    res.status(200).json({ message: "Đổi mật khẩu thành công" });
+  } catch (err) {
+    console.error("❌ Lỗi changePassword:", err);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
 module.exports = {
   listAccount,
   getApiUser,
@@ -601,4 +669,6 @@ module.exports = {
   getAccount,
   sendOtpRegister,
   verifyOtpRegister,
+  updateAccount,
+  changePassword,
 };

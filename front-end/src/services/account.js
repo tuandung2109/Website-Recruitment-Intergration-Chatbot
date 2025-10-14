@@ -203,6 +203,34 @@ const verifyOtpRegister = async (email, otp) => {
   const data = await res.json();
   return data;
 };
+
+const updateAccount = async (body) => {
+  try {
+    const res = await _patch(`/account/updateAccount`, body);
+    const result = await res.json();
+    if (res.ok) {
+      return { success: true, account: result.account };
+    } else {
+      return {
+        success: false,
+        message: result.error || "Không thể cập nhật tài khoản",
+      };
+    }
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+const changePassword = async (data) => {
+  try {
+    const res = await _patch(`/account/changePassword`, data);
+    const result = await res.json();
+    return res.ok
+      ? { success: true, message: result.message }
+      : { success: false, message: result.error };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
 export {
   postRegister,
   loginAccount,
@@ -217,4 +245,6 @@ export {
   userForgot,
   sendOtpRegister,
   verifyOtpRegister,
+  updateAccount,
+  changePassword,
 };

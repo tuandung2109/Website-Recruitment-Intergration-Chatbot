@@ -31,6 +31,7 @@ import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
 import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
 import AddCompany from "./pages/Company/addCompany";
+import InfoUser from "./pages/Users";
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
           <Route path="/evaluate_cv" element={<EvaluateCV />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
+          <Route path="/profile" element={<InfoUser />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

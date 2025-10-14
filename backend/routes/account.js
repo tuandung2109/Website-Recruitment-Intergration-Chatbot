@@ -19,4 +19,7 @@ router.get("/getAccount", controllerUsers.getAccount);
 router.post("/checkEmailAndSendOtp", controllerUsers.sendOtpRegister);
 router.post("/verifyOtp", controllerUsers.verifyOtpRegister);
 
+router.patch("/updateAccount", controllerUsers.updateAccount);
+router.patch("/changePassword", controllerUsers.changePassword);
+
 module.exports = router;

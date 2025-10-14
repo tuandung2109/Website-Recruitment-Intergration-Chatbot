@@ -10,7 +10,6 @@ const Header = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Kiểm tra thông tin user từ localStorage khi component mount
     const userInfo = localStorage.getItem("account");
     if (userInfo) {
       try {
@@ -155,7 +154,13 @@ const Header = () => {
                         <FileText className="h-4 w-4 mr-3" />
                         Đăng ký công ty
                       </a>
-
+                      <a
+                        href="/profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <User className="h-4 w-4 mr-3" />
+                        Đổi mật khẩu
+                      </a>
                       <div className="border-t border-gray-200 my-2"></div>
 
                       <button

@@ -17,7 +17,7 @@ import {
   updateApplicationStatus,
 } from "../../../services/jobApplication";
 
-const { Paragraph, Link } = Typography;
+const { Paragraph } = Typography;
 
 function CompanyListJobPosting() {
   UseTitle("JobVip - Company Job Applications");
@@ -46,6 +46,7 @@ function CompanyListJobPosting() {
       message.error(result.message);
     }
   };
+  console.log(handleStatusChange);
   useEffect(() => {
     const fetchApplications = async () => {
       try {

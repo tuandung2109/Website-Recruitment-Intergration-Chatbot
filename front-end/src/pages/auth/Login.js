@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, Briefcase, Loader2 } from "lucide-react";
 import { authAPI } from "../../services/api";
 import UseTitle from "../../hooks/useTitle";
-import { loginAccount } from "../../services/account";
 const Login = () => {
   UseTitle("JobVip - Đăng nhập");
   const navigate = useNavigate();

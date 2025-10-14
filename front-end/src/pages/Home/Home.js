@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import UseTitle from "../../hooks/useTitle";
 const Home = ({ title }) => {
   UseTitle("JobVip - Trang chủ");
@@ -9,7 +9,7 @@ const Home = ({ title }) => {
     distance: "",
   });
   const [isVisible, setIsVisible] = useState({});
-  const [userInfo, setUserInfo] = useState(null);
+  // const [userInfo, setUserInfo] = useState(null);
 
   const [stats, setStats] = useState({
     jobs: 0,
@@ -17,6 +17,7 @@ const Home = ({ title }) => {
     candidates: 0,
     success: 0,
   });
+  console.log(stats);
   const jobCategories = [
     ["Hàng không", "Kế toán", "Hành chính", "Quảng cáo", "Nông nghiệp"],
     ["Thực tập sinh", "Quân đội", "Ô tô", "Ngân hàng", "Nhà hàng"],

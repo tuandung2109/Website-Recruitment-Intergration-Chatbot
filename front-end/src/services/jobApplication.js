@@ -1,6 +1,6 @@
 import { _get, _patch, _post } from "../utils/request";
 
-const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
+// const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
 
 const listJobApplication = async () => {
   try {
@@ -103,4 +103,3 @@ export {
   updateApplicationStatus,
   addJobApplicationWithFile,
 };
-

@@ -31,11 +31,9 @@ const listCompany = async (req, res) => {
 const listCompanyId = async (req, res) => {
   try {
     const company_id = req.params.id;
-
     if (!company_id) {
       return res.status(400).json({ error: "Thiếu ID công ty" });
     }
-
     const { data: company, error } = await supabase
       .from("company")
       // .select("*")
@@ -56,7 +54,6 @@ const listCompanyId = async (req, res) => {
       )
       .eq("company_id", company_id)
       .single();
-
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ company });
   } catch (err) {

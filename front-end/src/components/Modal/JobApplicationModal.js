@@ -21,7 +21,7 @@ const JobApplicationModal = ({ open, onClose, job }) => {
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key == "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
@@ -123,32 +123,33 @@ const JobApplicationModal = ({ open, onClose, job }) => {
 
       // await addJobApplication(payload);
       if (info.cvId) {
-  // 💾 Dùng CV có sẵn: gửi JSON như cũ
-  const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
-  if (!pickedCV) {
-    alert("CV đã chọn không hợp lệ");
-    setLoading(false);
-    return;
-  }
-  const payload = {
-    account_id,
-    job_posting_id: job.id,
-    cv_id: Number(info.cvId),
-    cover_letter: info.coverLetter,
-    // Có thể gửi luôn 2 field dưới (tùy BE có yêu cầu hay không)
-    file_upload: pickedCV.cv_link?.split("/").pop() || `cv_${info.cvId}.pdf`,
-    file_url: pickedCV.cv_link,
-  };
-  await addJobApplication(payload);
-} else {
-  // 📎 Tải tệp mới: gửi multipart, KHÔNG tạo bản ghi CV
-  const form = new FormData();
-  form.append("account_id", account_id);
-  form.append("job_posting_id", job.id);
-  form.append("cover_letter", info.coverLetter);
-  form.append("file", info.file); // <- file gốc
-  await addJobApplicationWithFile(form); // endpoint mới multipart
-}
+        // 💾 Dùng CV có sẵn: gửi JSON như cũ
+        const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
+        if (!pickedCV) {
+          alert("CV đã chọn không hợp lệ");
+          setLoading(false);
+          return;
+        }
+        const payload = {
+          account_id,
+          job_posting_id: job.id,
+          cv_id: Number(info.cvId),
+          cover_letter: info.coverLetter,
+          // Có thể gửi luôn 2 field dưới (tùy BE có yêu cầu hay không)
+          file_upload:
+            pickedCV.cv_link?.split("/").pop() || `cv_${info.cvId}.pdf`,
+          file_url: pickedCV.cv_link,
+        };
+        await addJobApplication(payload);
+      } else {
+        // 📎 Tải tệp mới: gửi multipart, KHÔNG tạo bản ghi CV
+        const form = new FormData();
+        form.append("account_id", account_id);
+        form.append("job_posting_id", job.id);
+        form.append("cover_letter", info.coverLetter);
+        form.append("file", info.file); // <- file gốc
+        await addJobApplicationWithFile(form); // endpoint mới multipart
+      }
 
       alert("Nộp đơn thành công!");
       onClose();

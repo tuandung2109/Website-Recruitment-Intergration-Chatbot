@@ -58,7 +58,7 @@ function CompanyInformation() {
   useEffect(() => {
     fetchAll();
   }, []);
-
+  // CompanyOwne
   // 🔹 Hàm hủy liên kết thành viên
   const handleUnlink = async (account_id) => {
     try {

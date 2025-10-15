@@ -1,67 +1,82 @@
 class Reflection():
-    def __init__(self, llm):
+    def __init__(self, llm, max_items=100):
+        """
+        llm: đối tượng có method generate_content(list_of_messages) -> str
+        max_items: số lượng message cuối cùng được xem xét
+        """
         self.llm = llm
-    
-    def _concat_and_format_texts(self, data):
-        concatenatedTexts = []
-        for entry in data:
-            role = entry.get('role', '')
-            if entry.get('parts'):
-                all_texts = ' '.join(part['text'] for part in entry['parts'] )
-            elif entry.get('content'):
-                all_texts = entry['content'] 
-            concatenatedTexts.append(f"{role}: {all_texts} \n")
-        return ''.join(concatenatedTexts)
-    
-    
-    def __call__(self, chatHistory, lastItemsConsidereds=100):
-        
-        if len(chatHistory) >= lastItemsConsidereds:
-            chatHistory = chatHistory[len(chatHistory) - lastItemsConsidereds:]
+        self.max_items = max_items
 
-        historyString = self._concat_and_format_texts(chatHistory)
+    def _collect_user_messages(self, chat_history):
+        """
+        Lấy và ghép nội dung chỉ từ các message có role == 'user',
+        giữ thứ tự ban đầu (cũ -> mới).
+        """
+        if len(chat_history) > self.max_items:
+            chat_history = chat_history[-self.max_items:]
 
-        # Lấy câu hỏi cuối cùng của user
-        last_user_msg = ""
-        for msg in reversed(chatHistory):
-            if msg.get("role") == "user":
-                last_user_msg = msg.get("content") or ""
-                break
+        user_texts = []
+        for entry in chat_history:
+            if entry.get("role") == "user":
+                text = ""
+                if entry.get("parts"):
+                    text = " ".join(part.get("text", "") for part in entry["parts"])
+                elif entry.get("content"):
+                    text = entry.get("content", "")
+                if text.strip():
+                    user_texts.append(text.strip())
 
-        prompt_template = """
-Bạn nhận được toàn bộ lịch sử hội thoại giữa người dùng (user) và trợ lý (assistant).  
+        return user_texts  # trả về dạng list thay vì string
 
-🎯 Nhiệm vụ:
-- Viết lại YÊU CẦU hoặc CÂU HỎI cuối cùng của NGƯỜI DÙNG thành MỘT CÂU HOÀN CHỈNH và ĐỘC LẬP bằng tiếng Việt.  
-- Phải KẾT HỢP các thông tin từ lịch sử để câu hỏi/đề nghị có thể hiểu được mà KHÔNG cần xem lại lịch sử.  
-- Câu viết phải NGẮN GỌN, TỰ NHIÊN và GIỮ NGUYÊN Ý ĐỊNH của người dùng.
+    def __call__(self, chatHistory, lastItemsConsidereds=None):
+        if lastItemsConsidereds is None:
+            lastItemsConsidereds = self.max_items
 
-💡 Ví dụ:
-Lịch sử hội thoại:
-- User: "Tìm việc ở đây"
-- Assistant: "Bạn muốn tìm việc gì?"
-- User: "Hà Nội"
+        user_messages = self._collect_user_messages(chatHistory)
+        if not user_messages:
+            return "Không có tin nhắn của người dùng để tóm tắt."
 
-➡️ Kết quả mong đợi: "Tôi muốn tìm công việc ở Hà Nội"
-*** Lưu ý: Ví dụ chỉ mang tính minh họa
-{historyString}
+        # Nếu chỉ có 1 tin nhắn => tóm tắt thẳng
+        if len(user_messages) == 1:
+            last_block = user_messages[-1]
+        else:
+            # Gộp logic: phát hiện "chuyển chủ đề"
+            # Ta cho LLM tự phát hiện, chọn giữ lại các câu cùng chủ đề với tin cuối
+            joined_messages = "\n".join(user_messages)
+
+            topic_detection_prompt = f"""
+Bạn nhận được các tin nhắn của người dùng theo thứ tự thời gian.  
+Hãy xác định xem các tin nhắn có cùng một chủ đề hay không.  
+Nếu người dùng đổi chủ đề (ví dụ: đang nói về việc làm rồi chuyển sang nói về thời tiết),
+chỉ GIỮ LẠI những tin nhắn thuộc CHỦ ĐỀ CUỐI CÙNG (tức là những tin nhắn mới nhất có cùng chủ đề).  
+
+Tin nhắn người dùng:
+{joined_messages}
+
+Trả về đúng nội dung (hoặc các dòng) của chủ đề cuối cùng, không cần giải thích thêm.
 """.strip()
 
+            selected_text = self.llm.generate_content([{"role": "user", "content": topic_detection_prompt}])
+            if isinstance(selected_text, str):
+                if "</think>" in selected_text:
+                    selected_text = selected_text.split("</think>")[-1].strip()
+                selected_text = selected_text.strip().strip('"')
+            last_block = selected_text
 
-        filled_prompt = prompt_template.format(historyString=historyString, last_user_msg=last_user_msg)
+        # Bước 2: tóm tắt lại CHỈ trong 1 câu
+        summarize_prompt = f"""
+Tóm tắt nội dung sau đây thành đúng **1 câu duy nhất**,
+chỉ giữ ý chính thể hiện mục đích hoặc yêu cầu của người dùng.
 
-        higherLevelSummariesPrompt = {
-            "role": "user",
-            "content": filled_prompt
-        }
+Nội dung:
+{last_block}
+""".strip()
 
-        print({"reflection_prompt": filled_prompt})
+        summary = self.llm.generate_content([{"role": "user", "content": summarize_prompt}])
 
-        completion = self.llm.generate_content([higherLevelSummariesPrompt])
+        if isinstance(summary, str):
+            if "</think>" in summary:
+                summary = summary.split("</think>")[-1].strip()
+            summary = summary.strip().strip('"')
 
-        # Clean possible thinking tags or quotes
-        if "</think>" in completion:
-            completion = completion.split("</think>")[-1].strip()
-        completion = completion.strip().strip('"')
-        return completion
-
+        return summary

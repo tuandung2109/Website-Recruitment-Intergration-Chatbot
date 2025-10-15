@@ -306,6 +306,8 @@ VÍ DỤ RÕ (phải học thuộc):
 - "Hướng dẫn tạo tài khoản" → intent_guide.
 - "Mình muốn phản hồi về tính năng đăng bài" → intent_feedback.
 - "Chào bạn" / "Trời hôm nay đẹp" → intent_chitchat.
+- "Người dùng muốn tìm thông tin về ngân hàng FinBank" → intent_company_info.
+
 
 ⚠ Biên giới đặc biệt:
 - "Tìm việc IT" → intent_incomplete_recruitment_question ("IT" quá rộng, không đủ cụ thể).

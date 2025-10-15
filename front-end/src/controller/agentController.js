@@ -33,15 +33,26 @@ export const handleIntent = (intent, navigate, filters = null) => {
         console.log("💾 Filters saved to sessionStorage");
       }
 
-      // Điều hướng đến trang danh sách công việc
-      navigate("/job");
-
-      // Dispatch custom event to notify JobListings component about new filters
-      setTimeout(() => {
+      // Kiểm tra nếu đã ở trang /job
+      const isOnJobPage = window.location.pathname === "/job";
+      
+      if (isOnJobPage) {
+        // Đã ở trang /job, chỉ cần dispatch event
+        console.log("🔄 Already on /job page, dispatching event immediately");
         window.dispatchEvent(new CustomEvent('agentNavigation', {
           detail: { filters, intent }
         }));
-      }, 100);
+      } else {
+        // Điều hướng đến trang danh sách công việc
+        navigate("/job");
+        
+        // Dispatch custom event to notify JobListings component about new filters
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('agentNavigation', {
+            detail: { filters, intent }
+          }));
+        }, 100);
+      }
       break;
 
     case "intent_company_info":
@@ -50,14 +61,27 @@ export const handleIntent = (intent, navigate, filters = null) => {
         sessionStorage.setItem("agentFilters", JSON.stringify(filters));
         console.log("💾 Filters saved to sessionStorage");
       }
-      console.log("✅ Navigating to /company page...");
-      navigate("/company");
-
-      setTimeout(() => {
+      
+      // Kiểm tra nếu đã ở trang /company
+      const isOnCompanyPage = window.location.pathname === "/company";
+      
+      if (isOnCompanyPage) {
+        // Đã ở trang /company, chỉ cần dispatch event
+        console.log("🔄 Already on /company page, dispatching event immediately");
         window.dispatchEvent(new CustomEvent('agentNavigation', {
           detail: { filters, intent }
         }));
-      }, 100);
+      } else {
+        // Điều hướng đến trang công ty
+        console.log("✅ Navigating to /company page...");
+        navigate("/company");
+
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('agentNavigation', {
+            detail: { filters, intent }
+          }));
+        }, 100);
+      }
       break;
 
     case "intent_login":
@@ -86,7 +110,6 @@ export const handleIntent = (intent, navigate, filters = null) => {
     
     case "evaluate_cv":
       // Intent về đánh giá CV
-      console.log("✅ Navigating to /evaluate_cv page...");
       
       // Lưu dữ liệu đánh giá CV vào sessionStorage
       if (filters && Object.keys(filters).length > 0) {
@@ -94,14 +117,27 @@ export const handleIntent = (intent, navigate, filters = null) => {
         console.log("💾 CV Evaluation data saved to sessionStorage");
       }
       
-      navigate("/evaluate_cv");
+      // Kiểm tra nếu đã ở trang /evaluate_cv
+      const isOnEvaluateCVPage = window.location.pathname === "/evaluate_cv";
       
-      // Dispatch custom event to notify EvaluateCV component
-      setTimeout(() => {
+      if (isOnEvaluateCVPage) {
+        // Đã ở trang /evaluate_cv, chỉ cần dispatch event
+        console.log("🔄 Already on /evaluate_cv page, dispatching event immediately");
         window.dispatchEvent(new CustomEvent('agentNavigation', {
           detail: { filters, intent }
         }));
-      }, 100);
+      } else {
+        // Điều hướng đến trang đánh giá CV
+        console.log("✅ Navigating to /evaluate_cv page...");
+        navigate("/evaluate_cv");
+        
+        // Dispatch custom event to notify EvaluateCV component
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('agentNavigation', {
+            detail: { filters, intent }
+          }));
+        }, 100);
+      }
       break;
     default:
       // Intent không được xử lý

@@ -30,18 +30,18 @@ function Company() {
     fetchData();
   }, []);
 
-  // Lắng nghe sự kiện điều hướng từ Agent
+  // 🤖 Áp dụng agent filters khi component mount hoặc companies thay đổi
   useEffect(() => {
     const agentFillters = getAgentFilters();
     if (agentFillters) {
       console.log("🎯 Company Page - Received agent filters:", agentFillters);
 
-
-      setSearchText(agentFillters.name);
-      setSelectedIndustry(agentFillters.industry);
-      setSelectedAddress(agentFillters.location);
+      // ✅ Đảm bảo các giá trị không bao giờ là undefined
+      setSearchText(agentFillters.name || "");
+      setSelectedIndustry(agentFillters.industry || "");
+      setSelectedAddress(agentFillters.location || "");
       
-       setCurrentPage(1);
+      setCurrentPage(1);
 
       // Scroll to top để người dùng thấy kết quả filter
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -49,6 +49,35 @@ function Company() {
       console.log("✅ Agent filters applied successfully");
     }
   }, [companies]); // Chạy khi companies đã được load
+
+  // 🔄 Lắng nghe sự kiện navigation mới từ Agent (khi đang ở trang Company)
+  useEffect(() => {
+    const handleAgentNavigation = (event) => {
+      if (event.detail?.filters) {
+        console.log("🔄 New agent filters received while on Company page:", event.detail.filters);
+        const filters = event.detail.filters;
+        
+        // Áp dụng filters mới
+        setSearchText(filters.name || "");
+        setSelectedIndustry(filters.industry || "");
+        setSelectedAddress(filters.location || "");
+        
+        setCurrentPage(1);
+        
+        // Scroll to top để người dùng thấy kết quả filter
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        
+        console.log("✅ New agent filters applied successfully");
+      }
+    };
+
+    // Lắng nghe custom event từ agentController
+    window.addEventListener('agentNavigation', handleAgentNavigation);
+
+    return () => {
+      window.removeEventListener('agentNavigation', handleAgentNavigation);
+    };
+  }, []); // Chỉ chạy một lần khi mount
 
       
 
@@ -80,16 +109,16 @@ function Company() {
   const filteredCompanies = useMemo(() => {
     let data = companies;
 
-      // 🔎 Lọc theo từ khóa (tên công ty hoặc mô tả)
-    if (searchText && searchText.trim()) {
+    // 🔎 Lọc theo từ khóa (tên công ty hoặc mô tả)
+    if (searchText && typeof searchText === 'string' && searchText.trim()) {
       const s = searchText.toLowerCase();
       data = data.filter((c) =>
         (c?.name || "").toLowerCase().includes(s)
       );
     }
 
-
-    if (selectedIndustry) {
+    // 🏭 Lọc theo ngành nghề
+    if (selectedIndustry && typeof selectedIndustry === 'string' && selectedIndustry.trim()) {
       data = data.filter((c) =>
         Array.isArray(c?.company_industry) &&
         c.company_industry.some(
@@ -101,7 +130,8 @@ function Company() {
       );
     }
 
-    if (selectedAddress) {
+    // 📍 Lọc theo địa chỉ
+    if (selectedAddress && typeof selectedAddress === 'string' && selectedAddress.trim()) {
       data = data.filter((c) =>
         Array.isArray(c?.address) &&
         c.address.some((a) =>

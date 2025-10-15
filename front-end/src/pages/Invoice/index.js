@@ -1,64 +1,102 @@
-import { useState, useEffect } from "react";
-import { createPayment } from "../../services/invoice";
-import { listAccount } from "../../../services/account";
-function Vnpay() {
-  const [money, setMoney] = useState(0);
-  const [notif, setNotif] = useState({ show: false, type: "", content: "" });
-  const [accounts, setAccounts] = useState([]);
-  // Lấy user hiện tại từ localStorage
-  const currentUserId = JSON.parse(localStorage.getItem("account"))?._id;
-  console.log("🟢 Current account ID:", currentUserId);
-  // Hiển thị thông báo
-  const showNotification = (content, type = "success") => {
-    setNotif({ show: true, type, content });
-    setTimeout(() => setNotif({ show: false, type: "", content: "" }), 3000);
-  };
-  // Lấy danh sách users từ server
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await listAccount(); // trả về mảng users
-        setAccounts(data.docs || []);
-      } catch (error) {
-        console.error("❌ Lỗi tải danh sách users:", error);
-      }
-    };
-    fetchUsers();
-  }, []);
-  // Lấy số dư của user hiện tại
-  useEffect(() => {
-    if (!currentUserId || accounts.length === 0) return;
+import { useEffect, useState } from "react";
+import {
+  listInvoice,
+  updateInvoiceStatus,
+  createPayment,
+} from "../../services/invoice";
+import { Table, Button, message, Spin } from "antd";
 
-    const currentUser = accounts.find((u) => u._id === currentUserId);
-    if (currentUser) setMoney(currentUser.money || 0);
-  }, [accounts, currentUserId]);
-  // Hàm nạp tiền
-  const handlePayment = async (amount) => {
-    if (!currentUserId) return;
+function InvoicePage() {
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const account = JSON.parse(localStorage.getItem("account"));
+  const accountId = account?.account_id;
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    setLoading(true);
+    const res = await listInvoice();
+    if (res.success) {
+      setInvoices(res.invoices.filter((inv) => inv.account_id === accountId));
+    } else {
+      message.error(res.message);
+    }
+    setLoading(false);
+  };
+
+  const handleRecharge = async (amount) => {
     try {
-      const res = await createPayment(currentUserId, amount);
+      const res = await createPayment(accountId, amount);
       const data = await res.json();
       if (data.url) {
-        showNotification("Đang chuyển tới VNPAY...", "success");
         window.location.href = data.url;
       } else {
-        showNotification("Không tạo được link VNPAY", "error");
+        message.error("Không thể tạo liên kết VNPay");
       }
     } catch (err) {
-      console.error("❌ Lỗi createPayment:", err);
-      showNotification("Lỗi khi tạo payment", "error");
+      message.error("Lỗi tạo thanh toán");
     }
   };
+
+  const handleUpdateInvoice = async (id) => {
+    const res = await updateInvoiceStatus(id);
+    if (res.success) {
+      message.success("Cập nhật thành công!");
+      fetchInvoices();
+    } else {
+      message.error(res.message || "Cập nhật thất bại!");
+    }
+  };
+
+  const columns = [
+    { title: "ID", dataIndex: "invoice_id" },
+    { title: "Email", dataIndex: ["account", "email"] },
+    { title: "Số tiền", dataIndex: "amount" },
+    { title: "Ngân hàng", dataIndex: "bank_name" },
+    { title: "Phương thức", dataIndex: "payment_method" },
+    { title: "Trạng thái", dataIndex: "status" },
+    {
+      title: "Hành động",
+      render: (_, record) =>
+        record.status === "active" ? (
+          <Button
+            type="primary"
+            onClick={() => handleUpdateInvoice(record.invoice_id)}
+          >
+            Cộng tiền
+          </Button>
+        ) : (
+          <span>Đã xử lý</span>
+        ),
+    },
+  ];
+
   return (
-    <>
-      <div>
-        <h2>Nạp tiền vào tài khoản</h2>
-        <p>Số dư hiện tại: {money} VND</p>
-        <button onClick={() => handlePayment(10)}>Nạp 10,000đ = 10 xu</button>
-        <button onClick={() => handlePayment(20)}>Nạp 20,000đ = 25 xu</button>
-        <button onClick={() => handlePayment(50)}>Nạp 50,000đ = 100 xu</button>
+    <div style={{ padding: 24 }}>
+      <h2>💳 Nạp tiền vào tài khoản</h2>
+      <div style={{ marginBottom: 20 }}>
+        <Button type="primary" onClick={() => handleRecharge(10000)}>
+          Nạp 10.000đ
+        </Button>
+        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(20000)}>
+          Nạp 20.000đ
+        </Button>
+        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(50000)}>
+          Nạp 50.000đ
+        </Button>
       </div>
-    </>
+
+      <h3>Lịch sử giao dịch</h3>
+      {loading ? (
+        <Spin />
+      ) : (
+        <Table dataSource={invoices} columns={columns} rowKey="invoice_id" />
+      )}
+    </div>
   );
 }
-export default Vnpay;
+
+export default InvoicePage;

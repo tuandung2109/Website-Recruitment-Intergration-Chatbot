@@ -43,28 +43,19 @@ function AdminPage() {
       key: "sub5",
       label: "Quản lý kỹ năng",
       icon: <SettingOutlined />,
-      children: [
-        { key: "skills", label: "Danh sách kỹ năng" },
-        { key: "10", label: "Thêm kỹ năng" },
-      ],
+      children: [{ key: "skills", label: "Danh sách kỹ năng" }],
     },
     {
       key: "sub7",
       label: "Quản lý hình thức làm việc",
       icon: <SettingOutlined />,
-      children: [
-        { key: "work_type", label: "Danh sách hình thức" },
-        { key: "10", label: "Thêm hình thức" },
-      ],
+      children: [{ key: "work_type", label: "Danh sách hình thức" }],
     },
     {
       key: "sub9",
       label: "Quản lý ngành nghề",
       icon: <SettingOutlined />,
-      children: [
-        { key: "industry", label: "Danh sách ngành nghề" },
-        { key: "10", label: "Thêm ngành nghề" },
-      ],
+      children: [{ key: "industry", label: "Danh sách ngành nghề" }],
     },
     {
       key: "sub10",

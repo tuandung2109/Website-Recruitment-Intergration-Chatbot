@@ -10,17 +10,17 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
-    if (e.key === 'Enter' || e.type === 'click') {
+    if (e.key === "Enter" || e.type === "click") {
       // Chuyển đến trang JobListings và set searchData
-      navigate('/job', { 
-        state: { 
+      navigate("/job", {
+        state: {
           searchData: {
             keywords: searchQuery,
             location: "",
             distance: "",
-            skills: ""
-          }
-        }
+            skills: "",
+          },
+        },
       });
     }
   };
@@ -85,8 +85,18 @@ const Header = () => {
                   onClick={handleSearch}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-md transition-colors"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </button>
               </div>
@@ -165,6 +175,14 @@ const Header = () => {
                       >
                         <User className="h-4 w-4 mr-3" />
                         Thông tin cá nhân
+                      </a>
+
+                      <a
+                        href="/invoiceAdd"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <User className="h-4 w-4 mr-3" />
+                        Nạp tiền ngay
                       </a>
 
                       <a

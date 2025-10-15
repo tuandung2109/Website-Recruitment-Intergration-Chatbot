@@ -1,4 +1,4 @@
-import { _get, _post } from "../utils/request";
+import { _get, _patch, _post } from "../utils/request";
 
 const listInvoice = async () => {
   try {
@@ -57,4 +57,37 @@ const createPayment = (user_id, amount) =>
 // Kiểm tra kết quả thanh toán
 const checkPayment = (query) => _get(`/invoice/check-payment-vnpay?${query}`);
 
-export { listInvoice, postInvoice, createPayment, checkPayment };
+const listInvoice1 = async () => {
+  try {
+    const res = await _get(`/invoice/listInvoice`);
+    const result = await res.json();
+
+    if (res.ok && result.invoice) {
+      return { success: true, invoices: result.invoice };
+    }
+    return {
+      success: false,
+      message: result.message || "Không thể lấy danh sách hóa đơn",
+    };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
+const updateInvoiceStatus = async (invoice_id) => {
+  try {
+    const res = await _patch(`/invoice/updateInvoiceStatus/${invoice_id}`);
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
+export {
+  listInvoice,
+  postInvoice,
+  createPayment,
+  checkPayment,
+  updateInvoiceStatus,
+};

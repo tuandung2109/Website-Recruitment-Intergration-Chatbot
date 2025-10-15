@@ -4,7 +4,9 @@ import {
   updateAccount,
   changePassword,
 } from "../../services/account";
-import { Spin, Card, message, Button, Form, Input, Modal } from "antd";
+import { Spin, message, Modal, Form, Input } from "antd";
+import { Button } from "antd";
+import { User, CheckCircle, XCircle } from "lucide-react";
 
 function InfoUser() {
   const [account, setAccount] = useState(null);
@@ -38,9 +40,19 @@ function InfoUser() {
     fetchAccount();
   }, []);
 
-  if (loading) return <Spin tip="Đang tải thông tin người dùng..." />;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spin tip="Đang tải thông tin người dùng..." />
+      </div>
+    );
 
-  if (!account) return <p>Không có thông tin tài khoản</p>;
+  if (!account)
+    return (
+      <p className="text-center text-gray-500 mt-10">
+        Không có thông tin tài khoản
+      </p>
+    );
 
   const roleName =
     account.account_account_type?.[0]?.account_type?.role_name ||
@@ -63,56 +75,100 @@ function InfoUser() {
       account_id: account.account_id,
       ...values,
     });
+
     if (res.success) {
-      message.success("Đổi mật khẩu thành công!");
-      setIsChangePw(false);
+      message.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
       formPw.resetFields();
-    } else message.error(res.message);
+      setIsChangePw(false);
+      // Xoá thông tin đăng nhập hiện tại
+      localStorage.removeItem("account");
+      localStorage.removeItem("token");
+      // Chuyển hướng về trang đăng nhập (điều chỉnh nếu route khác)
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
+    } else {
+      message.error(res.message);
+    }
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto" }}>
-      <Card
-        title="Thông tin cá nhân"
-        bordered
-        style={{ borderRadius: "10px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
-        extra={
-          <>
-            <Button type="link" onClick={() => setIsEdit(true)}>
+    <div className="max-w-3xl mx-auto mt-10 px-6">
+      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-blue-700 flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Thông tin cá nhân
+          </h2>
+          <div className="space-x-2">
+            <Button
+              type="primary"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setIsEdit(true)}
+            >
               ✏️ Cập nhật
             </Button>
-            <Button type="link" onClick={() => setIsChangePw(true)}>
+            <Button
+              danger
+              className="hover:bg-red-600"
+              onClick={() => setIsChangePw(true)}
+            >
               🔒 Đổi mật khẩu
             </Button>
-          </>
-        }
-      >
-        <p>
-          <strong>Mã tài khoản:</strong> {account.account_id}
-        </p>
-        <p>
-          <strong>Email:</strong> {account.email}
-        </p>
-        <p>
-          <strong>Giới tính:</strong> {account.gender || "Chưa cập nhật"}
-        </p>
-        <p>
-          <strong>Số điện thoại:</strong> {account.phone_number || "Chưa có"}
-        </p>
-        <p>
-          <strong>Vai trò:</strong> {roleName}
-        </p>
-        <p>
-          <strong>Trạng thái:</strong>{" "}
-          {account.status === "active" ? "Đang hoạt động" : "Không hoạt động"}
-        </p>
-      </Card>
+          </div>
+        </div>
+
+        {/* Info Card */}
+        <div className="space-y-4 text-gray-700">
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Mã tài khoản:</span>
+            <span>{account.account_id}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Email:</span>
+            <span>{account.email}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Giới tính:</span>
+            <span>{account.gender || "Chưa cập nhật"}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Số điện thoại:</span>
+            <span>{account.phone_number || "Chưa có"}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Vai trò:</span>
+            <span>{roleName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Trạng thái:</span>
+            <span
+              className={`flex items-center gap-1 ${
+                account.status === "active" ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {account.status === "active" ? (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Đang hoạt động
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4" />
+                  Không hoạt động
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Modal cập nhật thông tin */}
       <Modal
         open={isEdit}
         title="Cập nhật thông tin cá nhân"
-        okText="Lưu"
+        okText="Lưu thay đổi"
         cancelText="Hủy"
         onCancel={() => setIsEdit(false)}
         onOk={() => form.submit()}
@@ -150,14 +206,14 @@ function InfoUser() {
             label="Mật khẩu cũ"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu cũ" />
           </Form.Item>
           <Form.Item
             name="new_password"
             label="Mật khẩu mới"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }]}
           >
-            <Input.Password />
+            <Input.Password placeholder="Nhập mật khẩu mới" />
           </Form.Item>
         </Form>
       </Modal>

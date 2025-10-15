@@ -32,6 +32,7 @@ import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
 import AddCompany from "./pages/Company/addCompany";
 import InfoUser from "./pages/Users";
+import Vnpay from "./pages/Invoice";
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
           <Route path="/profile" element={<InfoUser />} />
+          <Route path="/invoiceAdd" element={<Vnpay />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

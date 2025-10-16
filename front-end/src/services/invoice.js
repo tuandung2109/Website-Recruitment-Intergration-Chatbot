@@ -1,6 +1,6 @@
 import { _get, _patch, _post } from "../utils/request";
 
-const listInvoice = async () => {
+const listInvoice1 = async () => {
   try {
     const res = await _get(`/invoice/listInvoice`);
     const result = await res.json();
@@ -23,13 +23,11 @@ const listInvoice = async () => {
     };
   }
 };
-const postInvoice = async ({ username, password, email, phone }) => {
+const postInvoice = async ({ password, email }) => {
   try {
     const res = await _post(`/account/listInvoice`, {
-      username,
       password,
       email,
-      phone,
     });
     const result = await res.json();
     if (res.ok) {
@@ -51,13 +49,13 @@ const postInvoice = async ({ username, password, email, phone }) => {
   }
 };
 
-const createPayment = (user_id, amount) =>
-  _post("/invoice/create-qr", { user_id, amount });
+const createPayment = (account_id, amount) =>
+  _post("/invoice/create-qr", { account_id, amount });
 
 // Kiểm tra kết quả thanh toán
 const checkPayment = (query) => _get(`/invoice/check-payment-vnpay?${query}`);
 
-const listInvoice1 = async () => {
+const listInvoice = async () => {
   try {
     const res = await _get(`/invoice/listInvoice`);
     const result = await res.json();

@@ -53,12 +53,12 @@ const listInvoiceId = async (req, res) => {
 // 🧾 Tạo link thanh toán VNPay
 const vnpays = async (req, res) => {
   try {
-    const { user_id, amount } = req.body;
+    const { account_id, amount } = req.body;
 
-    if (!user_id || !amount) {
+    if (!account_id || !amount) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu user_id hoặc amount",
+        message: "Thiếu account_id hoặc amount",
       });
     }
 
@@ -78,7 +78,7 @@ const vnpays = async (req, res) => {
       vnp_Amount: amount * 100, // VNPay cần nhân 100
       vnp_IpAddr: req.ip,
       vnp_TxnRef: Date.now().toString(),
-      vnp_OrderInfo: `${user_id}|NapTien`,
+      vnp_OrderInfo: `${account_id}|NapTien`,
       vnp_ReturnUrl: `http://localhost:9000/api/invoice/check-payment-vnpay`,
       vnp_Locale: VnpLocale.VN,
       vnp_CreateDate: dateFormat(new Date()),
@@ -97,70 +97,21 @@ const vnpays = async (req, res) => {
 };
 
 // 🧾 Check kết quả thanh toán (callback từ VNPay)
-const checkVnpays1 = async (req, res) => {
-  try {
-    const query = req.query;
-    let orderInfo = query.vnp_OrderInfo || "";
-    let user_id = orderInfo.includes("|") ? orderInfo.split("|")[0] : null;
-
-    if (!user_id) {
-      console.error("❌ Không tìm thấy user_id trong OrderInfo");
-      return res.redirect("http://localhost:3000?status=fail");
-    }
-
-    const vnp_Amount = Number(query.vnp_Amount) / 100;
-
-    // ✅ Lưu giao dịch vào bảng invoice (hoặc bảng riêng)
-    const { data, error } = await supabase.from("invoice").insert([
-      {
-        account_id: user_id,
-        description: "Nạp tiền qua VNPay",
-        amount: vnp_Amount,
-        bank_name: query.vnp_BankCode || "VNPay",
-        payment_method: "VNPay",
-        payment_status:
-          query.vnp_ResponseCode === "00" ? "completed" : "failed",
-        transaction_code: query.vnp_TxnRef,
-        status: "active",
-        deleted: false,
-        create_at: new Date(),
-      },
-    ]);
-
-    if (error) {
-      console.error("❌ Lỗi lưu invoice:", error);
-      return res.redirect("http://localhost:3000?status=fail");
-    }
-
-    // ✅ Cập nhật tiền user
-    if (query.vnp_ResponseCode === "00") {
-      await updateUserMoney(user_id, vnp_Amount);
-    }
-
-    return res.redirect("http://localhost:3000?status=success");
-  } catch (error) {
-    console.error("❌ Lỗi checkVnpays:", error);
-    return res.redirect("http://localhost:3000?status=fail");
-  }
-};
-// 🧾 Check kết quả thanh toán (callback từ VNPay)
 const checkVnpays = async (req, res) => {
   try {
     const query = req.query;
     const orderInfo = query.vnp_OrderInfo || "";
-    const user_id = orderInfo.includes("|") ? orderInfo.split("|")[0] : null;
+    const account_id = orderInfo.includes("|") ? orderInfo.split("|")[0] : null;
 
-    if (!user_id) {
-      console.error("❌ Không tìm thấy user_id trong OrderInfo");
+    if (!account_id) {
+      console.error("❌ Không tìm thấy account_id trong OrderInfo");
       return res.redirect("http://localhost:3000?status=fail");
     }
-
     const vnp_Amount = Number(query.vnp_Amount) / 100;
-
     // ✅ Lưu giao dịch vào bảng invoice
     const { data, error } = await supabase.from("invoice").insert([
       {
-        account_id: user_id,
+        account_id: account_id,
         card_number: query.vnp_CardNo || "", // ✅ thêm card_number để tránh null
         description: "Nạp tiền qua VNPay",
         amount: vnp_Amount,
@@ -182,9 +133,9 @@ const checkVnpays = async (req, res) => {
 
     // ✅ Cập nhật số dư nếu thanh toán thành công
     if (query.vnp_ResponseCode === "00") {
-      await updateUserMoney(user_id, vnp_Amount);
+      await updateUserMoney(account_id, vnp_Amount);
     }
-
+    updateInvoiceStatus();
     return res.redirect("http://localhost:3000?status=success");
   } catch (error) {
     console.error("❌ Lỗi checkVnpays:", error);
@@ -199,13 +150,11 @@ const getVnpay = async (req, res) => {
       .from("invoice")
       .select("*")
       .eq("deleted", false)
-      .eq("payment_method", "VNPay")
       .order("create_at", { ascending: false });
 
     if (error) {
       return res.status(400).json({ success: false, message: error.message });
     }
-
     return res.status(200).json({
       success: true,
       payments: data,
@@ -217,93 +166,91 @@ const getVnpay = async (req, res) => {
 };
 
 // 💰 Cập nhật số dư user sau khi thanh toán
-const updateUserMoney = async (user_id, amount) => {
+const updateUserMoney1 = async (account_id, amount) => {
   try {
-    if (!user_id || !amount) return;
+    if (!account_id || !amount) return;
 
     const { data, error } = await supabase.rpc("account", {
-      user_id_input: user_id,
-      amount_input: amount,
+      account_id: account_id,
+      // account_id_input: account_id,
+      // amount_input: amount,
+      amount: amount,
     });
 
     if (error) console.error("❌ Lỗi cập nhật tiền user:", error);
-    else console.log(`✅ User ${user_id} vừa nạp ${amount} thành công`);
+    else console.log(`✅ User ${account_id} vừa nạp ${amount} thành công`);
+  } catch (error) {
+    console.error("❌ Lỗi updateUserMoney:", error);
+  }
+};
+// 💰 Cập nhật số dư user sau khi thanh toán
+const updateUserMoney = async (account_id, amount) => {
+  try {
+    if (!account_id || !amount) return;
+
+    // Lấy số dư hiện tại
+    const { data: account, error: errGet } = await supabase
+      .from("account")
+      .select("amount")
+      .eq("account_id", account_id)
+      .single();
+
+    if (errGet) throw errGet;
+
+    const newAmount = (account?.amount || 0) + Number(amount);
+
+    // Cập nhật lại số dư
+    const { error: errUpdate } = await supabase
+      .from("account")
+      .update({ amount: newAmount })
+      .eq("account_id", account_id);
+
+    if (errUpdate) throw errUpdate;
+
+    console.log(`✅ User ${account_id} vừa nạp ${amount} thành công`);
   } catch (error) {
     console.error("❌ Lỗi updateUserMoney:", error);
   }
 };
 
 // 📍 Khi thanh toán thành công thì cộng tiền và đổi trạng thái hóa đơn
-// 📍 Khi thanh toán thành công thì cộng tiền và đổi trạng thái hóa đơn
-const updateInvoiceStatus = async (req, res) => {
+const updateInvoiceStatus = async (invoice_id) => {
   try {
-    const { invoice_id } = req.params;
-
-    // ✅ 1. Lấy thông tin hóa đơn đang active
     const { data: invoice, error: errInvoice } = await supabase
       .from("invoice")
       .select("*")
       .eq("invoice_id", invoice_id)
       .eq("status", "active")
       .single();
+    if (errInvoice || !invoice)
+      return { success: false, message: "Không tìm thấy hóa đơn" };
 
-    if (errInvoice || !invoice) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy hóa đơn đang active",
-      });
-    }
-
-    // ✅ 2. Lấy thông tin tài khoản của người dùng
     const { data: account, error: errAccount } = await supabase
       .from("account")
       .select("amount")
       .eq("account_id", invoice.account_id)
       .single();
-
-    if (errAccount || !account) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy tài khoản" });
-    }
+    if (errAccount || !account)
+      return { success: false, message: "Không tìm thấy tài khoản" };
 
     const newAmount = (account.amount || 0) + invoice.amount;
-
-    // ✅ 3. Cập nhật số dư tài khoản
     const { error: errUpdateMoney } = await supabase
       .from("account")
       .update({ amount: newAmount })
       .eq("account_id", invoice.account_id);
+    if (errUpdateMoney) return { success: false, message: "Lỗi cộng tiền" };
 
-    if (errUpdateMoney) {
-      console.error("❌ Lỗi cộng tiền:", errUpdateMoney);
-      return res
-        .status(400)
-        .json({ success: false, message: "Không thể cộng tiền cho user" });
-    }
-
-    // ✅ 4. Chuyển trạng thái hóa đơn sang inactive
     const { error: errStatus } = await supabase
       .from("invoice")
       .update({ status: "inactive" })
       .eq("invoice_id", invoice_id);
+    if (errStatus)
+      return { success: false, message: "Lỗi đổi trạng thái hóa đơn" };
 
-    if (errStatus) {
-      console.error("❌ Lỗi đổi trạng thái hóa đơn:", errStatus);
-      return res.status(400).json({
-        success: false,
-        message: "Không thể cập nhật trạng thái hóa đơn",
-      });
-    }
-
-    // ✅ 5. Trả kết quả
-    return res.status(200).json({
-      success: true,
-      message: `Đã cộng ${invoice.amount}đ vào tài khoản ID ${invoice.account_id} và khóa hóa đơn #${invoice_id}`,
-    });
+    return { success: true, message: "Cập nhật thành công!" };
   } catch (error) {
     console.error("❌ Lỗi updateInvoiceStatus:", error);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return { success: false, message: "Lỗi server" };
   }
 };
 

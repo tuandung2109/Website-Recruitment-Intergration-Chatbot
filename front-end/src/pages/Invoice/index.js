@@ -5,17 +5,14 @@ import {
   createPayment,
 } from "../../services/invoice";
 import { Table, Button, message, Spin } from "antd";
-
 function InvoicePage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const account = JSON.parse(localStorage.getItem("account"));
   const accountId = account?.account_id;
-
   useEffect(() => {
     fetchInvoices();
   }, []);
-
   const fetchInvoices = async () => {
     setLoading(true);
     const res = await listInvoice();
@@ -26,7 +23,6 @@ function InvoicePage() {
     }
     setLoading(false);
   };
-
   const handleRecharge = async (amount) => {
     try {
       const res = await createPayment(accountId, amount);
@@ -40,7 +36,6 @@ function InvoicePage() {
       message.error("Lỗi tạo thanh toán");
     }
   };
-
   const handleUpdateInvoice = async (id) => {
     const res = await updateInvoiceStatus(id);
     if (res.success) {
@@ -50,7 +45,6 @@ function InvoicePage() {
       message.error(res.message || "Cập nhật thất bại!");
     }
   };
-
   const columns = [
     { title: "ID", dataIndex: "invoice_id" },
     { title: "Email", dataIndex: ["account", "email"] },
@@ -73,7 +67,6 @@ function InvoicePage() {
         ),
     },
   ];
-
   return (
     <div style={{ padding: 24 }}>
       <h2>💳 Nạp tiền vào tài khoản</h2>
@@ -88,7 +81,6 @@ function InvoicePage() {
           Nạp 50.000đ
         </Button>
       </div>
-
       <h3>Lịch sử giao dịch</h3>
       {loading ? (
         <Spin />

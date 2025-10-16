@@ -27,8 +27,11 @@ function InfoUser() {
           return;
         }
         const result = await listAccountId(user.account_id);
+        console.log("result123123:", result);
         if (result.success && result.accounts.length > 0) {
           setAccount(result.accounts[0]);
+          console.log("account123", account);
+          console.log("Đã setAccount với:", result.accounts[0]);
         } else message.error(result.message);
       } catch (err) {
         console.error("❌", err);
@@ -136,6 +139,10 @@ function InfoUser() {
           <div className="flex justify-between border-b pb-2">
             <span className="font-medium">Số điện thoại:</span>
             <span>{account.phone_number || "Chưa có"}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Số dư:</span>
+            <span>{account.amount || "Chưa có"}</span>
           </div>
           <div className="flex justify-between border-b pb-2">
             <span className="font-medium">Vai trò:</span>

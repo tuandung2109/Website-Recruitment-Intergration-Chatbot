@@ -10,4 +10,6 @@ router.get("/getVnpay", controllerInvoice.getVnpay);
 router.post("/create-qr", controllerInvoice.vnpays);
 router.post("/updateUserMoneys", controllerInvoice.updateUserMoney);
 
+router.patch("/updateInvoiceStatus/:id", controllerInvoice.updateInvoiceStatus);
+
 module.exports = router;

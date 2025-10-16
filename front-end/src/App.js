@@ -6,6 +6,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import Home from "./pages/Home/Home";
 import JobListings from "./pages/JobListing/JobListings";
 import JobDetail from "./pages/JobDetail/JobDetail";
+import JobDetailAIReview from "./pages/JobDetail/JobDetailAIReview";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -51,6 +52,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/job" element={<JobListings />} />
           <Route path="/job/:id" element={<JobDetail />} />
+          <Route path="/job/:id/ai-review" element={<JobDetailAIReview />} />
           <Route path="/company" element={<Company />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/cv" element={<CV />} />

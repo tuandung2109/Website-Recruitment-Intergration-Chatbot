@@ -48,6 +48,19 @@ class AgentKatCoder(BaseAI):
         except Exception as e:
             logging.error(f"Error generating content: {str(e)}")
             raise
+        
+    def evaluate_job_description(self, id) -> str:
+        """Evaluate job description quality using LLM"""
+        try:
+            from tool.database.postgest import PostgreSQLClient
+            pg_client = PostgreSQLClient(Settings=Settings.load_settings())
+            job_description = pg_client.get_job_posting_info_by_id(id)
+            prompt = self.prompt_config.get_prompt("evaluate_jd", user_input=job_description)
+            evaluation = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
+            return evaluation
+        except Exception as e:
+            logging.error(f"Error evaluating job description: {str(e)}")
+            return f"Error evaluating job description: {str(e)}"
 
 
     def chat_with_agent(self, message: str, **kwargs) -> str:

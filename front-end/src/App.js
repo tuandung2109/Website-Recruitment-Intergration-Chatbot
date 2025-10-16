@@ -123,6 +123,7 @@ import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
 
 import "./App.css";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -148,6 +149,7 @@ function App() {
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
           <Route path="/profile" element={<InfoUser />} />
+          <Route path="*" element={<NotFound />} />
           <Route path="/invoiceAdd" element={<Vnpay />} />
         </Route>
 

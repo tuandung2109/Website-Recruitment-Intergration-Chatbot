@@ -1,6 +1,23 @@
 import { useState, useEffect } from "react";
 import UseTitle from "../../hooks/useTitle";
+import { useNavigate } from "react-router-dom";
 const Home = ({ title }) => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const account = JSON.parse(localStorage.getItem("account"));
+    if (account) {
+      const role = account.account_account_type?.[0]?.account_type?.role_name;
+      // 👉 Nếu là admin thì điều hướng luôn
+      if (role === "Admin") {
+        navigate("/admin", { replace: true });
+      }
+      // 👉 Nếu là nhà tuyển dụng thì điều hướng sang trang companyAdmin
+      else if (role === "Employer") {
+        navigate("/companyAdmin", { replace: true }) ||
+          navigate("/", { replace: true });
+      }
+    }
+  }, [navigate]);
   UseTitle("JobVip - Trang chủ");
   const [activeTab, setActiveTab] = useState("industry");
   const [searchData, setSearchData] = useState({
@@ -10,7 +27,6 @@ const Home = ({ title }) => {
   });
   const [isVisible, setIsVisible] = useState({});
   // const [userInfo, setUserInfo] = useState(null);
-
   const [stats, setStats] = useState({
     jobs: 0,
     companies: 0,
@@ -32,7 +48,6 @@ const Home = ({ title }) => {
     { name: "RetailMax", logo: "RM", jobs: 23, rating: 4.5 },
     { name: "StartupHub", logo: "SH", jobs: 67, rating: 4.8 },
   ];
-
   // Animation on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -45,10 +60,8 @@ const Home = ({ title }) => {
       },
       { threshold: 0.1 }
     );
-
     const elements = document.querySelectorAll("[data-animate]");
     elements.forEach((el) => observer.observe(el));
-
     return () => observer.disconnect();
   }, []);
   // Counter animation
@@ -63,9 +76,7 @@ const Home = ({ title }) => {
       const duration = 2000;
       const steps = 60;
       const stepDuration = duration / steps;
-
       let current = { jobs: 0, companies: 0, candidates: 0, success: 0 };
-
       const timer = setInterval(() => {
         Object.keys(targets).forEach((key) => {
           const increment = targets[key] / steps;
@@ -97,7 +108,6 @@ const Home = ({ title }) => {
       [e.target.name]: e.target.value,
     });
   };
-
   const getUserInfo = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("account"));
@@ -106,7 +116,6 @@ const Home = ({ title }) => {
       console.error("❌ Lỗi khi gọi API:", err);
     }
   };
-
   return (
     <>
       <div
@@ -117,14 +126,12 @@ const Home = ({ title }) => {
         <section className="relative bg-gradient-to-br from-blue-300 via-purple-200 to-blue-100 text-gray-800 py-20 lg:py-32 overflow-hidden">
           {/* Add subtle pattern overlay */}
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-
           {/* Add animated shapes */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
             <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
           </div>
-
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div
               id="hero"
@@ -135,20 +142,21 @@ const Home = ({ title }) => {
                   : "translate-y-10 opacity-0"
               }`}
             >
-              <a href="/admin">
-                <button>Admin</button>
-              </a>
+              <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+                <a href="/admin">
+                  <button className="px-6 py-3 text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 shadow-md hover:shadow-lg transition-all duration-300">
+                    Admin
+                  </button>
+                </a>
+                <a href="/companyAdmin">
+                  <button className="px-6 py-3 text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-gray-800 to-blue-700 hover:from-gray-900 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-300">
+                    Nhà tuyển dụng
+                  </button>
+                </a>
+              </div>
               <br></br>
-              <a href="/companyAdmin">
-                <button>companyAdmin</button>
-              </a>
-              <br></br>
-              <a href="/invoiceAdd">
-                <button>Nạp tiền</button>
-              </a>
               <div className="p-6">
                 <h1 className="text-xl font-bold mb-4">Trang chủ</h1>
-
                 {/* 🔘 Nút lấy user */}
                 <button
                   onClick={getUserInfo}

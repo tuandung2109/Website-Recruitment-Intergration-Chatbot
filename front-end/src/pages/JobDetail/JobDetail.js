@@ -429,7 +429,7 @@ const JobDetail = () => {
                 </button>
                 <button
                   onClick={() => setIsSaved(!isSaved)}
-                  className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 mb-3 ${
                     isSaved
                       ? "bg-blue-50 text-blue-600 border-2 border-blue-600"
                       : "bg-gray-100 text-gray-700 border-2 border-gray-300 hover:border-blue-600 hover:text-blue-600"
@@ -450,6 +450,27 @@ const JobDetail = () => {
                       />
                     </svg>
                     {isSaved ? "Đã lưu" : "Lưu tin"}
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate(`/job/${id}/ai-review`)}
+                  className="w-full py-4 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    AI Đánh giá & Cải thiện
                   </span>
                 </button>
               </div>

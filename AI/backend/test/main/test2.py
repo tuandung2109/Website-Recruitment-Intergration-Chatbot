@@ -1,27 +1,132 @@
-import sys
-from pathlib import Path
-import os
-
-# Set UTF-8 encoding for Windows console
-os.system('chcp 65001 >nul')
-
-from flask import logging
-from openai import OpenAI
+import re
+from transformers import pipeline
+from typing import List, Set
 
 
-# Ensure the backend package is discoverable when running the test directly
-backend_dir = Path(__file__).resolve().parents[2]
-if str(backend_dir) not in sys.path:
-	sys.path.insert(0, str(backend_dir))
+def normalize_token(token: str) -> str:
+    t = token.strip()
+    # Fix common typos and canonicalize
+    replacements = {
+        "asp.net": "ASP.NET",
+        "asp .net": "ASP.NET",
+        "asp.net core mvc": "ASP.NET Core MVC",
+        "githup": "GitHub",
+        "ui toolkit": "UI Toolkit",
+        "unity ui": "Unity UI",
+        "google admob sdk": "Google AdMob SDK",
+        "c ++": "C++",
+        "c#": "C#",
+    }
+    low = t.lower()
+    if low in replacements:
+        return replacements[low]
+    # Title-case multi-word tokens that look like phrases (except known all-caps like OOP, SOLID, SDK, UI, MVC)
+    if re.search(r"\b(oop|solid|sdk|ui|mvc|html|css|sql|hlsl|c\+\+|c#|3d|2d)\b", low):
+        return t.replace("  ", " ").strip()
+    # Keep original case for tech names with punctuation/numbers
+    return t.replace("  ", " ").strip()
 
 
+def heuristic_extract_skills(text: str) -> List[str]:
+    # Curated skill tokens for this CV; extend as needed
+    known = [
+        "ASP.NET Core MVC",
+        "ASP.NET",
+        "Unity 3D/2D",
+        "Unity UI",
+        "UI Toolkit",
+        "Unity",
+        "Unreal",
+        "DOTween",
+        "Firebase",
+        "Google AdMob SDK",
+        "JavaScript",
+        "Java",
+        "Kotlin",
+        "C#",
+        "C++",
+        "SQL",
+        "HTML",
+        "CSS",
+        "HLSL",
+        "OOP",
+        "Design Pattern",
+        "SOLID",
+        "State Machine",
+        "MVC",
+        "SDK",
+        "UI",
+        "GitHub",
+        "Git",
+    ]
+    # Build regex that prefers longer tokens first
+    esc = [re.escape(k) for k in sorted(known, key=len, reverse=True)]
+    pattern = re.compile(r"(" + "|".join(esc) + r")", re.IGNORECASE)
 
-cv = """
+    # Normalize common typos before matching
+    pre = text.replace("ASP.Net", "ASP.NET").replace("Githup", "GitHub")
+
+    matches = []
+    for m in pattern.finditer(pre):
+        token = normalize_token(m.group(0))
+        matches.append((m.start(), token))
+
+    # Stable order by occurrence and deduplicate
+    seen: Set[str] = set()
+    ordered: List[str] = []
+    for _, tok in sorted(matches, key=lambda x: x[0]):
+        key = tok.lower()
+        # Prefer GitHub over Git if both hit at same position later
+        if key == "git" and "github" in seen:
+            continue
+        if key not in seen:
+            ordered.append(tok)
+            seen.add(key)
+
+    return ordered
+
+
+def ner_extract_skills(text: str, threshold: float = 0.50) -> List[str]:
+    try:
+        ner = pipeline(
+            "token-classification",
+            model="yashpwr/resume-ner-bert-v2",
+            aggregation_strategy="simple",
+        )
+    except Exception as e:
+        # If model fails to load, fallback to heuristic only
+        print(f"[WARN] NER model load failed, using heuristic only: {e}")
+        return []
+
+    results = ner(text)
+    skills = []
+    for ent in results:
+        label = ent.get("entity_group") or ent.get("entity")
+        word = ent.get("word", "").strip()
+        score = float(ent.get("score", 0))
+        if not word or score < threshold:
+            continue
+        if str(label).lower() in {"skill", "skills", "technology", "tech"}:
+            skills.append(normalize_token(word))
+    # De-dup while preserving order
+    seen = set()
+    uniq = []
+    for s in skills:
+        if s.lower() not in seen:
+            uniq.append(s)
+            seen.add(s.lower())
+    return uniq
+
+
+if __name__ == "__main__":
+    # Sample resume text (Vietnamese + English tech stack)
+    text = """"
 Projects
 Skills
 Unity Developer Intern
 Education
-AwardsLà một sinh viên đam mê lập trình,
+Awards
+Là một sinh viên đam mê lập trình,
 nhiệt huyết và trách nhiệm, luôn nỗ lực
 phát triển bản thân để đạt mục tiêu.
 Trong 2 năm tới, tôi mong muốn trở
@@ -46,7 +151,7 @@ Unity 3D/2D, Unreal
 C#, Java, Kotlin, C++, SQL, HTML, CSS,
 JavaScript, HLSL
 OOP, Design Pattern, SOLID, ASP.Net
-Core MVC 
+Core MVC
 UI Toolkit, Unity UI, Dotween, Firebase,
 Google Admob SDK
 Git, Githup
@@ -56,7 +161,7 @@ TREASURE RUNNER 2D
 Là thể loại game chạy vô tận. Người chơi nhập vai vào một cướp
 biển phiêu lưu qua các vùng đất, vượt qua các vật cản để đạt được
 kho báu.
-Game sử dụng UI Toolkit  và Unity UI để tạo giao diện người dùng 
+Game sử dụng UI Toolkit  và Unity UI để tạo giao diện người dùng
 Linh demo: Link
 Link Githup: Link
 10/2024-11/2024
@@ -85,15 +190,18 @@ nGuyễn Thế
 Trang 1/1
 """
 
-from prompt.promt_config import PromptConfig
-prompt_config = PromptConfig()
-prompt = prompt_config.get_prompt("extract_features_cvssss", user_input=cv)
-from setting import Settings
-settings = Settings()
-client = OpenAI(base_url=settings.BASE_URL_OPENAI,api_key=settings.API_KEY_OPENAI)
+    heuristic = heuristic_extract_skills(text)
+    print(f"Heuristic skills ({len(heuristic)}): {heuristic}")
 
-print("prompt:", prompt )
+    ner_skills = ner_extract_skills(text, threshold=0.50)
+    print(f"NER skills ({len(ner_skills)}): {ner_skills}")
 
-response = client.chat.completions.create(model=settings.MODE_KAT_CODER, messages=[{"role": "user", "content": prompt}])
-
-print("response:", response.choices[0].message.content)
+    # Unified set with heuristics taking precedence
+    unified = []
+    seen = set()
+    for s in heuristic + ner_skills:
+        key = s.lower()
+        if key not in seen:
+            unified.append(s)
+            seen.add(key)
+    print(f"Unified skills ({len(unified)}): {unified}")

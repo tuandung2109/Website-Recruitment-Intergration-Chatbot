@@ -74,6 +74,22 @@ class AgentOllama(BaseAI):
                 
                 print(f"✅ Returning CV evaluation result")
                 return result
+            elif message == "Lựa chọn công việc phù hợp dựa trên CV":
+                from tool.ner_extract_skills import get_similarity_job_by_skills
+                
+                # Get filepath from kwargs
+                filepath = kwargs.get('filepath', '')
+                
+                # Call the function with filepath
+                result = get_similarity_job_by_skills(filepath, use_kat_coder=False)
+                
+                # Check if there was an error
+                if "error" in result:
+                    print(f"❌ Error in job suggestion: {result['error']}")
+                    return result
+                
+                print(f"✅ Returning job suggestion result")
+                return result
             
             # Continue with normal agent flow for other messages
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)

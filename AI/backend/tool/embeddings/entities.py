@@ -47,6 +47,17 @@ def _build_company_text(record: Dict[str, Any]) -> str:
     return ". ".join(parts).strip()
 
 
+
+def _build_skill_text(record: Dict[str, Any]) -> str:
+    """Build a single descriptive string used for embedding a skill from job posting record."""
+    skills = record.get("skills")
+    if skills:
+        if isinstance(skills, list):
+            return ", ".join(skills)
+        return str(skills)
+    return ""
+
+
 def _build_job_posting_text(record: Dict[str, Any]) -> str:
     """Build a single descriptive string used for embedding a job posting record."""
     parts: List[str] = []
@@ -179,7 +190,12 @@ def sync_entities_embeddings(
     batch_size: int = 64,
     limit: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Fetch both company and job posting data from PostgreSQL and upsert embeddings into unified Qdrant collection.
+    """Fetch company and job posting data from PostgreSQL and upsert embeddings into unified Qdrant collection.
+    
+    This function creates three types of embeddings:
+    - Company embeddings: Based on company information
+    - Job posting embeddings: Based on full job posting information
+    - Skill embeddings: Based on skills extracted from job postings (with entity_type='skill')
 
     Args:
         settings: Application settings instance. If omitted, settings will be loaded lazily.
@@ -188,7 +204,7 @@ def sync_entities_embeddings(
         limit: Maximum number of records to fetch from each procedure.
 
     Returns:
-        A dictionary summarising the sync results for both entity types.
+        A dictionary summarising the sync results for all three entity types (companies, job postings, and skills).
     """
 
     settings = settings or Settings.load_settings()
@@ -202,9 +218,10 @@ def sync_entities_embeddings(
     logger.info("Fetching job posting data from PostgreSQL...")
     job_postings = pg_client.get_data_from_procedures("get_job_posting_infor", limit=limit or 1000)
     
+    # Skills will be extracted from job_postings, so we count them separately
     total_records = len(companies) + len(job_postings)
     
-    logger.info(f"Retrieved {len(companies)} companies and {len(job_postings)} job postings")
+    logger.info(f"Retrieved {len(companies)} companies and {len(job_postings)} job postings (skills will be extracted from job postings)")
     
     if total_records == 0:
         logger.info("No records returned from PostgreSQL procedures")
@@ -213,6 +230,7 @@ def sync_entities_embeddings(
             "collection": collection_name,
             "companies": 0,
             "job_postings": 0,
+            "skills": 0,
             "total_records": 0,
             "upserted": 0,
         }
@@ -246,6 +264,7 @@ def sync_entities_embeddings(
     # Get existing IDs from Qdrant for smart update
     existing_company_ids = set()
     existing_job_posting_ids = set()
+    existing_skill_ids = set()
     
     try:
         # Scroll through all points to get existing IDs
@@ -258,14 +277,16 @@ def sync_entities_embeddings(
         
         for point in scroll_result[0]:
             point_id = str(point.id)
-            # Check entity_type in payload to determine if it's a company or job posting
+            # Check entity_type in payload to determine the entity type
             entity_type = point.payload.get("entity_type") if point.payload else None
             if entity_type == "company":
                 existing_company_ids.add(point_id)
             elif entity_type == "job_posting":
                 existing_job_posting_ids.add(point_id)
+            elif entity_type == "skill":
+                existing_skill_ids.add(point_id)
         
-        logger.info(f"Found {len(existing_company_ids)} existing companies and {len(existing_job_posting_ids)} existing job postings in Qdrant")
+        logger.info(f"Found {len(existing_company_ids)} existing companies, {len(existing_job_posting_ids)} existing job postings, and {len(existing_skill_ids)} existing skills in Qdrant")
     except Exception as e:
         logger.warning(f"Could not fetch existing IDs from Qdrant: {e}")
 
@@ -273,6 +294,8 @@ def sync_entities_embeddings(
     skipped: List[str] = []
     new_company_ids = set()
     new_job_posting_ids = set()
+    new_skill_ids = set()
+    skills_processed = 0
 
     # Process company records
     logger.info(f"Processing {len(companies)} company records...")
@@ -385,6 +408,67 @@ def sync_entities_embeddings(
             skipped.append(f"job_posting_{job_posting_id}")
             continue
 
+    # Process skill records from job postings
+    logger.info(f"Processing skill records from {len(job_postings)} job postings...")
+    for record in job_postings:
+        job_posting_id = record.get("job_posting_id")
+        if job_posting_id is None:
+            continue
+
+        text = _build_skill_text(record)
+        if not text:
+            continue
+
+        try:
+            vector = embedding_model.encode(text)
+            if hasattr(vector, "tolist"):
+                vector = vector.tolist()
+
+            if not isinstance(vector, list):
+                vector = list(vector)
+
+            # Keep all job posting fields in payload but change entity_type to skill
+            payload = {
+                "entity_type": "skill",
+                "job_posting_id": job_posting_id,
+                "position_name": record.get("position_name"),
+                "job_description": record.get("job_description"),
+                "requirements": record.get("requirements"),
+                "salary": record.get("salary"),
+                "deadline": record.get("deadline"),
+                "experience_year": record.get("experience_year"),
+                "education_level": record.get("education_level"),
+                "benefits": record.get("benefits"),
+                "working_time": record.get("working_time"),
+                "name_of_company": record.get("name_of_company"),
+                "industries": record.get("industries"),
+                "skills": record.get("skills"),
+                "addresses": record.get("addresses"),
+            }
+
+            # Create unique point ID - Qdrant accepts only UUID or int
+            # Generate deterministic UUID from job_posting_id with skill namespace
+            namespace = uuid.UUID('00000000-0000-0000-0000-000000000003')  # Skill namespace
+            point_id = str(uuid.uuid5(namespace, f"skill_{job_posting_id}"))
+            
+            # Track new IDs
+            new_skill_ids.add(point_id)
+            skills_processed += 1
+
+            points.append(
+                PointStruct(
+                    id=point_id,
+                    vector=vector,
+                    payload=payload,
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Failed to process skill from job posting {job_posting_id}: {e}")
+            skipped.append(f"skill_{job_posting_id}")
+            continue
+
+    logger.info(f"Successfully processed {skills_processed} skill embeddings from job postings")
+
     if not points:
         logger.warning("No valid records to upsert into Qdrant")
         return {
@@ -392,6 +476,7 @@ def sync_entities_embeddings(
             "collection": collection_name,
             "companies": len(companies),
             "job_postings": len(job_postings),
+            "skills": skills_processed,
             "total_records": total_records,
             "upserted": 0,
             "skipped_ids": skipped,
@@ -402,10 +487,11 @@ def sync_entities_embeddings(
     # Delete obsolete records (exist in Qdrant but not in PostgreSQL)
     company_ids_to_delete = existing_company_ids - new_company_ids
     job_posting_ids_to_delete = existing_job_posting_ids - new_job_posting_ids
+    skill_ids_to_delete = existing_skill_ids - new_skill_ids
     total_deleted = 0
     
-    if company_ids_to_delete or job_posting_ids_to_delete:
-        ids_to_delete = list(company_ids_to_delete) + list(job_posting_ids_to_delete)
+    if company_ids_to_delete or job_posting_ids_to_delete or skill_ids_to_delete:
+        ids_to_delete = list(company_ids_to_delete) + list(job_posting_ids_to_delete) + list(skill_ids_to_delete)
         
         if ids_to_delete:
             try:
@@ -415,8 +501,9 @@ def sync_entities_embeddings(
                 )
                 total_deleted = len(ids_to_delete)
                 logger.info(
-                    f"Deleted {len(company_ids_to_delete)} obsolete companies and "
-                    f"{len(job_posting_ids_to_delete)} obsolete job postings from Qdrant"
+                    f"Deleted {len(company_ids_to_delete)} obsolete companies, "
+                    f"{len(job_posting_ids_to_delete)} obsolete job postings, and "
+                    f"{len(skill_ids_to_delete)} obsolete skills from Qdrant"
                 )
             except Exception as e:
                 logger.warning(f"Failed to delete obsolete records: {e}")
@@ -427,7 +514,7 @@ def sync_entities_embeddings(
     total_inserted = 0
     
     # Combine all existing IDs for easier lookup
-    all_existing_ids = existing_company_ids | existing_job_posting_ids
+    all_existing_ids = existing_company_ids | existing_job_posting_ids | existing_skill_ids
     
     for start in range(0, len(points), batch_size):
         batch = points[start : start + batch_size]
@@ -459,6 +546,7 @@ def sync_entities_embeddings(
         "collection": collection_name,
         "companies": len(companies),
         "job_postings": len(job_postings),
+        "skills": skills_processed,
         "total_records": total_records,
         "upserted": total_upserted,
         "inserted": total_inserted,

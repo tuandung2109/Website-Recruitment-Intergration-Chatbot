@@ -14,7 +14,7 @@ from openai import OpenAI
 class AgentKatCoder(BaseAI):
     def __init__(self, model_name: str = "", **kwargs):
         settings = Settings.load_settings()
-        resolved_model = model_name or settings.KAT_CODER_MODEL
+        resolved_model = model_name or settings.MODE_KAT_CODER
 
         super().__init__(model_name=resolved_model, **kwargs)
         
@@ -48,6 +48,19 @@ class AgentKatCoder(BaseAI):
         except Exception as e:
             logging.error(f"Error generating content: {str(e)}")
             raise
+        
+    def evaluate_job_description(self, id) -> str:
+        """Evaluate job description quality using LLM"""
+        try:
+            from tool.database.postgest import PostgreSQLClient
+            pg_client = PostgreSQLClient(Settings=Settings.load_settings())
+            job_description = pg_client.get_job_posting_info_by_id(id)
+            prompt = self.prompt_config.get_prompt("evaluate_jd", user_input=job_description)
+            evaluation = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
+            return evaluation
+        except Exception as e:
+            logging.error(f"Error evaluating job description: {str(e)}")
+            return f"Error evaluating job description: {str(e)}"
 
 
     def chat_with_agent(self, message: str, **kwargs) -> str:
@@ -67,6 +80,22 @@ class AgentKatCoder(BaseAI):
                     return result
                 
                 print(f"✅ Returning CV evaluation result")
+                return result
+            elif message == "Lựa chọn công việc phù hợp dựa trên CV":
+                from tool.ner_extract_skills import get_similarity_job_by_skills
+                
+                # Get filepath from kwargs
+                filepath = kwargs.get('filepath', '')
+                
+                # Call the function with filepath
+                result = get_similarity_job_by_skills(filepath, use_kat_coder=True)
+                
+                # Check if there was an error
+                if "error" in result:
+                    print(f"❌ Error in job suggestion: {result['error']}")
+                    return result
+                
+                print(f"✅ Returning job suggestion result")
                 return result
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
             intent = self._strip_think(self.generate_content([{"role": "user", "content": classification_prompt}]))

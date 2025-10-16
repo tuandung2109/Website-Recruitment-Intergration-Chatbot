@@ -96,6 +96,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home/Home";
 import JobListings from "./pages/JobListing/JobListings";
 import JobDetail from "./pages/JobDetail/JobDetail";
+import JobDetailAIReview from "./pages/JobDetail/JobDetailAIReview";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -105,9 +106,13 @@ import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
 import Applications from "./pages/Application/Applications";
 import EvaluateCV from "./pages/EvaluateCV/EvaluateCV";
+<<<<<<< HEAD
 import AddCompany from "./pages/Company/addCompany";
 import InfoUser from "./pages/Users";
 import Vnpay from "./pages/Invoice";
+=======
+import JobSuggestions from "./pages/JobSuggestions/JobSuggestions";
+>>>>>>> 522ba43c70bd243496ba266aa992d1fd970576b1
 
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
@@ -141,11 +146,13 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/job" element={<JobListings />} />
           <Route path="/job/:id" element={<JobDetail />} />
+          <Route path="/job/:id/ai-review" element={<JobDetailAIReview />} />
           <Route path="/company" element={<Company />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/cv" element={<CV />} />
           <Route path="/cv/:id" element={<CVDetail />} />
           <Route path="/evaluate_cv" element={<EvaluateCV />} />
+          <Route path="/job-suggestions" element={<JobSuggestions />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
           <Route path="/profile" element={<InfoUser />} />

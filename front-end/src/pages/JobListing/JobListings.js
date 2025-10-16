@@ -152,11 +152,21 @@ const JobListings = () => {
     if (agentFilters) {
       console.log("🤖 Agent filters detected, applying to JobListings...");
 
-      setSearchData((prev) => ({ ...prev, keywords: agentFilters.title }));
-      setSearchData((prev) => ({ ...prev, location: agentFilters.location }));
-      setActiveFilters((prev) => ({...prev,workType: [agentFilters.workType],}));
-      setSearchData((prev) => ({...prev,skills: Array.isArray(agentFilters.skills)? agentFilters.skills.join(", "): agentFilters.skills,}));
-
+      setSearchData((prev) => ({ 
+        ...prev, 
+        keywords: agentFilters.title || "",
+        location: agentFilters.location || "",
+        skills: Array.isArray(agentFilters.skills)
+          ? agentFilters.skills.join(", ")
+          : agentFilters.skills || "",
+      }));
+      
+      if (agentFilters.workType) {
+        setActiveFilters((prev) => ({
+          ...prev,
+          workType: [agentFilters.workType],
+        }));
+      }
 
       // Reset current page to 1 when new filters are applied
       setCurrentPage(1);
@@ -181,10 +191,21 @@ const JobListings = () => {
         setTimeout(() => {
           // Áp dụng filters vào searchData
 
-          setSearchData((prev) => ({...prev, keywords: agentFilters.title,}));
-          setSearchData((prev) => ({...prev,location: agentFilters.location,}));
-          setActiveFilters((prev) => ({...prev,workType: [agentFilters.workType],}));
-          setSearchData((prev) => ({...prev, skills: Array.isArray(agentFilters.skills)? agentFilters.skills.join(", "): agentFilters.skills,}));
+          setSearchData((prev) => ({
+            ...prev, 
+            keywords: agentFilters.title || "",
+            location: agentFilters.location || "",
+            skills: Array.isArray(agentFilters.skills)
+              ? agentFilters.skills.join(", ")
+              : agentFilters.skills || "",
+          }));
+          
+          if (agentFilters.workType) {
+            setActiveFilters((prev) => ({
+              ...prev,
+              workType: [agentFilters.workType],
+            }));
+          }
 
 
           // Reset current page to 1 when new filters are applied
@@ -201,8 +222,38 @@ const JobListings = () => {
     checkForNewFilters();
 
     // Also listen for custom event when navigating from agent
-    const handleAgentNavigation = () => {
-      checkForNewFilters();
+    const handleAgentNavigation = (event) => {
+      // Ưu tiên sử dụng filters từ event.detail nếu có
+      if (event.detail?.filters) {
+        console.log("🔄 New agent filters received from event:", event.detail.filters);
+        const agentFilters = event.detail.filters;
+        
+        setTimeout(() => {
+          setSearchData((prev) => ({
+            ...prev, 
+            keywords: agentFilters.title || "",
+            location: agentFilters.location || "",
+            skills: Array.isArray(agentFilters.skills)
+              ? agentFilters.skills.join(", ")
+              : agentFilters.skills || "",
+          }));
+          
+          if (agentFilters.workType) {
+            setActiveFilters((prev) => ({
+              ...prev,
+              workType: [agentFilters.workType],
+            }));
+          }
+
+          setCurrentPage(1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          
+          console.log("✅ Agent filters from event applied successfully");
+        }, 100);
+      } else {
+        // Fallback: đọc từ sessionStorage
+        checkForNewFilters();
+      }
     };
 
     window.addEventListener("agentNavigation", handleAgentNavigation);
@@ -253,7 +304,7 @@ const JobListings = () => {
     let filtered = [...jobs];
 
     // Lọc theo từ khóa
-    if (searchData.keywords.trim()) {
+    if (searchData.keywords && searchData.keywords.trim()) {
       const keyword = searchData.keywords.toLowerCase();
       filtered = filtered.filter(
         (job) =>
@@ -265,7 +316,7 @@ const JobListings = () => {
     }
 
     // Lọc theo địa điểm
-    if (searchData.location.trim()) {
+    if (searchData.location && searchData.location.trim()) {
       const location = searchData.location.toLowerCase();
       filtered = filtered.filter((job) =>
         job.location.toLowerCase().includes(location)

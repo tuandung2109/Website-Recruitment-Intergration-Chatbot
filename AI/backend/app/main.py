@@ -311,6 +311,66 @@ def chat():
             "status": "error"
         }), 500
 
+@app.route('/api/evaluate/jd', methods=['POST'])
+def evaluate_job_description():
+    """Evaluate job description quality using AgentKatCoder"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'job_id' not in data:
+            return jsonify({
+                "error": "job_id is required",
+                "status": "error"
+            }), 400
+        
+        job_id = data['job_id']
+        
+        # Validate job_id is a valid integer
+        try:
+            job_id = int(job_id)
+        except (ValueError, TypeError):
+            return jsonify({
+                "error": "job_id must be a valid integer",
+                "status": "error"
+            }), 400
+        
+        logger.info(f"📋 Evaluating job description for ID: {job_id}")
+        
+        # Import AgentKatCoder
+        from app.chatbot.AgentKatCoder import AgentKatCoder
+        
+        # Create AgentKatCoder instance
+        settings = Settings.load_settings()
+        agent = AgentKatCoder(model_name=settings.MODE_KAT_CODER)
+        
+        # Call evaluate_job_description method
+        evaluation_result = agent.evaluate_job_description(job_id)
+        
+        # Check if evaluation was successful
+        if evaluation_result and not evaluation_result.startswith("Error"):
+            return jsonify({
+                "status": "success",
+                "job_id": job_id,
+                "evaluation": evaluation_result,
+                "timestamp": time.time()
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "job_id": job_id,
+                "error": evaluation_result or "Failed to evaluate job description",
+                "timestamp": time.time()
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"Job description evaluation error: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error",
+            "timestamp": time.time()
+        }), 500
+
+
 
 @app.route('/api/chat/history', methods=['GET'])
 def get_chat_history():

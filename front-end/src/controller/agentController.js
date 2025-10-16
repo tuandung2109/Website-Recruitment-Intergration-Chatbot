@@ -139,6 +139,35 @@ export const handleIntent = (intent, navigate, filters = null) => {
         }, 100);
       }
       break;
+    case "job-suggestions":
+      if (filters && Object.keys(filters).length > 0) {
+        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
+        console.log("💾 CV Evaluation data saved to sessionStorage");
+      }
+      
+      // Kiểm tra nếu đã ở trang /evaluate_cv
+      const haha = window.location.pathname === "/job-suggestions";
+
+      if (haha) {
+        // Đã ở trang /evaluate_cv, chỉ cần dispatch event
+        console.log("🔄 Already on /evaluate_cv page, dispatching event immediately");
+        window.dispatchEvent(new CustomEvent('agentNavigation', {
+          detail: { filters, intent }
+        }));
+      } else {
+        // Điều hướng đến trang đánh giá CV
+        console.log("✅ Navigating to /job-suggestions page...");
+        navigate("/job-suggestions");
+        
+        // Dispatch custom event to notify EvaluateCV component
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('agentNavigation', {
+            detail: { filters, intent }
+          }));
+        }, 100);
+      }
+      break;
+
     default:
       // Intent không được xử lý
       console.log("⚠️ Intent not handled:", intent);

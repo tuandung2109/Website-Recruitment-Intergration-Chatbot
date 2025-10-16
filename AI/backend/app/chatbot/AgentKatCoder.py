@@ -14,7 +14,7 @@ from openai import OpenAI
 class AgentKatCoder(BaseAI):
     def __init__(self, model_name: str = "", **kwargs):
         settings = Settings.load_settings()
-        resolved_model = model_name or settings.KAT_CODER_MODEL
+        resolved_model = model_name or settings.MODE_KAT_CODER
 
         super().__init__(model_name=resolved_model, **kwargs)
         
@@ -67,6 +67,22 @@ class AgentKatCoder(BaseAI):
                     return result
                 
                 print(f"✅ Returning CV evaluation result")
+                return result
+            elif message == "Lựa chọn công việc phù hợp dựa trên CV":
+                from tool.ner_extract_skills import get_similarity_job_by_skills
+                
+                # Get filepath from kwargs
+                filepath = kwargs.get('filepath', '')
+                
+                # Call the function with filepath
+                result = get_similarity_job_by_skills(filepath, use_kat_coder=True)
+                
+                # Check if there was an error
+                if "error" in result:
+                    print(f"❌ Error in job suggestion: {result['error']}")
+                    return result
+                
+                print(f"✅ Returning job suggestion result")
                 return result
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
             intent = self._strip_think(self.generate_content([{"role": "user", "content": classification_prompt}]))

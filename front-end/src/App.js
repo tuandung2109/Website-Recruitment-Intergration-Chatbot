@@ -15,6 +15,7 @@ import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
 import Applications from "./pages/Application/Applications";
 import EvaluateCV from "./pages/EvaluateCV/EvaluateCV";
+import JobSuggestions from "./pages/JobSuggestions/JobSuggestions";
 
 import "./App.css";
 import AdminCompany from "./pages/Admin/Company/company";
@@ -55,6 +56,7 @@ function App() {
           <Route path="/cv" element={<CV />} />
           <Route path="/cv/:id" element={<CVDetail />} />
           <Route path="/evaluate_cv" element={<EvaluateCV />} />
+          <Route path="/job-suggestions" element={<JobSuggestions />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
           <Route path="/profile" element={<InfoUser />} />

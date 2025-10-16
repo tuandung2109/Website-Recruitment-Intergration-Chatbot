@@ -1,4 +1,4 @@
-class Reflection():
+class Reflection:
     def __init__(self, llm, max_items=100):
         """
         llm: đối tượng có method generate_content(list_of_messages) -> str
@@ -8,10 +8,7 @@ class Reflection():
         self.max_items = max_items
 
     def _collect_user_messages(self, chat_history):
-        """
-        Lấy và ghép nội dung chỉ từ các message có role == 'user',
-        giữ thứ tự ban đầu (cũ -> mới).
-        """
+        """Lấy và ghép nội dung chỉ từ message của người dùng."""
         if len(chat_history) > self.max_items:
             chat_history = chat_history[-self.max_items:]
 
@@ -25,8 +22,7 @@ class Reflection():
                     text = entry.get("content", "")
                 if text.strip():
                     user_texts.append(text.strip())
-
-        return user_texts  # trả về dạng list thay vì string
+        return user_texts
 
     def __call__(self, chatHistory, lastItemsConsidereds=None):
         if lastItemsConsidereds is None:
@@ -36,24 +32,22 @@ class Reflection():
         if not user_messages:
             return "Không có tin nhắn của người dùng để tóm tắt."
 
-        # Nếu chỉ có 1 tin nhắn => tóm tắt thẳng
+        # Nếu chỉ có 1 tin nhắn => lấy luôn
         if len(user_messages) == 1:
             last_block = user_messages[-1]
         else:
-            # Gộp logic: phát hiện "chuyển chủ đề"
-            # Ta cho LLM tự phát hiện, chọn giữ lại các câu cùng chủ đề với tin cuối
+            # Giữ lại các dòng thuộc chủ đề cuối cùng
             joined_messages = "\n".join(user_messages)
 
             topic_detection_prompt = f"""
-Bạn nhận được các tin nhắn của người dùng theo thứ tự thời gian.  
-Hãy xác định xem các tin nhắn có cùng một chủ đề hay không.  
-Nếu người dùng đổi chủ đề (ví dụ: đang nói về việc làm rồi chuyển sang nói về thời tiết),
-chỉ GIỮ LẠI những tin nhắn thuộc CHỦ ĐỀ CUỐI CÙNG (tức là những tin nhắn mới nhất có cùng chủ đề).  
+Bạn nhận được các tin nhắn của người dùng theo thứ tự thời gian.
+Nếu người dùng đổi chủ đề (ví dụ: nói về việc làm rồi chuyển sang thời tiết),
+hãy chỉ giữ lại các tin nhắn thuộc **chủ đề cuối cùng**.
 
 Tin nhắn người dùng:
 {joined_messages}
 
-Trả về đúng nội dung (hoặc các dòng) của chủ đề cuối cùng, không cần giải thích thêm.
+Trả về đúng nội dung (hoặc các dòng) của chủ đề cuối cùng, không giải thích thêm.
 """.strip()
 
             selected_text = self.llm.generate_content([{"role": "user", "content": topic_detection_prompt}])
@@ -63,11 +57,16 @@ Trả về đúng nội dung (hoặc các dòng) của chủ đề cuối cùng,
                 selected_text = selected_text.strip().strip('"')
             last_block = selected_text
 
-        # Bước 2: tóm tắt lại CHỈ trong 1 câu
+        # ✅ Bước 2: chỉ trích lại câu hỏi/yêu cầu cuối cùng, không diễn giải
         summarize_prompt = f"""
-Tóm tắt nội dung sau đây thành đúng **1 câu duy nhất**,
-chỉ giữ ý chính thể hiện mục đích hoặc yêu cầu của người dùng.
-
+Phân tích đoạn hội thoại sau và trích ra **một câu duy nhất**
+thể hiện đúng yêu cầu hoặc câu hỏi cuối cùng của người dùng.
+Không được diễn giải, không tóm tắt, không thêm chi tiết mới.
+ví dụ: 
+user: "Tìm thông tin về công ty ABC"
+assistant: "Thông tin công ty ABC là..."
+user: "Công ty đó đang tuyển về gì?"
+kết quả: "Công ty ABC đang tuyển về gì?"
 Nội dung:
 {last_block}
 """.strip()

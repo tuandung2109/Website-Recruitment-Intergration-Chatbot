@@ -6,6 +6,22 @@ class PromptConfig:
                 "and responsibilities required for the role:\n\n{job_description}\n\n"
                 "Provide a summary in bullet points."
             ),
+            "extract_features_cv": (
+            """Bạn là chuyên gia phân tích CV.
+
+Nhiệm vụ:
+Đọc CV dưới đây và trả về **JSON hợp lệ** với format:
+{{
+  "skills": ["skill1", "skill2", ...],
+}}
+HƯỚNG DẪN:
+- skills: Liệt kê tất cả kỹ năng lập trình, công nghệ, framework.
+CV CONTENT:
+{user_input}
+
+CHỈ TRẢ VỀ JSON, KHÔNG VIẾT THÊM BẤT KỲ TEXT NÀO KHÁC"""
+          ),
+            
             "extract_feature_question_about_jd": (
                 """You are an information extraction engine. Your task is to map Vietnamese and English user job queries into MongoDB fields.
 

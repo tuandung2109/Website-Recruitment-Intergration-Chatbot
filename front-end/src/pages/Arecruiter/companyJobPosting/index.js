@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card, Spin, Alert, Tag, Table, Button, message, Modal } from "antd";
+import { useNavigate } from "react-router-dom";
 import UseTitle from "../../../hooks/useTitle";
 import { getCompanyById } from "../../../services/company";
 import { listJobsPosting } from "../../../services/jobPosting";
 function CompanyJobPosting() {
   UseTitle("JobVip - Company Job Postings");
+  const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [jobPostings, setJobPostings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,17 +116,33 @@ function CompanyJobPosting() {
             },
             {
               title: "Thao tác",
-              width: 120,
+              width: 200,
               render: (_, record) => (
-                <Button
-                  type="link"
-                  onClick={() => {
-                    setSelectedJob(record);
-                    setIsModalOpen(true);
-                  }}
-                >
-                  Xem chi tiết
-                </Button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      setSelectedJob(record);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    Xem chi tiết
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                      border: 'none',
+                      fontWeight: '600'
+                    }}
+                    onClick={() => {
+                      navigate(`/companyAdmin/evaluateCandidates/${record.id}`);
+                    }}
+                  >
+                    🤖 Đánh giá AI
+                  </Button>
+                </div>
               ),
             },
           ]}

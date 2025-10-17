@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     BASE_URL_OPENAI: str = "https://vanchin.streamlake.ai/api/gateway/v1/endpoints"
     API_KEY_OPENAI: str = "UoMaZSDIoUhEHNAJIqzszg_xqwyZ5gOaGebPE7c2EA4"
     MODE_KAT_CODER: str = "ep-4gojfr-1760317712505142118"
+    
+    
+    MONGO_DB_URI : str = "mongodb+srv://thanhthanh10012004:10012004@rag-cluster.ssgkce4.mongodb.net/?retryWrites=true&w=majority&appName=rag-cluster"
+    DATABASE_MONGO_NAME : str = "rag"
 
 
     @classmethod

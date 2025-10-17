@@ -123,6 +123,7 @@ import CompanyInformation from "./pages/Arecruiter/companyInformation";
 import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
 import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
+import CandidateEvaluation from "./pages/Recruiter/CandidateEvaluation";
 
 import "./App.css";
 import NotFound from "./pages/NotFound";
@@ -155,6 +156,8 @@ function App() {
           <Route path="/profile" element={<InfoUser />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/invoiceAdd" element={<Vnpay />} />
+          {/* 🧪 TEST: Đánh giá ứng viên - Không cần đăng nhập */}
+          <Route path="/test-candidate-evaluation" element={<CandidateEvaluation />} />
         </Route>
 
         {/* 👑 Admin chỉ được truy cập nếu role = Admin */}
@@ -179,6 +182,10 @@ function App() {
             <Route
               path="companyListJobPosting"
               element={<CompanyListJobPosting />}
+            />
+            <Route
+              path="evaluateCandidates/:jobPostingId"
+              element={<CandidateEvaluation />}
             />
           </Route>
         </Route>

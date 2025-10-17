@@ -36,3 +36,4 @@ pyyaml==6.0.2
 # torch-cuda (if using GPU)
 openai==2.3.0
 PyMuPDF==1.22.0
+pymongo[srv]==3.11

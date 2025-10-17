@@ -106,13 +106,10 @@ import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
 import Applications from "./pages/Application/Applications";
 import EvaluateCV from "./pages/EvaluateCV/EvaluateCV";
-<<<<<<< HEAD
 import AddCompany from "./pages/Company/addCompany";
 import InfoUser from "./pages/Users";
 import Vnpay from "./pages/Invoice";
-=======
 import JobSuggestions from "./pages/JobSuggestions/JobSuggestions";
->>>>>>> 522ba43c70bd243496ba266aa992d1fd970576b1
 
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";

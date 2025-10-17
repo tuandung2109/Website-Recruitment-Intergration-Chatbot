@@ -34,48 +34,64 @@ class Reflection:
 
         # Nếu chỉ có 1 tin nhắn => lấy luôn
         if len(user_messages) == 1:
-            last_block = user_messages[-1]
-        else:
-            # Giữ lại các dòng thuộc chủ đề cuối cùng
-            joined_messages = "\n".join(user_messages)
+            return user_messages[-1]
+        
+        # Nếu có nhiều tin nhắn, ghép và tóm tắt thông minh
+        joined_messages = "\n---\n".join(user_messages)
 
-            topic_detection_prompt = f"""
-Bạn nhận được các tin nhắn của người dùng theo thứ tự thời gian.
-Nếu người dùng đổi chủ đề (ví dụ: nói về việc làm rồi chuyển sang thời tiết),
-hãy chỉ giữ lại các tin nhắn thuộc **chủ đề cuối cùng**.
+        # Prompt cải tiến để tạo summary thông minh hơn
+        summarize_prompt = f"""
+Bạn là trợ lý phân tích ý định người dùng. Dưới đây là các tin nhắn của người dùng:
 
-Tin nhắn người dùng:
 {joined_messages}
 
-Trả về đúng nội dung (hoặc các dòng) của chủ đề cuối cùng, không giải thích thêm.
-""".strip()
+Hãy phân tích và xác định **MỤC ĐÍCH CHÍNH** của người dùng:
 
-            selected_text = self.llm.generate_content([{"role": "user", "content": topic_detection_prompt}])
-            if isinstance(selected_text, str):
-                if "</think>" in selected_text:
-                    selected_text = selected_text.split("</think>")[-1].strip()
-                selected_text = selected_text.strip().strip('"')
-            last_block = selected_text
+🎯 NGUYÊN TẮC PHÂN TÍCH:
+1. Nếu có nhiều câu hỏi liên quan → Tìm câu hỏi CỐT LÕI nhất
+2. Nếu câu hỏi đầu là ĐIỀU KIỆN để hỏi câu sau → Chỉ lấy câu SAU
+3. Nếu hỏi về thông tin rồi hỏi chi tiết → Ưu tiên CHI TIẾT cụ thể
+4. Tập trung vào HÀNH ĐỘNG hoặc THÔNG TIN người dùng thực sự cần
 
-        # ✅ Bước 2: chỉ trích lại câu hỏi/yêu cầu cuối cùng, không diễn giải
-        summarize_prompt = f"""
-Phân tích đoạn hội thoại sau và trích ra **một câu duy nhất**
-thể hiện đúng yêu cầu hoặc câu hỏi cuối cùng của người dùng.
-Không được diễn giải, không tóm tắt, không thêm chi tiết mới.
-ví dụ: 
-user: "Tìm thông tin về công ty ABC"
-assistant: "Thông tin công ty ABC là..."
-user: "Công ty đó đang tuyển về gì?"
-kết quả: "Công ty ABC đang tuyển về gì?"
-Nội dung:
-{last_block}
-""".strip()
+📝 VÍ DỤ:
+- "Tìm công ty X, công ty đó tuyển gì?" → "Công ty X đang tuyển dụng vị trí gì?"
+- "Có việc làm nào phù hợp không?" → "Tìm việc làm phù hợp"
+- "Cho tôi biết về công ty A, lương bao nhiêu?" → "Mức lương tại công ty A"
+
+✅ YÊU CẦU OUTPUT:
+- Một câu ngắn gọn, đi thẳng vào ý chính
+- Giữ nguyên tên riêng, từ khóa quan trọng
+- Loại bỏ thông tin phụ, chỉ giữ mục đích chính
+- Trả về trực tiếp, không giải thích
+
+Tóm tắt thông minh:""".strip()
 
         summary = self.llm.generate_content([{"role": "user", "content": summarize_prompt}])
 
         if isinstance(summary, str):
+            # Xử lý các tag thinking nếu có
             if "</think>" in summary:
                 summary = summary.split("</think>")[-1].strip()
-            summary = summary.strip().strip('"')
+            
+            # Loại bỏ markdown và quotes thừa
+            summary = summary.strip()
+            if summary.startswith('"') and summary.endswith('"'):
+                summary = summary[1:-1]
+            if summary.startswith("'") and summary.endswith("'"):
+                summary = summary[1:-1]
+            
+            # Loại bỏ các prefix không cần thiết
+            prefixes_to_remove = [
+                "Câu tóm tắt:",
+                "Tóm tắt:",
+                "Summary:",
+                "Người dùng muốn:",
+                "Yêu cầu:",
+            ]
+            for prefix in prefixes_to_remove:
+                if summary.startswith(prefix):
+                    summary = summary[len(prefix):].strip()
+            
+            summary = summary.strip()
 
         return summary

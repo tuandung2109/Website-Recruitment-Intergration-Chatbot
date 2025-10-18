@@ -760,7 +760,7 @@ def evaluate_job_description():
         evaluation_result = agent.evaluate_job_description(job_id)
         
         # Check if evaluation was successful
-        if evaluation_result and not evaluation_result.startswith("Error"):
+        if evaluation_result and not (isinstance(evaluation_result, str) and evaluation_result.startswith("Error")):
             return jsonify({
                 "status": "success",
                 "job_id": job_id,

@@ -2,6 +2,8 @@
 import os
 import logging
 from unittest import result
+
+
 from .base import BaseAI
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -13,14 +15,14 @@ from openai import OpenAI
 
 class AgentKatCoder(BaseAI):
     def __init__(self, model_name: str = "", **kwargs):
-        settings = Settings.load_settings()
-        resolved_model = model_name or settings.MODE_KAT_CODER
+        self.settings = Settings.load_settings()
+        resolved_model = model_name or self.settings.MODE_KAT_CODER
 
         super().__init__(model_name=resolved_model, **kwargs)
         
         self.client = OpenAI(
-            base_url=settings.BASE_URL_OPENAI,
-            api_key=settings.API_KEY_OPENAI
+            base_url=self.settings.BASE_URL_OPENAI,
+            api_key=self.settings.API_KEY_OPENAI
         )
 
         self.prompt_config = PromptConfig()
@@ -53,12 +55,62 @@ class AgentKatCoder(BaseAI):
         """Evaluate job description quality using LLM"""
         try:
             from tool.database.postgest import PostgreSQLClient
+            from tool.database.mongodb import MongoDBClient
+            from tool import generate_evaluation_key
+            import json
+            from bson import ObjectId
+            
             pg_client = PostgreSQLClient(Settings=Settings.load_settings())
+            
             job_description = pg_client.get_job_posting_info_by_id(id)
             
+            mongo_client = MongoDBClient(Settings=self.settings)
+            
+            key = generate_evaluation_key(job_description)
+            
+            result_by_key = mongo_client.read_documents(
+                "recruitment website intergrate ai", 
+                filter_query={"key": key, "id": id}
+            )
+            
+            # If found existing evaluation, return it
+            if result_by_key:
+                # result_by_key is a list, get the first document
+                evaluation_data = result_by_key[0]
+                
+                # Convert ObjectId to string for JSON serialization
+                if '_id' in evaluation_data:
+                    evaluation_data['_id'] = str(evaluation_data['_id'])
+                
+                return evaluation_data  # Return the dict data
+            
+            # If no existing evaluation found, could generate new one here
             prompt = self.prompt_config.get_prompt("evaluate_jd", user_input=job_description)
             evaluation = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
+            
+            mongo_client.delete_document(
+                "recruitment website intergrate ai",
+                filter_query={"id": id}
+            )
+            import re
+            import json
+
+
+            cleaned_output = re.sub(r"```(?:json)?", "", evaluation).strip()
+
+# Parse thành JSON thật
+            data = json.loads(cleaned_output)
+            
+            mongo_client.create_document(
+                "recruitment website intergrate ai",
+                {
+                    "key": key,
+                    "id": id,
+                    **data
+                }
+            )
             return evaluation
+            
         except Exception as e:
             logging.error(f"Error evaluating job description: {str(e)}")
             return f"Error evaluating job description: {str(e)}"

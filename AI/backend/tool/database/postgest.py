@@ -98,6 +98,8 @@ class PostgreSQLClient:
         except Exception as e:
             logger.error(f"❌ Error getting job posting info: {str(e)}")
             return None
+        
+    
     
     
     def get_multiple_job_postings_info(self, job_posting_ids: List[int]) -> List[Dict[str, Any]]:

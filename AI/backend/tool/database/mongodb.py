@@ -223,6 +223,9 @@ if __name__ == "__main__":
                 print(f"No documents found with key '{key}'")
         except Exception as e:
             print(f"Error querying by key: {e}")
+            
+        
+        
         
 
         

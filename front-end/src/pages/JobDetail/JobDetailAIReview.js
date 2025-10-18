@@ -81,8 +81,17 @@ const JobDetailAIReview = () => {
         // Parse the AI evaluation result
         const evaluation = data.evaluation;
         
-        // Transform AI text response into structured format
-        const parsedReview = parseAIEvaluation(evaluation);
+        // Check if evaluation is already an object (from MongoDB) or string (from AI)
+        let parsedReview;
+        if (typeof evaluation === 'object' && evaluation !== null) {
+          // Already an object from MongoDB, use directly
+          console.log('✅ Dữ liệu từ MongoDB - sử dụng trực tiếp');
+          parsedReview = evaluation;
+        } else {
+          // String from AI, need to parse
+          console.log('✅ Dữ liệu từ AI - cần parse');
+          parsedReview = parseAIEvaluation(evaluation);
+        }
         
         setAiReview(parsedReview);
         console.log('✅ Đã cập nhật kết quả đánh giá');
@@ -178,6 +187,17 @@ const JobDetailAIReview = () => {
   // Helper function to parse AI evaluation text into structured format
   const parseAIEvaluation = (evaluationText) => {
     try {
+      // Check if evaluationText is already an object
+      if (typeof evaluationText === 'object' && evaluationText !== null) {
+        return evaluationText;
+      }
+      
+      // Ensure evaluationText is a string
+      if (typeof evaluationText !== 'string') {
+        console.error('⚠️ evaluationText is not a string:', typeof evaluationText);
+        throw new Error('Invalid evaluation data type');
+      }
+      
       // Clean the text - remove markdown code blocks if present
       let cleanedText = evaluationText.trim();
       
@@ -205,14 +225,19 @@ const JobDetailAIReview = () => {
       }
     } catch (e) {
       console.error('⚠️ Failed to parse AI response as JSON:', e.message);
-      console.log('Raw text:', evaluationText.substring(0, 200));
+      if (typeof evaluationText === 'string') {
+        console.log('Raw text:', evaluationText.substring(0, 200));
+      } else {
+        console.log('Non-string data:', evaluationText);
+      }
     }
     
     // Fallback: If not JSON, try to extract from text
     console.log('⚠️ Using fallback text parsing');
+    const textForParsing = typeof evaluationText === 'string' ? evaluationText : 'Dữ liệu không hợp lệ';
     return {
       overallScore: 75,
-      rawEvaluation: evaluationText,
+      rawEvaluation: textForParsing,
       scores: {
         clarity: 80,
         completeness: 75,
@@ -220,12 +245,12 @@ const JobDetailAIReview = () => {
         seo: 75,
         inclusivity: 75
       },
-      strengths: extractStrengths(evaluationText),
-      improvements: extractImprovements(evaluationText),
+      strengths: extractStrengths(textForParsing),
+      improvements: extractImprovements(textForParsing),
       keywordAnalysis: {
-        missing: extractKeywords(evaluationText, "thiếu"),
-        overused: extractKeywords(evaluationText, "dùng nhiều"),
-        recommended: extractKeywords(evaluationText, "nên thêm")
+        missing: extractKeywords(textForParsing, "thiếu"),
+        overused: extractKeywords(textForParsing, "dùng nhiều"),
+        recommended: extractKeywords(textForParsing, "nên thêm")
       },
       competitorComparison: {
         betterThan: 70,

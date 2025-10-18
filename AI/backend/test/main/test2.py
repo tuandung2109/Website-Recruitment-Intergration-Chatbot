@@ -1,121 +1,13 @@
-import re
-from transformers import pipeline
-from typing import List, Set
 
+import sys
+import os
 
-def normalize_token(token: str) -> str:
-    t = token.strip()
-    # Fix common typos and canonicalize
-    replacements = {
-        "asp.net": "ASP.NET",
-        "asp .net": "ASP.NET",
-        "asp.net core mvc": "ASP.NET Core MVC",
-        "githup": "GitHub",
-        "ui toolkit": "UI Toolkit",
-        "unity ui": "Unity UI",
-        "google admob sdk": "Google AdMob SDK",
-        "c ++": "C++",
-        "c#": "C#",
-    }
-    low = t.lower()
-    if low in replacements:
-        return replacements[low]
-    # Title-case multi-word tokens that look like phrases (except known all-caps like OOP, SOLID, SDK, UI, MVC)
-    if re.search(r"\b(oop|solid|sdk|ui|mvc|html|css|sql|hlsl|c\+\+|c#|3d|2d)\b", low):
-        return t.replace("  ", " ").strip()
-    # Keep original case for tech names with punctuation/numbers
-    return t.replace("  ", " ").strip()
+# Add the parent directories to Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
+from setting import Settings  # PyMuPDF
 
-def heuristic_extract_skills(text: str) -> List[str]:
-    # Curated skill tokens for this CV; extend as needed
-    known = [
-        "ASP.NET Core MVC",
-        "ASP.NET",
-        "Unity 3D/2D",
-        "Unity UI",
-        "UI Toolkit",
-        "Unity",
-        "Unreal",
-        "DOTween",
-        "Firebase",
-        "Google AdMob SDK",
-        "JavaScript",
-        "Java",
-        "Kotlin",
-        "C#",
-        "C++",
-        "SQL",
-        "HTML",
-        "CSS",
-        "HLSL",
-        "OOP",
-        "Design Pattern",
-        "SOLID",
-        "State Machine",
-        "MVC",
-        "SDK",
-        "UI",
-        "GitHub",
-        "Git",
-    ]
-    # Build regex that prefers longer tokens first
-    esc = [re.escape(k) for k in sorted(known, key=len, reverse=True)]
-    pattern = re.compile(r"(" + "|".join(esc) + r")", re.IGNORECASE)
-
-    # Normalize common typos before matching
-    pre = text.replace("ASP.Net", "ASP.NET").replace("Githup", "GitHub")
-
-    matches = []
-    for m in pattern.finditer(pre):
-        token = normalize_token(m.group(0))
-        matches.append((m.start(), token))
-
-    # Stable order by occurrence and deduplicate
-    seen: Set[str] = set()
-    ordered: List[str] = []
-    for _, tok in sorted(matches, key=lambda x: x[0]):
-        key = tok.lower()
-        # Prefer GitHub over Git if both hit at same position later
-        if key == "git" and "github" in seen:
-            continue
-        if key not in seen:
-            ordered.append(tok)
-            seen.add(key)
-
-    return ordered
-
-
-def ner_extract_skills(text: str, threshold: float = 0.50) -> List[str]:
-    try:
-        ner = pipeline(
-            "token-classification",
-            model="yashpwr/resume-ner-bert-v2",
-            aggregation_strategy="simple",
-        )
-    except Exception as e:
-        # If model fails to load, fallback to heuristic only
-        print(f"[WARN] NER model load failed, using heuristic only: {e}")
-        return []
-
-    results = ner(text)
-    skills = []
-    for ent in results:
-        label = ent.get("entity_group") or ent.get("entity")
-        word = ent.get("word", "").strip()
-        score = float(ent.get("score", 0))
-        if not word or score < threshold:
-            continue
-        if str(label).lower() in {"skill", "skills", "technology", "tech"}:
-            skills.append(normalize_token(word))
-    # De-dup while preserving order
-    seen = set()
-    uniq = []
-    for s in skills:
-        if s.lower() not in seen:
-            uniq.append(s)
-            seen.add(s.lower())
-    return uniq
 
 
 if __name__ == "__main__":
@@ -189,19 +81,30 @@ Giải khuyến khích tỉnh môn vật lý 2021
 nGuyễn Thế
 Trang 1/1
 """
+    from tool.database.mongodb import MongoDBClient
+    from tool import extract_text_from_pdf
+    from tool import generate_evaluation_key
+    
+    settings = Settings().load_settings()
 
-    heuristic = heuristic_extract_skills(text)
-    print(f"Heuristic skills ({len(heuristic)}): {heuristic}")
+    key = generate_evaluation_key(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
+    print(f"Generated evaluation key: {key}")
 
-    ner_skills = ner_extract_skills(text, threshold=0.50)
-    print(f"NER skills ({len(ner_skills)}): {ner_skills}")
+    mongo_client = MongoDBClient(Settings=settings)
+            
+    # Check if evaluation already exists
+    existing_evaluation = mongo_client.read_documents(
+        "cv_evaluation",
+        filter_query={"id": 4, "key": "63ba246606b8152936eab39ec5abb3b6cf3b35552dc3fe413e1c1159bfd86747"}
+    )
+            
+    if existing_evaluation:
+        evaluation_data = existing_evaluation[0]
+                
+                # Convert ObjectId to string for JSON serialization
+    if '_id' in evaluation_data:
+        evaluation_data['_id'] = str(evaluation_data['_id'])
 
-    # Unified set with heuristics taking precedence
-    unified = []
-    seen = set()
-    for s in heuristic + ner_skills:
-        key = s.lower()
-        if key not in seen:
-            unified.append(s)
-            seen.add(key)
-    print(f"Unified skills ({len(unified)}): {unified}")
+    print(evaluation_data)  # Return the dict data
+    
+    

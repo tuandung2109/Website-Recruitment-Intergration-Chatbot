@@ -181,6 +181,8 @@ def chat():
         if request.content_type and 'multipart/form-data' in request.content_type:
             # Handle file upload
             user_message = request.form.get('message', '')
+            user_id = request.form.get('id')  # Add user_id for file uploads
+            print(f"id user: {user_id}")
             mode = request.form.get('mode', 'chat')
             uploaded_file = request.files.get('file')
 
@@ -224,6 +226,7 @@ def chat():
                 return jsonify({"error": "Message is required"}), 400
             
             user_message = data['message']
+            user_id = data['id']
             mode = data.get('mode', 'chat')
 
 
@@ -247,7 +250,7 @@ def chat():
                 logger.info(f"📂 Filepath from session: '{filepath}'")
                 logger.info(f"📝 User message: '{user_message}'")
                 
-                response = bot.chat_with_agent(user_message, filepath=filepath)
+                response = bot.chat_with_agent(user_message, filepath=filepath, id=user_id)
                 logger.info(f"✅ Agent response type: {type(response)}")
                 
                 # Check if response is a dictionary (structured agent response)

@@ -32,6 +32,7 @@ def extract_cv_to_json_by_openai(filepath: str):
     
     print(f"📄 Extracting text from: {filepath}")
     cv = extract_text_from_pdf(filepath)
+    
     print(f"✅ Extracted {len(cv)} characters from CV")
     
     # Initialize agent with correct model

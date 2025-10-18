@@ -4,6 +4,22 @@ import { handleIntent, parseAIResponse } from "../controller/agentController";
 
 const Chatbot = () => {
   const navigate = useNavigate();
+  
+  // Utility function to get user ID
+  const getUserId = () => {
+    const userData = localStorage.getItem("account");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        return user.account_id || user.id || null;
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        return null;
+      }
+    }
+    return null;
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [chatMode, setChatMode] = useState("agent"); // "agent" or "ask"
   const [showModeDropdown, setShowModeDropdown] = useState(false);
@@ -116,6 +132,10 @@ const Chatbot = () => {
         formData.append("message", userMessage);
         formData.append("mode", chatMode);
         formData.append("file", fileData);
+        
+        // Get user ID from localStorage
+        const userId = getUserId();
+        formData.append("id", userId || "anonymous")
 
         response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
           method: "POST",

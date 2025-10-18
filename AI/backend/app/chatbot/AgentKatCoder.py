@@ -116,24 +116,66 @@ class AgentKatCoder(BaseAI):
             return f"Error evaluating job description: {str(e)}"
 
 
+    def handle_ai_evaluation_cv(self, filepath: str, id: str) -> str:
+        """Handle AI evaluation of CV given a file path"""
+        try:
+            from tool.extract_cv_to_json import extract_cv_to_json_by_openai
+            from tool.database.mongodb import MongoDBClient
+            from tool import extract_text_from_pdf
+            from tool import generate_evaluation_key
+            
+
+            text_content = extract_text_from_pdf(filepath)
+
+            key = generate_evaluation_key(text_content)
+
+            mongo_client = MongoDBClient(Settings=self.settings)
+            print(f"Evaluating CV for id: {id} with key: {key}")
+            
+            # Check if evaluation already exists
+            existing_evaluation = mongo_client.read_documents("cv_evaluation", filter_query={"id": int(id), "key": key})
+        
+            
+            print(existing_evaluation)
+            
+            if existing_evaluation:
+                evaluation_data = existing_evaluation[0]
+                
+                # Convert ObjectId to string for JSON serialization
+            if '_id' in evaluation_data:
+                evaluation_data['_id'] = str(evaluation_data['_id'])
+                
+            if evaluation_data:
+                return {
+                    "intent": "evaluate_cv",
+                    "extracted_features": evaluation_data
+                }  
+        
+            result = extract_cv_to_json_by_openai(filepath)
+            
+            mongo_client.create_document(
+                "cv_evaluation",
+                {
+                    "id": int(id),
+                    "key": key,
+                    **result
+                }
+            )
+            return result
+        except Exception as e:
+            logging.error(f"Error evaluating CV: {str(e)}")
+            return f"Error evaluating CV: {str(e)}"
+
+
     def chat_with_agent(self, message: str, **kwargs) -> str:
         try:
             if message == "Đánh giá CV cho tôi":
-                from tool.extract_cv_to_json import extract_cv_to_json_by_openai
-
                 # Get filepath from kwargs
                 filepath = kwargs.get('filepath', '')
-                
-                # Call the function with filepath
-                result = extract_cv_to_json_by_openai(filepath)
-                
-                # Check if there was an error
-                if "error" in result:
-                    print(f"❌ Error in CV evaluation: {result['error']}")
-                    return result
-                
-                print(f"✅ Returning CV evaluation result")
-                return result
+                id = kwargs.get('id', '')
+
+                return self.handle_ai_evaluation_cv(filepath, id)
+            
             elif message == "Lựa chọn công việc phù hợp dựa trên CV":
                 from tool.ner_extract_skills import get_similarity_job_by_skills
                 

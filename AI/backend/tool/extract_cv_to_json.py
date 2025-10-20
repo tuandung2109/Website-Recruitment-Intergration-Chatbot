@@ -72,8 +72,7 @@ def extract_cv_to_json_by_openai(filepath: str):
         }
     
     result = {
-        "intent": "evaluate_cv",
-        "extracted_features": extract_features_cv
+        **extract_features_cv
     }
     
     return result                

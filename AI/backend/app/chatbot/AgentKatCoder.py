@@ -142,10 +142,9 @@ class AgentKatCoder(BaseAI):
                 evaluation_data = existing_evaluation[0]
                 
                 # Convert ObjectId to string for JSON serialization
-            if '_id' in evaluation_data:
-                evaluation_data['_id'] = str(evaluation_data['_id'])
-                
-            if evaluation_data:
+                if '_id' in evaluation_data:
+                    evaluation_data['_id'] = str(evaluation_data['_id'])
+                    
                 return {
                     "intent": "evaluate_cv",
                     "extracted_features": evaluation_data
@@ -160,7 +159,11 @@ class AgentKatCoder(BaseAI):
                     **result
                 }
             )
-            return result
+            return {
+                "intent": "evaluate_cv",
+                "extracted_features": result
+            }
+
         except Exception as e:
             logging.error(f"Error evaluating CV: {str(e)}")
             return f"Error evaluating CV: {str(e)}"

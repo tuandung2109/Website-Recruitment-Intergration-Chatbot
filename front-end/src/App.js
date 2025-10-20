@@ -110,6 +110,8 @@ import AddCompany from "./pages/Company/addCompany";
 import InfoUser from "./pages/Users";
 import Vnpay from "./pages/Invoice";
 import JobSuggestions from "./pages/JobSuggestions/JobSuggestions";
+import AIInterviewPage from "./pages/AIInterview/AIInterviewPage";
+import AIInterviewResult from "./pages/AIInterview/AIInterviewResult";
 
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
@@ -151,6 +153,8 @@ function App() {
           <Route path="/cv/:id" element={<CVDetail />} />
           <Route path="/evaluate_cv" element={<EvaluateCV />} />
           <Route path="/job-suggestions" element={<JobSuggestions />} />
+          <Route path="/ai-interview" element={<AIInterviewPage />} />
+          <Route path="/ai-interview/result" element={<AIInterviewResult />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/addCompany" element={<AddCompany />} />
           <Route path="/profile" element={<InfoUser />} />

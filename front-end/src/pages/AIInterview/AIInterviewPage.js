@@ -47,6 +47,9 @@ const AIInterviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiTyping, setAiTyping] = useState(false);
   const [displayedQuestion, setDisplayedQuestion] = useState("");
+  const [cvFile, setCvFile] = useState(null);
+  const [cvFileName, setCvFileName] = useState("");
+  const [showCvUpload, setShowCvUpload] = useState(false);
 
   // Typing effect for AI question
   useEffect(() => {
@@ -71,7 +74,34 @@ const AIInterviewPage = () => {
   }, [currentQuestion, isStarted, isCompleted]);
 
   const handleStart = () => {
+    setShowCvUpload(true);
+  };
+
+  const handleCvUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+        setCvFile(file);
+        setCvFileName(file.name);
+      } else {
+        alert("Vui lòng chọn file PDF!");
+        e.target.value = "";
+      }
+    }
+  };
+
+  const handleStartInterview = () => {
+    if (!cvFile) {
+      alert("Vui lòng upload CV trước khi bắt đầu!");
+      return;
+    }
     setIsStarted(true);
+    setShowCvUpload(false);
+  };
+
+  const handleSkipCv = () => {
+    setIsStarted(true);
+    setShowCvUpload(false);
   };
 
   const handleAnswerChange = (e) => {
@@ -149,7 +179,7 @@ const AIInterviewPage = () => {
   };
 
   // Welcome Screen
-  if (!isStarted) {
+  if (!isStarted && !showCvUpload) {
     return (
       <div className="ai-interview-container">
         <div className="ai-interview-welcome">
@@ -228,6 +258,105 @@ const AIInterviewPage = () => {
               />
             </svg>
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // CV Upload Screen
+  if (showCvUpload && !isStarted) {
+    return (
+      <div className="ai-interview-container">
+        <div className="ai-interview-welcome cv-upload-screen">
+          <div className="cv-upload-icon">
+            <svg
+              width="80"
+              height="80"
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect x="25" y="15" width="50" height="70" rx="5" fill="#667eea" opacity="0.1" />
+              <rect x="25" y="15" width="50" height="70" rx="5" stroke="#667eea" strokeWidth="3" />
+              <path d="M35 30 H65" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
+              <path d="M35 45 H65" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
+              <path d="M35 55 H55" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="50" cy="70" r="8" fill="#667eea" />
+              <path d="M50 67 V73 M47 70 H53" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          <h2 className="cv-upload-title">Upload CV của bạn</h2>
+          <p className="cv-upload-subtitle">
+            Tải lên CV để AI có thể đưa ra các câu hỏi phù hợp hơn với hồ sơ của bạn
+          </p>
+
+          <div className="cv-upload-area">
+            <input
+              type="file"
+              id="cv-file-input"
+              accept=".pdf"
+              onChange={handleCvUpload}
+              style={{ display: "none" }}
+            />
+            <label htmlFor="cv-file-input" className="cv-upload-label">
+              {cvFile ? (
+                <div className="cv-uploaded">
+                  <div className="cv-file-icon">📄</div>
+                  <div className="cv-file-info">
+                    <div className="cv-file-name">{cvFileName}</div>
+                    <div className="cv-file-size">
+                      {(cvFile.size / 1024).toFixed(2)} KB
+                    </div>
+                  </div>
+                  <button
+                    className="cv-remove-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCvFile(null);
+                      setCvFileName("");
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="cv-upload-placeholder">
+                  <div className="upload-icon">📤</div>
+                  <p className="upload-text">Click để chọn file CV (PDF)</p>
+                  <p className="upload-hint">hoặc kéo thả file vào đây</p>
+                </div>
+              )}
+            </label>
+          </div>
+
+          <div className="cv-upload-actions">
+            <button className="btn-skip-cv" onClick={handleSkipCv}>
+              Bỏ qua
+            </button>
+            <button
+              className="btn-continue-interview"
+              onClick={handleStartInterview}
+              disabled={!cvFile}
+            >
+              Tiếp tục phỏng vấn
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7.5 5L12.5 10L7.5 15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     );

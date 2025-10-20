@@ -138,7 +138,7 @@ def get_similarity_job_by_skills(filePath: str, use_kat_coder: bool = False):
     )
     
     # Check if we have skills data
-    if not skills_json:
+    if not skills_list:
         print("[WARN] No skills found")
         return {
             "intent": "job-suggestions",
@@ -152,26 +152,12 @@ def get_similarity_job_by_skills(filePath: str, use_kat_coder: bool = False):
             }
         }
 
+    print(f"[INFO] Using {len(skills_list)} skills: {skills_list[:5]}...")
+
     # Use QDrant to find similar jobs
     settings = Settings().load_settings()
     qdrant = QDrant(Settings=settings)
-    
-    # Parse skills from JSON string
-    try:
-        skills_data = json.loads(skills_json)
-        # Handle both formats: {"skills": [...]} or just [...]
-        if isinstance(skills_data, dict):
-            skills_list = skills_data.get("skills", [])
-        elif isinstance(skills_data, list):
-            skills_list = skills_data
-        else:
-            skills_list = []
-    except json.JSONDecodeError as e:
-        print(f"[ERROR] Failed to parse skills JSON: {e}")
-        skills_list = []
-    
-    print(f"[INFO] Parsed {len(skills_list)} skills: {skills_list[:5]}...")
-    
+
     similar_jobs = qdrant.search_vectors_with_filter(
         settings,
         " ".join(skills_list),

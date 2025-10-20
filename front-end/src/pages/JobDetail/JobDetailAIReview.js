@@ -48,6 +48,20 @@ const JobDetailAIReview = () => {
         };
 
         setJob(mapped);
+        
+        // Check if there's evaluation data from chatbot in sessionStorage
+        const storedEvaluation = sessionStorage.getItem('jd_evaluation');
+        if (storedEvaluation) {
+          try {
+            const evaluation = JSON.parse(storedEvaluation);
+            console.log('✅ Loaded evaluation from sessionStorage:', evaluation);
+            setAiReview(evaluation);
+            // Clear the stored data after using it
+            sessionStorage.removeItem('jd_evaluation');
+          } catch (parseError) {
+            console.error('❌ Error parsing stored evaluation:', parseError);
+          }
+        }
       } catch (e) {
         console.error("❌ Lỗi khi fetch chi tiết job:", e);
         setError("Không thể tải chi tiết công việc");
@@ -457,40 +471,7 @@ const JobDetailAIReview = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                AI Đánh Giá & Cải Thiện
-              </h1>
-              <p className="text-gray-600 text-lg">
-                Phân tích thông minh và đề xuất tối ưu hóa tin tuyển dụng
-              </p>
-            </div>
-            {!aiReview && (
-              <button
-                onClick={handleAIAnalyze}
-                disabled={aiAnalyzing}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {aiAnalyzing ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <span>Đang phân tích...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>Phân tích với AI</span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          {/* Header title removed - chatbot will suggest AI review */}
         </div>
 
         {/* Job Summary Card */}

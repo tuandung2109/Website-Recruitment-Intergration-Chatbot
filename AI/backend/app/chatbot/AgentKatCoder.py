@@ -109,14 +109,14 @@ class AgentKatCoder(BaseAI):
                     **data
                 }
             )
-            return evaluation
+            return data
             
         except Exception as e:
             logging.error(f"Error evaluating job description: {str(e)}")
             return f"Error evaluating job description: {str(e)}"
 
 
-    def handle_ai_evaluation_cv(self, filepath: str, id: str) -> str:
+    def handle_ai_evaluation_cv(self, filepath: str) -> str:
         """Handle AI evaluation of CV given a file path"""
         try:
             from tool.extract_cv_to_json import extract_cv_to_json_by_openai
@@ -130,10 +130,10 @@ class AgentKatCoder(BaseAI):
             key = generate_evaluation_key(text_content)
 
             mongo_client = MongoDBClient(Settings=self.settings)
-            print(f"Evaluating CV for id: {id} with key: {key}")
+            print(f"Evaluating CV with key: {key}")
             
             # Check if evaluation already exists
-            existing_evaluation = mongo_client.read_documents("cv_evaluation", filter_query={"id": int(id), "key": key})
+            existing_evaluation = mongo_client.read_documents("cv_evaluation", filter_query={"key": key})
         
             
             print(existing_evaluation)
@@ -156,7 +156,6 @@ class AgentKatCoder(BaseAI):
             mongo_client.create_document(
                 "cv_evaluation",
                 {
-                    "id": int(id),
                     "key": key,
                     **result
                 }
@@ -172,9 +171,8 @@ class AgentKatCoder(BaseAI):
             if message == "Đánh giá CV cho tôi":
                 # Get filepath from kwargs
                 filepath = kwargs.get('filepath', '')
-                id = kwargs.get('id', '')
 
-                return self.handle_ai_evaluation_cv(filepath, id)
+                return self.handle_ai_evaluation_cv(filepath)
             
             elif message == "Lựa chọn công việc phù hợp dựa trên CV":
                 from tool.ner_extract_skills import get_similarity_job_by_skills

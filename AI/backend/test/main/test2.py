@@ -85,9 +85,14 @@ Trang 1/1
     from tool import extract_text_from_pdf
     from tool import generate_evaluation_key
     
+    
+    
     settings = Settings().load_settings()
 
     key = generate_evaluation_key(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
+    
+    
+    print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
     print(f"Generated evaluation key: {key}")
 
     mongo_client = MongoDBClient(Settings=settings)

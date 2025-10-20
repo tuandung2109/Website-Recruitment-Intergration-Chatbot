@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { handleIntent, parseAIResponse } from "../controller/agentController";
 
 const Chatbot = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Utility function to get user ID
   const getUserId = () => {
@@ -40,6 +41,7 @@ const Chatbot = () => {
   const fileInputRef = useRef(null);
   const [showCVActionDropdown, setShowCVActionDropdown] = useState(false);
   const [selectedCVAction, setSelectedCVAction] = useState("evaluate"); // "evaluate" or "recommend"
+  const [hasShownJDSuggestion, setHasShownJDSuggestion] = useState(false);
 
   // Khóa scroll nền khi fullscreen
   useEffect(() => {
@@ -89,6 +91,79 @@ const Chatbot = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Detect when user is on JobDetail or JobDetailAIReview page and show suggestion
+  useEffect(() => {
+    const isJobDetailPage = /^\/job\/\d+$/.test(location.pathname); // Match /job/:id
+    const isAIReviewPage = location.pathname.includes('/job/') && location.pathname.includes('/ai-review');
+    
+    // Show suggestion on JobDetail page
+    if (isJobDetailPage && !hasShownJDSuggestion) {
+      setHasShownJDSuggestion(true);
+      setIsOpen(true); // Auto-open chatbot
+      
+      // Add suggestion message after a short delay
+      setTimeout(() => {
+        const suggestionMessage = {
+          id: Date.now(),
+          text: "👋 Xin chào! Tôi thấy bạn đang xem chi tiết công việc. Bạn có muốn tôi phân tích và đánh giá Job Description này bằng AI không?",
+          sender: "bot",
+          timestamp: new Date(),
+          isJDSuggestion: true,
+        };
+        setMessages((prev) => [...prev, suggestionMessage]);
+        
+        // Add quick action buttons
+        const actionMessage = {
+          id: Date.now() + 1,
+          text: "Tôi có thể giúp bạn đánh giá chất lượng JD, phát hiện điểm mạnh/yếu và đưa ra gợi ý cải thiện!",
+          sender: "bot",
+          timestamp: new Date(),
+          showJDActions: true,
+        };
+        
+        setTimeout(() => {
+          setMessages((prev) => [...prev, actionMessage]);
+        }, 800);
+      }, 1500);
+    }
+    
+    // Show suggestion on AI Review page
+    if (isAIReviewPage && !hasShownJDSuggestion) {
+      setHasShownJDSuggestion(true);
+      setIsOpen(true); // Auto-open chatbot
+      
+      // Add suggestion message after a short delay
+      setTimeout(() => {
+        const suggestionMessage = {
+          id: Date.now(),
+          text: "🎯 Tôi thấy bạn đang xem trang đánh giá JD. Bạn có muốn tôi phân tích và đưa ra đề xuất cải thiện cho Job Description này không?",
+          sender: "bot",
+          timestamp: new Date(),
+          isJDSuggestion: true,
+        };
+        setMessages((prev) => [...prev, suggestionMessage]);
+        
+        // Add quick action buttons
+        const actionMessage = {
+          id: Date.now() + 1,
+          text: "Nhấn 'Phân tích JD' để bắt đầu đánh giá chi tiết!",
+          sender: "bot",
+          timestamp: new Date(),
+          showJDActions: true,
+        };
+        
+        setTimeout(() => {
+          setMessages((prev) => [...prev, actionMessage]);
+        }, 800);
+      }, 1000);
+    }
+    
+    // Reset flag when leaving both pages
+    if (!isJobDetailPage && !isAIReviewPage && hasShownJDSuggestion) {
+      setHasShownJDSuggestion(false);
+    }
+  }, [location.pathname, hasShownJDSuggestion]);
+
   const checkAIServiceHealth = async () => {
     try {
       const response = await fetch(`${AI_API_BASE_URL}/health`, {
@@ -133,9 +208,6 @@ const Chatbot = () => {
         formData.append("mode", chatMode);
         formData.append("file", fileData);
         
-        // Get user ID from localStorage
-        const userId = getUserId();
-        formData.append("id", userId || "anonymous")
 
         response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
           method: "POST",
@@ -187,6 +259,9 @@ const Chatbot = () => {
       throw error;
     }
   };
+
+
+
 
   const getEmergencyFallback = () => {
     return "Xin lỗi, hệ thống AI hiện tại đang gặp sự cố. Vui lòng thử lại sau ít phút hoặc liên hệ bộ phận hỗ trợ để được trợ giúp trực tiếp.";
@@ -771,33 +846,136 @@ const Chatbot = () => {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+              <div key={message.id}>
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                    message.sender === "user"
-                      ? "bg-blue-600 text-white rounded-br-none"
-                      : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <p className="text-sm">{message.text}</p>
-                  <p
-                    className={`text-xs mt-1 ${
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                       message.sender === "user"
-                        ? "text-blue-100"
-                        : "text-gray-400"
+                        ? "bg-blue-600 text-white rounded-br-none"
+                        : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
                     }`}
                   >
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                    <p className="text-sm">{message.text}</p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        message.sender === "user"
+                          ? "text-blue-100"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
                 </div>
+                
+                {/* Show JD action buttons if this is a JD suggestion message */}
+                {message.showJDActions && (
+                  <div className="flex justify-start mt-2">
+                    <div className="flex gap-2 ml-2">
+                      <button
+                        onClick={async () => {
+                          const userMessage = {
+                            id: Date.now(),
+                            text: "Đang phân tích Job Description...",
+                            sender: "user",
+                            timestamp: new Date(),
+                          };
+                          setMessages((prev) => [...prev, userMessage]);
+                          setIsTyping(true);
+                          
+                          try {
+                            // Extract job_id from URL path
+                            const pathMatch = location.pathname.match(/\/job\/(\d+)/);
+                            const jobId = pathMatch ? pathMatch[1] : null;
+                            
+                            if (!jobId) {
+                              throw new Error("Không tìm thấy ID công việc trong URL");
+                            }
+                            
+                            // Call the /api/evaluate/jd endpoint
+                            const response = await fetch(`${AI_API_BASE_URL}/api/evaluate/jd`, {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                              },
+                              mode: "cors",
+                              credentials: "include",
+                              body: JSON.stringify({
+                                job_id: parseInt(jobId, 10)
+                              }),
+                            });
+                            
+                            if (!response.ok) {
+                              throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            
+                            const data = await response.json();
+                            
+                            if (data.status === "success" && data.evaluation) {
+                              // Show success message
+                              const botResponse = {
+                                id: Date.now() + 1,
+                                text: "✅ Đánh giá hoàn tất! Đang chuyển đến trang đánh giá chi tiết...",
+                                sender: "bot",
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, botResponse]);
+                              setIsTyping(false);
+                              
+                              // Store evaluation data in sessionStorage
+                              sessionStorage.setItem('jd_evaluation', JSON.stringify(data.evaluation));
+                              
+                              // Navigate to AI Review page after a short delay
+                              setTimeout(() => {
+                                navigate(`/job/${jobId}/ai-review`);
+                              }, 1000);
+                            } else {
+                              throw new Error(data.error || "Không thể đánh giá JD");
+                            }
+                          } catch (error) {
+                            console.error("JD Evaluation error:", error);
+                            const errorResponse = {
+                              id: Date.now() + 1,
+                              text: `❌ Xin lỗi, không thể đánh giá JD: ${error.message}\n\nVui lòng thử lại sau hoặc kiểm tra kết nối AI.`,
+                              sender: "bot",
+                              timestamp: new Date(),
+                            };
+                            setMessages((prev) => [...prev, errorResponse]);
+                            setIsTyping(false);
+                          }
+                        }}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-md flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        Phân tích JD
+                      </button>
+                      <button
+                        onClick={() => {
+                          const closeMessage = {
+                            id: Date.now(),
+                            text: "Được rồi, nếu cần hỗ trợ thì hãy gọi tôi nhé!",
+                            sender: "bot",
+                            timestamp: new Date(),
+                          };
+                          setMessages((prev) => [...prev, closeMessage]);
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all"
+                      >
+                        Để sau
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
 

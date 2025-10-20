@@ -108,8 +108,8 @@ if __name__ == "__main__":
 
         mongo_client = MongoDBClient(Settings=settings)
         result_by_key = mongo_client.read_documents(
-                "recruitment website intergrate ai", 
-                filter_query={"key": "9adc47d168ded4b80b9ec5bc3ddd9a8139d91ad5d4d233aa15a6c3ac2ea0150b", "id": int(1)}
+                "job_match_cv", 
+                filter_query={"id": "63ba246606b8152936eab39ec5abb3b6cf3b35552dc3fe413e1c1159bfd86747"}
             )
         print(result_by_key)
  

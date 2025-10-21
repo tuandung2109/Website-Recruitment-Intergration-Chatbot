@@ -82,6 +82,7 @@ const AIInterviewResult = () => {
   useEffect(() => {
     // Lấy dữ liệu phỏng vấn từ location state
     const interviewData = location.state?.interviewData;
+    const evaluationResult = location.state?.evaluationResult;
 
     if (!interviewData) {
       // Nếu không có dữ liệu, chuyển về trang phỏng vấn
@@ -89,13 +90,62 @@ const AIInterviewResult = () => {
       return;
     }
 
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      const mockEvaluation = generateMockEvaluation(interviewData);
-      setEvaluation(mockEvaluation);
-      setLoading(false);
-    }, 2000);
+    console.log("📊 Received evaluation result:", evaluationResult);
+
+    // Nếu đã có kết quả đánh giá từ API, sử dụng luôn
+    if (evaluationResult) {
+      setLoading(true);
+      
+      // Parse mock_result từ string JSON nếu cần
+      let parsedResults;
+      try {
+        if (typeof evaluationResult.results === 'string') {
+          parsedResults = JSON.parse(evaluationResult.results);
+        } else {
+          parsedResults = evaluationResult.results;
+        }
+        
+        console.log("✅ Parsed evaluation:", parsedResults);
+        
+        // Format lại data để match với component structure
+        const formattedEvaluation = {
+          overallScore: parsedResults.overrallScore || parsedResults.overallScore || 0,
+          overallFeedback: parsedResults.overallFeedback,
+          strengths: parsedResults.strengths || [],
+          weaknesses: parsedResults.weaknesses || [],
+          recommendations: parsedResults.recommendations || [],
+          detailedScores: parsedResults.detailedScores || [],
+          questionEvaluations: interviewData.map((item, index) => ({
+            questionNumber: index + 1,
+            question: item.question,
+            answer: item.answer,
+            score: parsedResults.score?.[index] || 0,
+            feedback: parsedResults.feedback?.[index] || "Chưa có nhận xét",
+            highlightWords: [],
+          })),
+        };
+        
+        setEvaluation(formattedEvaluation);
+        setLoading(false);
+      } catch (error) {
+        console.error("❌ Error parsing evaluation result:", error);
+        // Fallback to mock if parsing fails
+        setTimeout(() => {
+          const mockEvaluation = generateMockEvaluation(interviewData);
+          setEvaluation(mockEvaluation);
+          setLoading(false);
+        }, 1000);
+      }
+    } else {
+      // Fallback: Nếu không có kết quả từ API, dùng mock
+      console.log("⚠️ No evaluation result from API, using mock data");
+      setLoading(true);
+      setTimeout(() => {
+        const mockEvaluation = generateMockEvaluation(interviewData);
+        setEvaluation(mockEvaluation);
+        setLoading(false);
+      }, 2000);
+    }
   }, [location.state, navigate]);
 
   const handleRetakeInterview = () => {

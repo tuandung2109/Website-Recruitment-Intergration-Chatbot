@@ -9,6 +9,7 @@ class BaseAI(ABC):
         self.conversation_history = []
         self.conversation_state = "idle"  # idle, waiting_for_location, waiting_for_skills, etc.
         self.recruitment_context = {}  # Store recruitment-related information
+        self.current_path_cv = []
     
     def add_system_message(self, message: str):
         self.conversation_history.append({"role": "system", "content": message})

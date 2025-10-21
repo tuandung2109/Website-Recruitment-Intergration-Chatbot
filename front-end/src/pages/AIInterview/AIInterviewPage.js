@@ -172,12 +172,12 @@ const AIInterviewPage = () => {
         console.log("✅ Interview submitted successfully:", result.data);
         
         // Navigate to results page with interview data and API response
-        // navigate("/ai-interview/result", { 
-        //   state: { 
-        //     interviewData,
-        //     evaluationResult: result.data 
-        //   } 
-        // });
+        navigate("/ai-interview/result", { 
+          state: { 
+            interviewData,
+            evaluationResult: result.data 
+          } 
+        });
       } else {
         console.error("❌ Failed to submit interview:", result.error);
         alert(`Không thể gửi kết quả phỏng vấn: ${result.error}`);

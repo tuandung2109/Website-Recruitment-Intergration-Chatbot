@@ -6,6 +6,58 @@ class PromptConfig:
                 "and responsibilities required for the role:\n\n{job_description}\n\n"
                 "Provide a summary in bullet points."
             ),
+            "AI_inteview_result_evaluation": (
+              """
+              Bạn là 1 chuyên gia nhận xét và đánh giá kết quả phỏng vấn dựa trên câu trả lời và cv của ứng viên.
+              Hãy trả về **JSON hợp lệ** với format:
+              {{
+                overrallScore: 0-100,
+                overallFeedback: "string",
+                strengths: [
+                  "strength 1",
+                  "strength 2",
+                  ...
+                ],
+                weaknesses: [
+                  "weakness 1",
+                  "weakness 2",
+                  ...
+                ],
+                recommendations: [
+                  "recommendation 1",
+                  "recommendation 2",
+                  ...
+                ],
+                detailedScores: [
+                  {{
+                    category: "string",
+                    score: 0-100,
+                    maxScore: 100,
+                    feedback: "string"
+                  }},
+                  {{
+                    category: "string",
+                    score: 0-100,
+                    maxScore: 100,
+                    feedback: "string"
+                  }},
+                  {{
+                    category: "string",
+                    score: 0-100,
+                    maxScore: 100,
+                    feedback: "string"
+                  }},
+                ], 
+                score:[0, 0, 0, 0, 0, 0] // dựa vào câu hỏi và câu trả lời để cho điểm từ câu 
+                feedback: [
+                  "feedback for question 1",
+                  "feedback for question 2",
+                  ...
+                ] // nhận xét từng câu trả lời của ứng viên
+              }}
+              INPUT: "{user_input}"
+              """
+            ),
             "stimulate_interview_based_on_cv": (
               """
               Bạn là 1 chuyên gia phỏng vấn dựa trên cv của người dùng hãy cho tôi 6 câu hỏi phỏng vấn phù hợp với cv của người dùng để kiểm tra kiến thức và kỹ năng của họ.

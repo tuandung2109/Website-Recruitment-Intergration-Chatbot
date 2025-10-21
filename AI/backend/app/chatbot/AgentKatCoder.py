@@ -115,6 +115,74 @@ class AgentKatCoder(BaseAI):
             logging.error(f"Error evaluating job description: {str(e)}")
             return f"Error evaluating job description: {str(e)}"
 
+    def evaluate_result_interview(self, answers: dict, path: str):
+        """Evaluate interview results using LLM"""
+        try:
+            from tool import extract_text_from_pdf
+            cv = extract_text_from_pdf(path)
+            print(f"câu trả lời: {answers}")
+            mock_result = """{
+  "overrallScore": 86,
+  "overallFeedback": "Ứng viên thể hiện kiến thức vững vàng về Unity, các mẫu thiết kế lập trình như MVC, State Machine, và Object Pooling. Câu trả lời rõ ràng, có tính thực tế, cho thấy kinh nghiệm làm dự án cá nhân nghiêm túc. Ứng viên có tiềm năng trở thành Game Developer chuyên nghiệp nếu tiếp tục trau dồi kỹ năng nâng cao như tối ưu hiệu suất và lập trình AI phức tạp hơn.",
+  "strengths": [
+    "Hiểu rõ và áp dụng tốt các mẫu thiết kế phổ biến trong phát triển game Unity (MVC, State Machine, Object Pooling).",
+    "Trình bày mạch lạc, tư duy logic rõ ràng, cho thấy nắm vững quy trình phát triển game.",
+    "Có trải nghiệm thực tế với nhiều công nghệ khác nhau (ML.NET, UI Toolkit, Unity UI).",
+    "Sử dụng Git/GitHub bài bản, thể hiện kỹ năng làm việc nhóm và quản lý dự án tốt."
+  ],
+  "weaknesses": [
+    "Chưa đề cập sâu đến việc tối ưu code hoặc hiệu năng cho các thiết bị di động.",
+    "Phần trình bày về ML.NET còn khái quát, chưa nêu rõ cách đánh giá mô hình hoặc xử lý lỗi.",
+    "Thiếu ví dụ cụ thể về việc giải quyết vấn đề thực tế trong quá trình phát triển game."
+  ],
+  "recommendations": [
+    "Nên học thêm về tối ưu hóa hiệu năng trong Unity, đặc biệt khi phát triển game mobile.",
+    "Cải thiện kỹ năng AI nâng cao (ví dụ như Behaviour Tree hoặc Utility AI).",
+    "Tham gia vào các dự án game nhóm hoặc game jam để trau dồi kỹ năng teamwork và production pipeline.",
+    "Nâng cao khả năng giải thích chi tiết hơn về quy trình kiểm thử và tối ưu mô hình Machine Learning."
+  ],
+  "detailedScores": [
+    {
+      "category": "Kiến thức chuyên môn Unity",
+      "score": 90,
+      "maxScore": 100,
+      "feedback": "Ứng viên nắm vững Unity, biết áp dụng tốt các kỹ thuật thiết kế và tối ưu hiệu suất cơ bản."
+    },
+    {
+      "category": "Kỹ năng lập trình & Design Pattern",
+      "score": 88,
+      "maxScore": 100,
+      "feedback": "Thể hiện hiểu biết sâu về OOP và Design Pattern, tuy nhiên có thể mở rộng hơn về kiến trúc hệ thống phức tạp."
+    },
+    {
+      "category": "Giao tiếp & Trình bày ý tưởng",
+      "score": 80,
+      "maxScore": 100,
+      "feedback": "Trả lời mạch lạc, dễ hiểu, tuy nhiên nên bổ sung ví dụ cụ thể hơn để tăng tính thuyết phục."
+    }
+  ],
+  "score": [90, 88, 92, 85, 80, 82],
+  "feedback": [
+    "Ứng viên trả lời rất tốt, hiểu rõ cách áp dụng MVC trong Unity và có khả năng tách biệt logic - giao diện hợp lý.",
+    "Giải thích rõ ràng cách triển khai State Machine, thể hiện hiểu biết thực tế và khả năng tổ chức code tốt.",
+    "Trình bày đúng bản chất của Object Pooling và lợi ích của nó, cho thấy tư duy tối ưu hiệu suất game.",
+    "Câu trả lời về ML.NET tốt, thể hiện hiểu về pipeline huấn luyện, tuy nhiên nên nói rõ hơn về quy trình đánh giá mô hình.",
+    "So sánh UI Toolkit và Unity UI chính xác, nắm rõ ưu nhược điểm của từng công cụ và biết khi nào nên dùng.",
+    "Câu trả lời về Git thể hiện kỹ năng quản lý dự án tốt, có quy trình làm việc chuyên nghiệp và tổ chức hợp lý."
+  ]
+}
+"""
+            return {
+                    "answers": answers,
+                    "results": mock_result
+                }
+                
+            
+            
+        except Exception as e:
+            logging.error(f"Error evaluating interview results: {str(e)}")
+            return f"Error evaluating interview results: {str(e)}"
+
 
     def handle_ai_evaluation_cv(self, filepath: str) -> str:
         """Handle AI evaluation of CV given a file path"""
@@ -122,8 +190,7 @@ class AgentKatCoder(BaseAI):
             from tool.extract_cv_to_json import extract_cv_to_json_by_openai
             from tool.database.mongodb import MongoDBClient
             from tool import extract_text_from_pdf
-            from tool import generate_evaluation_key
-            
+            from tool import generate_evaluation_key    
 
             text_content = extract_text_from_pdf(filepath)
 

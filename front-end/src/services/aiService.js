@@ -185,18 +185,20 @@ export const checkAIHealth = async () => {
  */
 export const submitInterviewData = async (interviewData) => {
   try {
+    console.log('📤 Sending to backend:', interviewData);
+    
     const response = await fetch(`${AI_API_URL}/api/stimulate/interview`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
-      body: JSON.stringify({
-        interview_data: interviewData
-      })
+      credentials: 'include', // Important: để maintain session với filepath
+      body: JSON.stringify(interviewData) // Gửi trực tiếp array, backend sẽ nhận như answers
     });
 
     const data = await response.json();
+    
+    console.log('📥 Received from backend:', data);
 
     if (!response.ok) {
       throw new Error(data.error || 'Không thể gửi kết quả phỏng vấn');
@@ -204,7 +206,7 @@ export const submitInterviewData = async (interviewData) => {
 
     return {
       success: true,
-      data: data
+      data: data.response // Backend trả về trong field "response"
     };
   } catch (error) {
     console.error('❌ Error submitting interview data:', error);

@@ -177,7 +177,19 @@ def test_endpoint():
 def handleEvaluateInterview():
     """Endpoint to evaluate result after interview"""
     try:
+        session_id = get_session_id()
+        get_user_chatbot(session_id)
+        filepath = user_chatbots[session_id].get('filepath', '')
         data = request.get_json()
+        bot = get_user_chatbot(session_id)
+        
+        response = bot.evaluate_result_interview(answers=data, path=filepath)
+        return jsonify({
+                "response": response,
+                "session_id": session_id,
+                "status": "success",
+                "agent_type": "OpenAI"
+            })
         print(f"Received data: {data}")
     except Exception as e:
         logger.error(f"❌ Chat endpoint error: {e}")

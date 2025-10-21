@@ -6,7 +6,7 @@ class PromptConfig:
                 "and responsibilities required for the role:\n\n{job_description}\n\n"
                 "Provide a summary in bullet points."
             ),
-            "AI_inteview_result_evaluation": (
+            "AI_interview_result_evaluation": (
               """
               Bạn là 1 chuyên gia nhận xét và đánh giá kết quả phỏng vấn dựa trên câu trả lời và cv của ứng viên.
               Hãy trả về **JSON hợp lệ** với format:
@@ -55,7 +55,8 @@ class PromptConfig:
                   ...
                 ] // nhận xét từng câu trả lời của ứng viên
               }}
-              INPUT: "{user_input}"
+              CV: "{user_input}"
+              Câu hỏi và câu trả lời: "{answers}"
               """
             ),
             "stimulate_interview_based_on_cv": (

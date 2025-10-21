@@ -6,6 +6,23 @@ class PromptConfig:
                 "and responsibilities required for the role:\n\n{job_description}\n\n"
                 "Provide a summary in bullet points."
             ),
+            "stimulate_interview_based_on_cv": (
+              """
+              Bạn là 1 chuyên gia phỏng vấn dựa trên cv của người dùng hãy cho tôi 6 câu hỏi phỏng vấn phù hợp với cv của người dùng để kiểm tra kiến thức và kỹ năng của họ.
+              Hãy trả về **JSON hợp lệ** với format:
+              {{
+                "questions": [
+                  "Câu hỏi 1",
+                  "Câu hỏi 2",
+                  "Câu hỏi 3",
+                  "Câu hỏi 4",
+                  "Câu hỏi 5",
+                  "Câu hỏi 6"
+                ]
+              }}
+              CV: "{user_input}"
+              """
+              ),
             "extract_features_cv": (
             """Bạn là chuyên gia phân tích CV.
 

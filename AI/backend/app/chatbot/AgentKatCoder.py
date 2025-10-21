@@ -193,6 +193,16 @@ class AgentKatCoder(BaseAI):
                 
                 print(f"✅ Returning job suggestion result")
                 return result
+            
+            elif message == "Mô phỏng phỏng vấn dựa trên CV":
+                from tool.stimulate_interview_based_on_cv import simulate_interview_based_on_cv
+                filepath = kwargs.get('filepath', '')
+                return {
+                    "intent": "simulate_interview",
+                    "extracted_features": simulate_interview_based_on_cv(filepath)
+                    
+                }
+                
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
             intent = self._strip_think(self.generate_content([{"role": "user", "content": classification_prompt}]))
             print(f"Intent classified as: {intent}")

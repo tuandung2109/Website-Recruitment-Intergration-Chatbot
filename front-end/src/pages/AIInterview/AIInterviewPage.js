@@ -1,6 +1,8 @@
 // src/pages/AIInterview/AIInterviewPage.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAgentFilters } from '../../controller/agentController';
+import { submitInterviewData } from '../../services/aiService';
 import "./AIInterviewPage.css";
 
 // Mock questions - có thể load từ API sau
@@ -39,6 +41,10 @@ const MOCK_QUESTIONS = [
 
 const AIInterviewPage = () => {
   const navigate = useNavigate();
+  
+  const [questions, setQuestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasData, setHasData] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentAnswer, setCurrentAnswer] = useState("");
@@ -47,21 +53,43 @@ const AIInterviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiTyping, setAiTyping] = useState(false);
   const [displayedQuestion, setDisplayedQuestion] = useState("");
-  const [cvFile, setCvFile] = useState(null);
-  const [cvFileName, setCvFileName] = useState("");
-  const [showCvUpload, setShowCvUpload] = useState(false);
+
+  // Load questions from agent filters
+  useEffect(() => {
+    const agentFilters = getAgentFilters();
+    
+    if (agentFilters && agentFilters.questions && Array.isArray(agentFilters.questions)) {
+      // Chuyển đổi dữ liệu từ agentFilters thành format của questions
+      const formattedQuestions = agentFilters.questions.map((q, index) => ({
+        id: index + 1,
+        question: q,
+        placeholder: "Viết câu trả lời của bạn ở đây...",
+      }));
+      
+      setQuestions(formattedQuestions);
+      setHasData(true);
+      console.log("✅ Loaded questions from agent filters:", formattedQuestions);
+    } else {
+      // Sử dụng MOCK_QUESTIONS nếu không có dữ liệu từ agent
+      //setQuestions(MOCK_QUESTIONS);
+      setHasData(true);
+      console.log("⚠️ No agent filters found, using MOCK_QUESTIONS");
+    }
+    
+    setIsLoading(false);
+  }, []);
 
   // Typing effect for AI question
   useEffect(() => {
-    if (isStarted && !isCompleted) {
+    if (isStarted && !isCompleted && questions.length > 0) {
       setAiTyping(true);
       setDisplayedQuestion("");
-      const question = MOCK_QUESTIONS[currentQuestion].question;
+      const question = questions[currentQuestion].question;
       let index = 0;
 
       const typingInterval = setInterval(() => {
-        if (index < question.length) {
-          setDisplayedQuestion((prev) => prev + question[index]);
+        if (index <= question.length - 1) {
+          setDisplayedQuestion(question.substring(0, index + 1));
           index++;
         } else {
           setAiTyping(false);
@@ -71,37 +99,11 @@ const AIInterviewPage = () => {
 
       return () => clearInterval(typingInterval);
     }
-  }, [currentQuestion, isStarted, isCompleted]);
+  }, [currentQuestion, isStarted, isCompleted, questions]);
 
   const handleStart = () => {
-    setShowCvUpload(true);
-  };
-
-  const handleCvUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setCvFile(file);
-        setCvFileName(file.name);
-      } else {
-        alert("Vui lòng chọn file PDF!");
-        e.target.value = "";
-      }
-    }
-  };
-
-  const handleStartInterview = () => {
-    if (!cvFile) {
-      alert("Vui lòng upload CV trước khi bắt đầu!");
-      return;
-    }
+    // Bỏ qua trang upload CV, vào thẳng phỏng vấn
     setIsStarted(true);
-    setShowCvUpload(false);
-  };
-
-  const handleSkipCv = () => {
-    setIsStarted(true);
-    setShowCvUpload(false);
   };
 
   const handleAnswerChange = (e) => {
@@ -121,7 +123,7 @@ const AIInterviewPage = () => {
     });
 
     // Move to next question or complete
-    if (currentQuestion < MOCK_QUESTIONS.length - 1) {
+    if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setCurrentAnswer("");
     } else {
@@ -154,20 +156,38 @@ const AIInterviewPage = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    // Prepare interview data
-    const interviewData = MOCK_QUESTIONS.map((q, index) => ({
-      question: q.question,
-      answer: answers[index] || "",
-    }));
+    try {
+      // Prepare interview data
+      const interviewData = questions.map((q, index) => ({
+        question: q.question,
+        answer: answers[index] || "",
+      }));
 
-    console.log("Interview Data:", interviewData);
+      console.log("📤 Sending interview data to API:", interviewData);
 
-    // Simulate API call
-    setTimeout(() => {
+      // Send interview data to API
+      const result = await submitInterviewData(interviewData);
+
+      if (result.success) {
+        console.log("✅ Interview submitted successfully:", result.data);
+        
+        // Navigate to results page with interview data and API response
+        // navigate("/ai-interview/result", { 
+        //   state: { 
+        //     interviewData,
+        //     evaluationResult: result.data 
+        //   } 
+        // });
+      } else {
+        console.error("❌ Failed to submit interview:", result.error);
+        alert(`Không thể gửi kết quả phỏng vấn: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("❌ Error submitting interview:", error);
+      alert("Đã có lỗi xảy ra khi gửi kết quả phỏng vấn. Vui lòng thử lại!");
+    } finally {
       setIsSubmitting(false);
-      // Navigate to results page with interview data
-      navigate("/ai-interview/result", { state: { interviewData } });
-    }, 1500);
+    }
   };
 
   const handleRestart = () => {
@@ -178,8 +198,20 @@ const AIInterviewPage = () => {
     setIsCompleted(false);
   };
 
+  // Loading Screen
+  if (isLoading) {
+    return (
+      <div className="ai-interview-container">
+        <div className="ai-interview-welcome">
+          <div className="spinner"></div>
+          <p>Đang tải câu hỏi phỏng vấn...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Welcome Screen
-  if (!isStarted && !showCvUpload) {
+  if (!isStarted) {
     return (
       <div className="ai-interview-container">
         <div className="ai-interview-welcome">
@@ -218,8 +250,8 @@ const AIInterviewPage = () => {
             <div className="info-card">
               <div className="info-icon">📋</div>
               <div className="info-content">
-                <h3>6 câu hỏi</h3>
-                <p>Các câu hỏi phỏng vấn phổ biến</p>
+                <h3>{questions.length} câu hỏi</h3>
+                <p>Các câu hỏi phỏng vấn {hasData && questions !== MOCK_QUESTIONS ? "được tạo dựa trên CV của bạn" : "phổ biến"}</p>
               </div>
             </div>
 
@@ -263,105 +295,6 @@ const AIInterviewPage = () => {
     );
   }
 
-  // CV Upload Screen
-  if (showCvUpload && !isStarted) {
-    return (
-      <div className="ai-interview-container">
-        <div className="ai-interview-welcome cv-upload-screen">
-          <div className="cv-upload-icon">
-            <svg
-              width="80"
-              height="80"
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect x="25" y="15" width="50" height="70" rx="5" fill="#667eea" opacity="0.1" />
-              <rect x="25" y="15" width="50" height="70" rx="5" stroke="#667eea" strokeWidth="3" />
-              <path d="M35 30 H65" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
-              <path d="M35 45 H65" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
-              <path d="M35 55 H55" stroke="#667eea" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="50" cy="70" r="8" fill="#667eea" />
-              <path d="M50 67 V73 M47 70 H53" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          <h2 className="cv-upload-title">Upload CV của bạn</h2>
-          <p className="cv-upload-subtitle">
-            Tải lên CV để AI có thể đưa ra các câu hỏi phù hợp hơn với hồ sơ của bạn
-          </p>
-
-          <div className="cv-upload-area">
-            <input
-              type="file"
-              id="cv-file-input"
-              accept=".pdf"
-              onChange={handleCvUpload}
-              style={{ display: "none" }}
-            />
-            <label htmlFor="cv-file-input" className="cv-upload-label">
-              {cvFile ? (
-                <div className="cv-uploaded">
-                  <div className="cv-file-icon">📄</div>
-                  <div className="cv-file-info">
-                    <div className="cv-file-name">{cvFileName}</div>
-                    <div className="cv-file-size">
-                      {(cvFile.size / 1024).toFixed(2)} KB
-                    </div>
-                  </div>
-                  <button
-                    className="cv-remove-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCvFile(null);
-                      setCvFileName("");
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <div className="cv-upload-placeholder">
-                  <div className="upload-icon">📤</div>
-                  <p className="upload-text">Click để chọn file CV (PDF)</p>
-                  <p className="upload-hint">hoặc kéo thả file vào đây</p>
-                </div>
-              )}
-            </label>
-          </div>
-
-          <div className="cv-upload-actions">
-            <button className="btn-skip-cv" onClick={handleSkipCv}>
-              Bỏ qua
-            </button>
-            <button
-              className="btn-continue-interview"
-              onClick={handleStartInterview}
-              disabled={!cvFile}
-            >
-              Tiếp tục phỏng vấn
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M7.5 5L12.5 10L7.5 15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Completed Screen
   if (isCompleted) {
     return (
@@ -389,13 +322,13 @@ const AIInterviewPage = () => {
 
           <h2 className="completed-title">Hoàn thành phỏng vấn! 🎉</h2>
           <p className="completed-subtitle">
-            Bạn đã trả lời tất cả {MOCK_QUESTIONS.length} câu hỏi
+            Bạn đã trả lời tất cả {questions.length} câu hỏi
           </p>
 
           <div className="interview-summary">
             <h3>Tóm tắt câu trả lời</h3>
             <div className="summary-list">
-              {MOCK_QUESTIONS.map((q, index) => (
+              {questions.map((q, index) => (
                 <div key={q.id} className="summary-item">
                   <div className="summary-question">
                     <span className="question-number">Câu {index + 1}</span>
@@ -458,13 +391,13 @@ const AIInterviewPage = () => {
 
         <div className="progress-info">
           <span className="progress-text">
-            Câu hỏi {currentQuestion + 1} / {MOCK_QUESTIONS.length}
+            Câu hỏi {currentQuestion + 1} / {questions.length}
           </span>
           <div className="progress-bar">
             <div
               className="progress-fill"
               style={{
-                width: `${((currentQuestion + 1) / MOCK_QUESTIONS.length) * 100}%`,
+                width: `${((currentQuestion + 1) / questions.length) * 100}%`,
               }}
             ></div>
           </div>
@@ -518,7 +451,7 @@ const AIInterviewPage = () => {
             className="answer-textarea"
             value={currentAnswer}
             onChange={handleAnswerChange}
-            placeholder={MOCK_QUESTIONS[currentQuestion].placeholder}
+            placeholder={questions[currentQuestion]?.placeholder || "Viết câu trả lời của bạn ở đây..."}
             rows={8}
             disabled={aiTyping}
           />
@@ -556,7 +489,7 @@ const AIInterviewPage = () => {
             onClick={handleNext}
             disabled={aiTyping || !currentAnswer.trim()}
           >
-            {currentQuestion === MOCK_QUESTIONS.length - 1
+            {currentQuestion === questions.length - 1
               ? "Hoàn thành"
               : "Câu tiếp theo"}
             <svg

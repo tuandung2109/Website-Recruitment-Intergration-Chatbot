@@ -81,8 +81,6 @@ const Chatbot = () => {
       action: "filter", // Áp dụng filter
       filters: { title: "backend" }, // Filter theo backend
     },
-    { id: 3, text: "Tư vấn nghề nghiệp", icon: "💡", router: "cv" },
-    { id: 4, text: "Hỗ trợ phỏng vấn", icon: "💬", router: "support" },
   ];
 
   // Check AI service health on component mount
@@ -286,12 +284,6 @@ const Chatbot = () => {
     if (inputValue.trim() === "" && !uploadedFile) return;
 
     const userMessageText = inputValue.trim() || "Xin hãy phân tích CV của tôi";
-    // if (inputValue == "Đánh giá CV cho tôi")
-    // {
-    //   setTimeout(() => {
-    //         handleIntent("evaluate_cv", navigate);
-    //   }, 1000);
-    // }
 
     const userMessage = {
       id: Date.now(),
@@ -540,6 +532,8 @@ const Chatbot = () => {
       setInputValue("Đánh giá CV cho tôi");
     } else if (action === "recommend") {
       setInputValue("Lựa chọn công việc phù hợp dựa trên CV");
+    } else if (action === "interview") {
+      setInputValue("Mô phỏng phỏng vấn dựa trên CV");
     }
   };
 
@@ -1063,12 +1057,19 @@ const Chatbot = () => {
                         </svg>
                         <span className="font-medium text-gray-700">Đánh giá CV cho tôi</span>
                       </>
-                    ) : (
+                    ) : selectedCVAction === "recommend" ? (
                       <>
                         <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         <span className="font-medium text-gray-700">Lựa chọn công việc phù hợp dựa trên CV</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span className="font-medium text-gray-700">Mô phỏng phỏng vấn dựa trên CV</span>
                       </>
                     )}
                   </div>
@@ -1128,6 +1129,30 @@ const Chatbot = () => {
                         </div>
                         {selectedCVAction === "recommend" && (
                           <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => handleCVActionChange("interview")}
+                      className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors border-t border-gray-100 ${
+                        selectedCVAction === "interview" ? "bg-green-50 border-l-4 border-green-500" : ""
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">Mô phỏng phỏng vấn dựa trên CV</div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Luyện tập phỏng vấn với AI dựa trên CV của bạn
+                          </div>
+                        </div>
+                        {selectedCVAction === "interview" && (
+                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}

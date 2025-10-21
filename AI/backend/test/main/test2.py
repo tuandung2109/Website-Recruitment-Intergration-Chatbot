@@ -87,29 +87,29 @@ Trang 1/1
     
     
     
-    settings = Settings().load_settings()
+    # settings = Settings().load_settings()
 
-    key = generate_evaluation_key(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
+    # key = generate_evaluation_key(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
     
     
-    print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
-    print(f"Generated evaluation key: {key}")
+    # print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
+    # print(f"Generated evaluation key: {key}")
 
-    mongo_client = MongoDBClient(Settings=settings)
+    # mongo_client = MongoDBClient(Settings=settings)
             
-    # Check if evaluation already exists
-    existing_evaluation = mongo_client.read_documents(
-        "cv_evaluation",
-        filter_query={"id": 4, "key": "63ba246606b8152936eab39ec5abb3b6cf3b35552dc3fe413e1c1159bfd86747"}
-    )
+    # # Check if evaluation already exists
+    # existing_evaluation = mongo_client.read_documents(
+    #     "cv_evaluation",
+    #     filter_query={"id": 4, "key": "63ba246606b8152936eab39ec5abb3b6cf3b35552dc3fe413e1c1159bfd86747"}
+    # )
             
-    if existing_evaluation:
-        evaluation_data = existing_evaluation[0]
+    # if existing_evaluation:
+    #     evaluation_data = existing_evaluation[0]
                 
-                # Convert ObjectId to string for JSON serialization
-    if '_id' in evaluation_data:
-        evaluation_data['_id'] = str(evaluation_data['_id'])
+    #             # Convert ObjectId to string for JSON serialization
+    # if '_id' in evaluation_data:
+    #     evaluation_data['_id'] = str(evaluation_data['_id'])
 
-    print(evaluation_data)  # Return the dict data
+    print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))  # Return the dict data
     
     

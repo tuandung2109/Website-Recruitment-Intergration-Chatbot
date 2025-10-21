@@ -388,6 +388,8 @@
   align-items: flex-start;
   gap: 20px;
   margin-bottom: 40px;
+  overflow: visible;
+  width: 100%;
 }
 
 .ai-avatar {
@@ -445,6 +447,9 @@
 
 .ai-message {
   flex: 1;
+  min-width: 0;
+  overflow: visible;
+  word-wrap: break-word;
 }
 
 .ai-name {
@@ -466,6 +471,10 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: pre-wrap;
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  overflow: visible;
 }
 
 .ai-question .cursor {

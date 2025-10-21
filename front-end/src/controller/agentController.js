@@ -8,9 +8,45 @@
  */
 
 /**
+ * Helper function - Xử lý navigation với filters và events
+ * @param {string} targetPath - Đường dẫn trang đích
+ * @param {function} navigate - Hook useNavigate() 
+ * @param {object} filters - Object chứa các bộ lọc
+ * @param {string} intent - Intent hiện tại
+ */
+const handleNavigationWithFilters = (targetPath, navigate, filters, intent) => {
+  // Lưu filters vào sessionStorage nếu có
+  if (filters && Object.keys(filters).length > 0) {
+    sessionStorage.setItem("agentFilters", JSON.stringify(filters));
+    console.log("💾 Filters saved to sessionStorage");
+  }
+
+  const isOnTargetPage = window.location.pathname === targetPath;
+
+  if (isOnTargetPage) {
+    // Đã ở trang đích, dispatch event ngay lập tức
+    console.log(`🔄 Already on ${targetPath} page, dispatching event immediately`);
+    window.dispatchEvent(new CustomEvent('agentNavigation', {
+      detail: { filters, intent }
+    }));
+  } else {
+    // Điều hướng đến trang đích
+    console.log(`✅ Navigating to ${targetPath} page...`);
+    navigate(targetPath);
+
+    // Dispatch event sau khi navigation
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('agentNavigation', {
+        detail: { filters, intent }
+      }));
+    }, 100);
+  }
+};
+
+/**
  * Hàm xử lý intent và điều hướng người dùng
  * 
- * @param {string} intent - Intent từ AI agent (ví dụ: "intent_jd", "intent_company", etc.)
+ * @param {string} intent - Intent từ AI agent
  * @param {function} navigate - Hook useNavigate() từ react-router-dom
  * @param {object} filters - Object chứa các bộ lọc (optional)
  * 
@@ -22,157 +58,34 @@ export const handleIntent = (intent, navigate, filters = null) => {
   console.log("🎯 Agent Controller - Processing intent:", intent);
   console.log("📦 Filters received:", filters);
 
-  switch (intent) {
-    case "intent_jd":
-      // Intent tìm kiếm công việc (Job Description)
-      console.log("✅ Navigating to /job page...");
+  // Mapping intent đến route
+  const intentRouteMap = {
+    intent_jd: { path: "/job", needsFilters: true },
+    intent_company_info: { path: "/company", needsFilters: true },
+    evaluate_cv: { path: "/evaluate_cv", needsFilters: true },
+    "job-suggestions": { path: "/job-suggestions", needsFilters: true },
+    simulate_interview: { path: "/ai-interview", needsFilters: true },
+    intent_login: { path: "/login", needsFilters: false },
+    intent_register: { path: "/register", needsFilters: false },
+    "intent_forgot-password": { path: "/forgot-password", needsFilters: false },
+    intent_applications: { path: "/applications", needsFilters: false }
+  };
 
-      // Nếu có filters, lưu vào sessionStorage để trang /job có thể đọc
-      if (filters && Object.keys(filters).length > 0) {
-        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
-        console.log("💾 Filters saved to sessionStorage");
-      }
+  const routeConfig = intentRouteMap[intent];
 
-      // Kiểm tra nếu đã ở trang /job
-      const isOnJobPage = window.location.pathname === "/job";
-      
-      if (isOnJobPage) {
-        // Đã ở trang /job, chỉ cần dispatch event
-        console.log("🔄 Already on /job page, dispatching event immediately");
-        window.dispatchEvent(new CustomEvent('agentNavigation', {
-          detail: { filters, intent }
-        }));
-      } else {
-        // Điều hướng đến trang danh sách công việc
-        navigate("/job");
-        
-        // Dispatch custom event to notify JobListings component about new filters
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('agentNavigation', {
-            detail: { filters, intent }
-          }));
-        }, 100);
-      }
-      break;
-
-    case "intent_company_info":
-      // Intent tìm hiểu về công ty
-      if (filters && Object.keys(filters).length > 0) {
-        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
-        console.log("💾 Filters saved to sessionStorage");
-      }
-      
-      // Kiểm tra nếu đã ở trang /company
-      const isOnCompanyPage = window.location.pathname === "/company";
-      
-      if (isOnCompanyPage) {
-        // Đã ở trang /company, chỉ cần dispatch event
-        console.log("🔄 Already on /company page, dispatching event immediately");
-        window.dispatchEvent(new CustomEvent('agentNavigation', {
-          detail: { filters, intent }
-        }));
-      } else {
-        // Điều hướng đến trang công ty
-        console.log("✅ Navigating to /company page...");
-        navigate("/company");
-
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('agentNavigation', {
-            detail: { filters, intent }
-          }));
-        }, 100);
-      }
-      break;
-
-    case "intent_login":
-      // Intent về đăng nhập
-      console.log("✅ Navigating to /login page...");
-      navigate("/login");
-      break;
-
-    case "intent_register":
-      // Intent về đăng ký
-      console.log("✅ Navigating to /register page...");
-      navigate("/register");
-      break;
-
-    case "intent_forgot-password":
-      // Intent về quên mật khẩu
-      console.log("✅ Navigating to /forgot-password page...");
-      navigate("/forgot-password");
-      break;
-      
-    case "intent_applications":
-      // Intent về hồ sơ ứng tuyển
-      console.log("✅ Navigating to /applications page...");
-      navigate("/applications");
-      break;
+  if (routeConfig) {
+    const { path, needsFilters } = routeConfig;
     
-    case "evaluate_cv":
-      // Intent về đánh giá CV
-      
-      // Lưu dữ liệu đánh giá CV vào sessionStorage
-      if (filters && Object.keys(filters).length > 0) {
-        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
-        console.log("💾 CV Evaluation data saved to sessionStorage");
-      }
-      
-      // Kiểm tra nếu đã ở trang /evaluate_cv
-      const isOnEvaluateCVPage = window.location.pathname === "/evaluate_cv";
-      
-      if (isOnEvaluateCVPage) {
-        // Đã ở trang /evaluate_cv, chỉ cần dispatch event
-        console.log("🔄 Already on /evaluate_cv page, dispatching event immediately");
-        window.dispatchEvent(new CustomEvent('agentNavigation', {
-          detail: { filters, intent }
-        }));
-      } else {
-        // Điều hướng đến trang đánh giá CV
-        console.log("✅ Navigating to /evaluate_cv page...");
-        navigate("/evaluate_cv");
-        
-        // Dispatch custom event to notify EvaluateCV component
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('agentNavigation', {
-            detail: { filters, intent }
-          }));
-        }, 100);
-      }
-      break;
-    case "job-suggestions":
-      if (filters && Object.keys(filters).length > 0) {
-        sessionStorage.setItem("agentFilters", JSON.stringify(filters));
-        console.log("💾 CV Evaluation data saved to sessionStorage");
-      }
-      
-      // Kiểm tra nếu đã ở trang /evaluate_cv
-      const haha = window.location.pathname === "/job-suggestions";
-
-      if (haha) {
-        // Đã ở trang /evaluate_cv, chỉ cần dispatch event
-        console.log("🔄 Already on /evaluate_cv page, dispatching event immediately");
-        window.dispatchEvent(new CustomEvent('agentNavigation', {
-          detail: { filters, intent }
-        }));
-      } else {
-        // Điều hướng đến trang đánh giá CV
-        console.log("✅ Navigating to /job-suggestions page...");
-        navigate("/job-suggestions");
-        
-        // Dispatch custom event to notify EvaluateCV component
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('agentNavigation', {
-            detail: { filters, intent }
-          }));
-        }, 100);
-      }
-      break;
-
-    default:
-      // Intent không được xử lý
-      console.log("⚠️ Intent not handled:", intent);
-      console.log("ℹ️ Available intents: intent_jd, intent_company, intent_cv, intent_support");
-      break;
+    if (needsFilters) {
+      handleNavigationWithFilters(path, navigate, filters, intent);
+    } else {
+      console.log(`✅ Navigating to ${path} page...`);
+      navigate(path);
+    }
+  } else {
+    // Intent không được xử lý
+    console.log("⚠️ Intent not handled:", intent);
+    console.log("ℹ️ Available intents:", Object.keys(intentRouteMap).join(", "));
   }
 };
 
@@ -193,13 +106,6 @@ export const handleIntent = (intent, navigate, filters = null) => {
  *   experience: 2,                    // Số năm kinh nghiệm
  *   industry: "Software"              // Ngành nghề
  * }
- * 
- * Cách sử dụng:
- * const filteredJobs = applyJobFilters(allJobs, {
- *   title: "Backend",
- *   location: "Hà Nội",
- *   workType: "Full-time"
- * });
  */
 export const applyJobFilters = (jobsData, filters) => {
   console.log("🔍 Agent Controller - Applying filters...");
@@ -212,55 +118,49 @@ export const applyJobFilters = (jobsData, filters) => {
     return jobsData;
   }
 
-  // Bắt đầu lọc
   let filteredJobs = [...jobsData];
 
+  // Helper function để kiểm tra string matching
+  const matchesKeyword = (value, keyword) => {
+    return value ? value.toLowerCase().includes(keyword.toLowerCase().trim()) : false;
+  };
+
   // 1️⃣ Lọc theo title (tên vị trí công việc)
-  if (filters.title && filters.title.trim() !== "") {
-    const titleKeyword = filters.title.toLowerCase().trim();
+  if (filters.title?.trim()) {
+    const titleKeyword = filters.title.trim();
     filteredJobs = filteredJobs.filter((job) => {
-      const jobTitle = job.title ? job.title.toLowerCase() : "";
-      const jobDescription = job.description ? job.description.toLowerCase() : "";
-      const jobSkills = Array.isArray(job.skills) 
-        ? job.skills.join(" ").toLowerCase() 
-        : "";
+      const searchFields = [
+        job.title,
+        job.description,
+        Array.isArray(job.skills) ? job.skills.join(" ") : ""
+      ].join(" ");
       
-      return (
-        jobTitle.includes(titleKeyword) ||
-        jobDescription.includes(titleKeyword) ||
-        jobSkills.includes(titleKeyword)
-      );
+      return matchesKeyword(searchFields, titleKeyword);
     });
     console.log(`✅ Filtered by title "${filters.title}":`, filteredJobs.length, "jobs");
   }
 
   // 2️⃣ Lọc theo location (địa điểm)
-  if (filters.location && filters.location.trim() !== "") {
-    const locationKeyword = filters.location.toLowerCase().trim();
-    filteredJobs = filteredJobs.filter((job) => {
-      const jobLocation = job.location ? job.location.toLowerCase() : "";
-      return jobLocation.includes(locationKeyword);
-    });
+  if (filters.location?.trim()) {
+    filteredJobs = filteredJobs.filter((job) => 
+      matchesKeyword(job.location, filters.location)
+    );
     console.log(`✅ Filtered by location "${filters.location}":`, filteredJobs.length, "jobs");
   }
 
   // 3️⃣ Lọc theo company (tên công ty)
-  if (filters.company && filters.company.trim() !== "") {
-    const companyKeyword = filters.company.toLowerCase().trim();
-    filteredJobs = filteredJobs.filter((job) => {
-      const jobCompany = job.company ? job.company.toLowerCase() : "";
-      return jobCompany.includes(companyKeyword);
-    });
+  if (filters.company?.trim()) {
+    filteredJobs = filteredJobs.filter((job) => 
+      matchesKeyword(job.company, filters.company)
+    );
     console.log(`✅ Filtered by company "${filters.company}":`, filteredJobs.length, "jobs");
   }
 
-  // 4️⃣ Lọc theo workType (loại công việc: Full-time, Part-time, Remote, etc.)
-  if (filters.workType && filters.workType.trim() !== "") {
-    const workTypeKeyword = filters.workType.toLowerCase().trim();
-    filteredJobs = filteredJobs.filter((job) => {
-      const jobType = job.type ? job.type.toLowerCase() : "";
-      return jobType.includes(workTypeKeyword);
-    });
+  // 4️⃣ Lọc theo workType (loại công việc)
+  if (filters.workType?.trim()) {
+    filteredJobs = filteredJobs.filter((job) => 
+      matchesKeyword(job.type, filters.workType)
+    );
     console.log(`✅ Filtered by workType "${filters.workType}":`, filteredJobs.length, "jobs");
   }
 
@@ -278,20 +178,19 @@ export const applyJobFilters = (jobsData, filters) => {
   if (filters.experience && !isNaN(filters.experience)) {
     const requiredExp = Number(filters.experience);
     filteredJobs = filteredJobs.filter((job) => {
-      const jobExp = job.experienceYears || 0;
+      const jobExp = Number(job.experienceYears) || 0;
       return jobExp <= requiredExp; // Người dùng có đủ kinh nghiệm
     });
     console.log(`✅ Filtered by experience >= ${filters.experience} years:`, filteredJobs.length, "jobs");
   }
 
   // 7️⃣ Lọc theo industry (ngành nghề)
-  if (filters.industry && filters.industry.trim() !== "") {
-    const industryKeyword = filters.industry.toLowerCase().trim();
+  if (filters.industry?.trim()) {
     filteredJobs = filteredJobs.filter((job) => {
       const jobIndustries = Array.isArray(job.industries)
-        ? job.industries.join(" ").toLowerCase()
+        ? job.industries.join(" ")
         : "";
-      return jobIndustries.includes(industryKeyword);
+      return matchesKeyword(jobIndustries, filters.industry);
     });
     console.log(`✅ Filtered by industry "${filters.industry}":`, filteredJobs.length, "jobs");
   }

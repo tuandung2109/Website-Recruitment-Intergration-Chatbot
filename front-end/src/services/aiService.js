@@ -178,10 +178,48 @@ export const checkAIHealth = async () => {
   }
 };
 
+/**
+ * Submit interview data for evaluation
+ * @param {Array} interviewData - Array of questions and answers
+ * @returns {Promise<Object>} - Evaluation result
+ */
+export const submitInterviewData = async (interviewData) => {
+  try {
+    const response = await fetch(`${AI_API_URL}/api/stimulate/interview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        interview_data: interviewData
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Không thể gửi kết quả phỏng vấn');
+    }
+
+    return {
+      success: true,
+      data: data
+    };
+  } catch (error) {
+    console.error('❌ Error submitting interview data:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
 export default {
   evaluateJobDescription,
   chatWithAI,
   getChatHistory,
   clearChatHistory,
-  checkAIHealth
+  checkAIHealth,
+  submitInterviewData
 };

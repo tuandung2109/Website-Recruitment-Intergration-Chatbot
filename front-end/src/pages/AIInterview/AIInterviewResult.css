@@ -370,6 +370,8 @@
   border-radius: 16px;
   padding: 24px;
   transition: all 0.2s ease;
+  overflow: visible;
+  word-wrap: break-word;
 }
 
 .question-evaluation:hover {
@@ -404,7 +406,12 @@
   font-weight: 600;
   color: #2d3748;
   margin-bottom: 16px;
-  line-height: 1.5;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  display: block;
+  width: 100%;
 }
 
 .answer-section {
@@ -425,6 +432,11 @@
   font-size: 15px;
   color: #4a5568;
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  display: block;
+  width: 100%;
 }
 
 .ai-feedback {

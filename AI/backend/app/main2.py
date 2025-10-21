@@ -173,6 +173,21 @@ def test_endpoint():
     })
 
 
+@app.route('/api/stimulate/interview', methods=['POST'])
+def handleEvaluateInterview():
+    """Endpoint to evaluate result after interview"""
+    try:
+        data = request.get_json()
+        print(f"Received data: {data}")
+    except Exception as e:
+        logger.error(f"❌ Chat endpoint error: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error"
+        }), 500
+        
+        
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """Chat endpoint for recruitment conversations using AgentKatCoder (OpenAI)"""

@@ -161,7 +161,10 @@ function App() {
           <Route path="*" element={<NotFound />} />
           <Route path="/invoiceAdd" element={<Vnpay />} />
           {/* 🧪 TEST: Đánh giá ứng viên - Không cần đăng nhập */}
-          <Route path="/test-candidate-evaluation" element={<CandidateEvaluation />} />
+          <Route
+            path="/test-candidate-evaluation"
+            element={<CandidateEvaluation />}
+          />
         </Route>
 
         {/* 👑 Admin chỉ được truy cập nếu role = Admin */}

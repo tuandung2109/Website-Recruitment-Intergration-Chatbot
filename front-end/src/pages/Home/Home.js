@@ -142,7 +142,7 @@ const Home = ({ title }) => {
                   : "translate-y-10 opacity-0"
               }`}
             >
-              <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+              {/* <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
                 <a href="/admin">
                   <button className="px-6 py-3 text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 shadow-md hover:shadow-lg transition-all duration-300">
                     Admin
@@ -153,18 +153,16 @@ const Home = ({ title }) => {
                     Nhà tuyển dụng
                   </button>
                 </a>
-              </div>
-              <br></br>
-              <div className="p-6">
+              </div> */}
+              {/* <div className="p-6">
                 <h1 className="text-xl font-bold mb-4">Trang chủ</h1>
-                {/* 🔘 Nút lấy user */}
                 <button
                   onClick={getUserInfo}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   Lấy thông tin User
                 </button>
-              </div>
+              </div> */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
                 Tham gia thế hệ người tìm việc mới và Tải CV của bạn ngay!
               </h1>

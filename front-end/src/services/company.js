@@ -26,7 +26,7 @@ const listCompany = async () => {
 const getCompanyById = async (id) => {
   try {
     // const res = await _get(`/company/listCompany/${id}`);
-    const res = await _get(`/company/listCompanyId/${id}`);
+    const res = await _get(`/company/listCompany/${id}`);
     const result = await res.json();
     if (res.ok && result.company) {
       return { success: true, company: result.company };

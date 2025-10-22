@@ -122,6 +122,15 @@ const Header = () => {
               >
                 Việc làm
               </a>
+              {user?.account_account_type?.[0]?.account_type?.role_name ===
+                "Employer" && (
+                <a
+                  href="/companyAdmin"
+                  className="text-white hover:text-blue-200 px-3 py-2 text-sm font-medium relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-white hover:after:w-full after:transition-all after:duration-300"
+                >
+                  Quản lý
+                </a>
+              )}
             </nav>
           </div>
 

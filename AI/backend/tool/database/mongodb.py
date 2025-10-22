@@ -24,7 +24,6 @@ class MongoDBClient:
     # ===============================
     # CRUD FUNCTIONS
     # ===============================
-
     def create_document(self, collection_name: str, data: Dict[str, Any]) -> str:
         """Thêm 1 document mới"""
         collection = self.get_collection(collection_name)

@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../components/Header";
 import AdminPage from "../pages/Admin";
 import UseTitle from "../hooks/useTitle";
+import Chatbot from "../components/Chatbot";
 const AdminLayout = () => {
   UseTitle(`JobVip - Admin`);
   return (
@@ -14,6 +15,7 @@ const AdminLayout = () => {
         <div style={{ flex: 1, padding: "20px" }}>
           <Outlet />
         </div>
+        <Chatbot />
       </div>
     </>
   );

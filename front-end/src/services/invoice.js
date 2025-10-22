@@ -13,7 +13,7 @@ const listInvoice1 = async () => {
     } else {
       return {
         success: false,
-        message: result.message || "Không thể lấy danh sách công ty",
+        message: result.message || "Không thể lấy danh sách hóa đơn",
       };
     }
   } catch (error) {
@@ -38,7 +38,7 @@ const postInvoice = async ({ password, email }) => {
     } else {
       return {
         success: false,
-        message: result.message || "Đăng ký không thành công",
+        message: result.message || "Tạo không thành công",
       };
     }
   } catch (error) {

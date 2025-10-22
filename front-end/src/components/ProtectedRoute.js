@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
+import Chatbot from "./Chatbot";
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const account = JSON.parse(localStorage.getItem("account"));
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/" replace />;
   }
 
-  // Hợp lệ -> render tiếp các route con
+  <Chatbot />;
   return <Outlet />;
 };
 

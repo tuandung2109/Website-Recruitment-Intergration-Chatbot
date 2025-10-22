@@ -102,40 +102,46 @@ const checkVnpays = async (req, res) => {
     const query = req.query;
     const orderInfo = query.vnp_OrderInfo || "";
     const account_id = orderInfo.includes("|") ? orderInfo.split("|")[0] : null;
+    const vnp_Amount = Number(query.vnp_Amount) / 100;
 
     if (!account_id) {
       console.error("❌ Không tìm thấy account_id trong OrderInfo");
       return res.redirect("http://localhost:3000?status=fail");
     }
-    const vnp_Amount = Number(query.vnp_Amount) / 100;
-    // ✅ Lưu giao dịch vào bảng invoice
-    const { data, error } = await supabase.from("invoice").insert([
-      {
-        account_id: account_id,
-        card_number: query.vnp_CardNo || "", // ✅ thêm card_number để tránh null
-        description: "Nạp tiền qua VNPay",
-        amount: vnp_Amount,
-        bank_name: query.vnp_BankCode || "VNPay",
-        payment_method: "VNPay",
-        payment_status:
-          query.vnp_ResponseCode === "00" ? "completed" : "failed",
-        transaction_code: query.vnp_TxnRef,
-        status: "active",
-        deleted: false,
-        create_at: new Date(),
-      },
-    ]);
+
+    // ✅ Lưu giao dịch
+    const { data, error } = await supabase
+      .from("invoice")
+      .insert([
+        {
+          account_id,
+          card_number: query.vnp_CardNo || "",
+          description: "Nạp tiền qua VNPay",
+          amount: vnp_Amount,
+          bank_name: query.vnp_BankCode || "VNPay",
+          payment_method: "VNPay",
+          payment_status:
+            query.vnp_ResponseCode === "00" ? "completed" : "failed",
+          transaction_code: query.vnp_TxnRef,
+          status: "active",
+          deleted: false,
+          create_at: new Date(),
+        },
+      ])
+      .select()
+      .single(); // ✅ để lấy invoice_id luôn
 
     if (error) {
       console.error("❌ Lỗi lưu invoice:", error);
       return res.redirect("http://localhost:3000?status=fail");
     }
 
-    // ✅ Cập nhật số dư nếu thanh toán thành công
+    // ✅ Nếu thanh toán thành công thì cộng tiền và cập nhật trạng thái hóa đơn
     if (query.vnp_ResponseCode === "00") {
       await updateUserMoney(account_id, vnp_Amount);
+      await updateInvoiceStatus(data.invoice_id);
     }
-    updateInvoiceStatus();
+
     return res.redirect("http://localhost:3000?status=success");
   } catch (error) {
     console.error("❌ Lỗi checkVnpays:", error);

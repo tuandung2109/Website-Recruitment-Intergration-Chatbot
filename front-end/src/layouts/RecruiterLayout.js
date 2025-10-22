@@ -4,6 +4,8 @@ import Header from "../components/Header";
 import AdminPage from "../pages/Admin";
 import UseTitle from "../hooks/useTitle";
 import Recruiter from "../pages/Arecruiter";
+import Chatbot from "../components/Chatbot";
+import Footer from "../components/Footer";
 const RecruiterLayout = () => {
   UseTitle(`JobVip - Admin`);
   return (
@@ -16,6 +18,8 @@ const RecruiterLayout = () => {
           <Outlet />
         </div>
       </div>
+      <Footer />
+      <Chatbot />
     </>
   );
 };

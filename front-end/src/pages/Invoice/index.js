@@ -5,14 +5,30 @@ import {
   createPayment,
 } from "../../services/invoice";
 import { Table, Button, message, Spin } from "antd";
+import { listAccount } from "../../services/account";
 function InvoicePage() {
   const [invoices, setInvoices] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const account = JSON.parse(localStorage.getItem("account"));
   const accountId = account?.account_id;
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await listAccount(); // trả về mảng users
+        setAccounts(data.docs || []);
+      } catch (error) {
+        console.error("❌ Lỗi tải danh sách users:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
   useEffect(() => {
     fetchInvoices();
   }, []);
+
   const fetchInvoices = async () => {
     setLoading(true);
     const res = await listInvoice();

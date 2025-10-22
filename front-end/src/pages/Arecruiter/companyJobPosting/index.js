@@ -33,6 +33,7 @@ function CompanyJobPosting() {
         return;
       }
       setCompany(resCompany.company);
+      console.log("company123321:", company);
 
       // 🔹 Lấy toàn bộ jobPosting rồi lọc theo company_id
       const resJobs = await listJobsPosting();
@@ -118,7 +119,13 @@ function CompanyJobPosting() {
               title: "Thao tác",
               width: 200,
               render: (_, record) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
                   <Button
                     type="link"
                     onClick={() => {
@@ -132,9 +139,9 @@ function CompanyJobPosting() {
                     type="primary"
                     size="small"
                     style={{
-                      background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                      border: 'none',
-                      fontWeight: '600'
+                      background: "linear-gradient(135deg, #667eea, #764ba2)",
+                      border: "none",
+                      fontWeight: "600",
                     }}
                     onClick={() => {
                       navigate(`/companyAdmin/evaluateCandidates/${record.id}`);

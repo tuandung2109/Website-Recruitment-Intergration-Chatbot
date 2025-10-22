@@ -163,6 +163,12 @@ const Home = ({ title }) => {
                   Lấy thông tin User
                 </button>
               </div> */}
+              <a href="/createCV">
+                <button className="px-6 py-3 text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-gray-800 to-blue-700 hover:from-gray-900 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-300">
+                  Nhà tuyển dụng
+                </button>
+              </a>
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
                 Tham gia thế hệ người tìm việc mới và Tải CV của bạn ngay!
               </h1>

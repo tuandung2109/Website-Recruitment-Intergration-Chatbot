@@ -202,6 +202,13 @@ const Header = () => {
                         CV của tôi
                       </a>
                       <a
+                        href="/createCV"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FileText className="h-4 w-4 mr-3" />
+                        Tạo CV
+                      </a>
+                      <a
                         href="/addCompany"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >

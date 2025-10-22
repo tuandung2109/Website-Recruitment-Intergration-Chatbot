@@ -11,8 +11,6 @@ from mcp.server.fastmcp import FastMCP
 
 
 
-
-
 from typing import List, Dict, Any
 from setting import Settings
 

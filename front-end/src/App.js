@@ -41,8 +41,9 @@ import CandidateEvaluation from "./pages/Recruiter/CandidateEvaluation";
 
 import "./App.css";
 import NotFound from "./pages/NotFound";
-import MyPDFViewer from "./pages/CreateCV";
-import CreateCVSample from "./pages/CreateCV/createCV";
+import CreateCVIndex from "./pages/CreateCV";
+import CVselfMade from "./pages/CreateCV/CVselfMade";
+import CreateCVTeacherFixed from "./pages/CreateCV/createCV";
 
 function App() {
   return (
@@ -74,8 +75,12 @@ function App() {
           <Route path="/profile" element={<InfoUser />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/invoiceAdd" element={<Vnpay />} />
-          <Route path="/createCV" element={<MyPDFViewer />} />
-          <Route path="/CreateCVSample" element={<CreateCVSample />} />
+          <Route path="/createCV" element={<CreateCVIndex />} />
+          <Route
+            path="/createCVTeacherFixed"
+            element={<CreateCVTeacherFixed />}
+          />
+          <Route path="/cvselfMade" element={<CVselfMade />} />
 
           {/* 🧪 TEST: Đánh giá ứng viên - Không cần đăng nhập */}
           <Route

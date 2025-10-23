@@ -386,7 +386,7 @@ function CreateCV() {
           <input
             type="number"
             min="0"
-            max="10"
+            max="30"
             value={borderWidth}
             onChange={(e) => handleBorderChange(e.target.value, borderColor)}
             className="ml-1 w-12 border"

@@ -227,6 +227,7 @@ function AddJobPosting() {
 
           <Form.Item label="Trình độ học vấn" name="education_level">
             <Select placeholder="Chọn trình độ">
+              <Select.Option value="Not required">Không yêu cầu</Select.Option>
               <Select.Option value="High School">Trung học</Select.Option>
               <Select.Option value="College">Cao đẳng</Select.Option>
               <Select.Option value="University">Đại học</Select.Option>

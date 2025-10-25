@@ -313,50 +313,55 @@ const addApplicationFile = async (req, res) => {
       if (!account_id || !job_posting_id || !cover_letter || !file) {
         return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
       }
-
       // 1) Đẩy file lên Supabase Storage (bucket nên khác bucket CV, ví dụ: application-files)
       const ts = Date.now();
-      const safeName = (file.originalname || "application.pdf").replace(/\s+/g, "_");
+      const safeName = (file.originalname || "application.pdf").replace(
+        /\s+/g,
+        "_"
+      );
       const objectKey = `applications/${account_id}/${ts}-${safeName}`;
 
-      const { error: uploadErr } = await supabase
-        .storage
+      const { error: uploadErr } = await supabase.storage
         .from("application-files")
         .upload(objectKey, file.buffer, {
           contentType: file.mimetype || "application/pdf",
           upsert: true,
         });
-if (uploadErr) {
-  console.error("[UPLOAD ERROR]", {
-    message: uploadErr.message,
-    name: uploadErr.name,
-    status: uploadErr.statusCode || uploadErr.status,
-    key: objectKey,
-    bucket: "application-files",
-  });
-  return res.status(500).json({ error: "Không upload được file" });
-}
-
-
-      const { data: pub } = supabase.storage.from("application-files").getPublicUrl(objectKey);
+      if (uploadErr) {
+        console.error("[UPLOAD ERROR]", {
+          message: uploadErr.message,
+          name: uploadErr.name,
+          status: uploadErr.statusCode || uploadErr.status,
+          key: objectKey,
+          bucket: "application-files",
+        });
+        return res.status(500).json({ error: "Không upload được file" });
+      }
+      const { data: pub } = supabase.storage
+        .from("application-files")
+        .getPublicUrl(objectKey);
       const publicUrl = pub?.publicUrl;
 
       // 2) Insert vào job_application (cv_id = null)
       const { data, error } = await supabase
         .from("job_application")
-        .insert([{
-          account_id: Number(account_id),
-          job_posting_id: Number(job_posting_id),
-          cv_id: null,                 // <– quan trọng
-          cover_letter,
-          status: "pending",
-          file_upload: safeName,
-          file_url: publicUrl,
-        }])
+        .insert([
+          {
+            account_id: Number(account_id),
+            job_posting_id: Number(job_posting_id),
+            cv_id: null, // <– quan trọng
+            cover_letter,
+            status: "pending",
+            file_upload: safeName,
+            file_url: publicUrl,
+          },
+        ])
         .select();
 
       if (error) return res.status(400).json({ error: error.message });
-      return res.status(201).json({ message: "Nộp đơn (file rời) thành công", data });
+      return res
+        .status(201)
+        .json({ message: "Nộp đơn (file rời) thành công", data });
     } catch (e) {
       console.error("❌ addApplicationFile error:", e);
       return res.status(500).json({ error: "Lỗi server" });

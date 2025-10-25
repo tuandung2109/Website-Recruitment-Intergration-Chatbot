@@ -369,7 +369,7 @@ const userOtp = async (req, res) => {
   }
 };
 //
-const userResetPassword = async (req, res) => {
+const userResetPassword1 = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -411,6 +411,73 @@ const userResetPassword = async (req, res) => {
     });
   }
 };
+const userResetPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu dữ liệu đầu vào (email hoặc password)!",
+      });
+    }
+
+    // Kiểm tra xem OTP đã được xác minh chưa
+    if (!verifiedOtpStore.get(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Chưa xác minh OTP hoặc OTP đã hết hạn",
+      });
+    }
+
+    // 🔹 Lấy mật khẩu cũ từ DB để so sánh
+    const { data: oldData, error: getError } = await supabase
+      .from("account")
+      .select("password")
+      .eq("email", email)
+      .single();
+
+    if (getError || !oldData) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản với email này!",
+      });
+    }
+
+    // 🔹 Kiểm tra mật khẩu mới có trùng mật khẩu cũ không
+    if (password === oldData.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu mới không được trùng với mật khẩu cũ!",
+      });
+    }
+
+    // 🔹 Cập nhật mật khẩu mới
+    const { data, error } = await supabase
+      .from("account")
+      .update({ password: password })
+      .eq("email", email);
+
+    if (error) {
+      console.error("❌ Lỗi khi cập nhật password:", error);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+
+    // 🔹 Xóa OTP đã xác minh
+    verifiedOtpStore.delete(email);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đổi mật khẩu thành công!",
+    });
+  } catch (error) {
+    console.error("Error in userResetPassword : ", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi máy chủ, vui lòng thử lại sau!",
+    });
+  }
+};
+
 // ⚙️ Lấy thông tin user (ví dụ đơn giản, không có JWT)
 const getApiUser = async (req, res) => {
   try {

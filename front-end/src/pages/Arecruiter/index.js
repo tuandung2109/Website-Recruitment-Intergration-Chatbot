@@ -63,7 +63,7 @@ function Recruiter() {
       navigate("/companyAdmin/companyInformation");
     }
     if (e.key === "home") {
-      navigate("/companyAdmin");
+      navigate("/companyAdmin/CompanyHome");
     }
     if (e.key === "companyJobPosting") {
       navigate("/companyAdmin/companyJobPosting");

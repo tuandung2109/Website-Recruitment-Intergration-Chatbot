@@ -7,7 +7,9 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from mcp.server.fastmcp import FastMCP 
+# from mcp.server.fastmcp import FastMCP 
+from fastmcp import FastMCP
+
 
 
 

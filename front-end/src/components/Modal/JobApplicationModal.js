@@ -83,44 +83,6 @@ const JobApplicationModal = ({ open, onClose, job }) => {
 
     try {
       setLoading(true);
-
-      // let cv_id = 0;
-      // let file_url = "";
-      // let file_upload = "";
-
-      // if (info.cvId) {
-      //   // ✅ Trường hợp chọn từ danh sách
-      //   const pickedCV = cvList.find((c) => c.cv_id == info.cvId);
-      //   if (!pickedCV) {
-      //     alert("CV đã chọn không hợp lệ");
-      //     setLoading(false);
-      //     return;
-      //   }
-      //   cv_id = Number(info.cvId);
-      //   file_url = pickedCV.cv_link; // link tuyệt đối từ backend
-      //   file_upload = pickedCV.cv_link?.split("/").pop() || `cv_${cv_id}.pdf`;
-      // } else {
-      //   // ✅ Trường hợp tải tệp mới -> Upload trước để lấy link/id
-      //   const uploaded = await uploadCvFile({
-      //     account_id,
-      //     file: info.file,
-      //     years_experience: 0, // tuỳ bạn muốn map info.yearsExp
-      //     education_level: "No Requirements",
-      //   });
-      //   cv_id = uploaded.cv_id; // backend trả về
-      //   file_url = uploaded.cv_link; // link tuyệt đối http://host/uploads/...
-      //   file_upload = info.file?.name || "uploaded_cv.pdf";
-      // }
-
-      // const payload = {
-      //   account_id,
-      //   job_posting_id: job.id,
-      //   cv_id,
-      //   cover_letter: info.coverLetter,
-      //   file_upload,
-      //   file_url, // ⬅️ Bây giờ luôn có URL hợp lệ
-      // };
-
       // await addJobApplication(payload);
       if (info.cvId) {
         // 💾 Dùng CV có sẵn: gửi JSON như cũ
@@ -137,7 +99,10 @@ const JobApplicationModal = ({ open, onClose, job }) => {
           cover_letter: info.coverLetter,
           // Có thể gửi luôn 2 field dưới (tùy BE có yêu cầu hay không)
           file_upload:
-            pickedCV.cv_link?.split("/").pop() || `cv_${info.cvId}.pdf`,
+            pickedCV.cv_link?.split("/").pop() ||
+            `cv_${info.cvId}.pdf ` ||
+            `cv_${info.cvId}.jpg ` ||
+            `cv_${info.cvId}.docx `,
           file_url: pickedCV.cv_link,
         };
         await addJobApplication(payload);

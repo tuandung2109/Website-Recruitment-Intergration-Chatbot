@@ -40,8 +40,6 @@ const JobListings = () => {
     industry: [],
   });
 
-  // Load filter options and fetch jobs from backend API once on mount
-  // Nhận searchData từ Header khi navigate
   useEffect(() => {
     if (location.state?.searchData) {
       setSearchData(location.state.searchData);
@@ -57,7 +55,7 @@ const JobListings = () => {
         setError("");
         const json = await listJobsPosting();
 
-        console.log("json123:", json);
+        console.log("json1233333333333:", json);
 
         if (!json || !Array.isArray(json.jobs)) {
           throw new Error("Dữ liệu trả về không hợp lệ");
@@ -65,19 +63,19 @@ const JobListings = () => {
 
         const mapped = json.jobs.map((j) => {
           // debug nhanh: bật lên console để thấy key thật sự
-          console.log("DBG work keys:", {
-            workTypes: j.workTypes,
-            work_type: j.work_type,
-            workingTime: j.workingTime,
-            working_time: j.working_time,
-          });
+          // console.log("DBG work keys:", {
+          //   workTypes: j.workTypes,
+          //   work_type: j.work_type,
+          //   workingTime: j.workingTime,
+          //   working_time: j.working_time,
+          // });
 
           // type: ưu tiên array -> map -> join, fallback sang string fields
           const type =
             Array.isArray(j.workTypes) && j.workTypes.length > 0
               ? j.workTypes.join(", ")
               : Array.isArray(j.work_type) && j.work_type.length > 0
-                ? j.work_type
+              ? j.work_type
                   .map(
                     (w) =>
                       w.work_type_name ||
@@ -86,17 +84,17 @@ const JobListings = () => {
                   )
                   .filter(Boolean)
                   .join(", ")
-                : typeof j.workingTime === "string" && j.workingTime.trim()
-                  ? j.workingTime.trim()
-                  : typeof j.working_time === "string" && j.working_time.trim()
-                    ? j.working_time.trim()
-                    : // đôi khi backend dùng workingTime là chuỗi, hoặc work_type là array, nên kiểm tra thêm
-                    Array.isArray(j.work_types) && j.work_types.length > 0
-                      ? j.work_types
-                        .map((w) => w.work_type_name || w.name)
-                        .filter(Boolean)
-                        .join(", ")
-                      : "Không rõ";
+              : typeof j.workingTime === "string" && j.workingTime.trim()
+              ? j.workingTime.trim()
+              : typeof j.working_time === "string" && j.working_time.trim()
+              ? j.working_time.trim()
+              : // đôi khi backend dùng workingTime là chuỗi, hoặc work_type là array, nên kiểm tra thêm
+              Array.isArray(j.work_types) && j.work_types.length > 0
+              ? j.work_types
+                  .map((w) => w.work_type_name || w.name)
+                  .filter(Boolean)
+                  .join(", ")
+              : "Không rõ";
 
           return {
             id: j.id ?? j.job_posting_id,
@@ -104,7 +102,6 @@ const JobListings = () => {
             company: j.company?.name || j.company || "Công ty chưa xác định",
             companyLogo:
               j.company?.logo || j.company?.logo_url || j.companyLogo || "",
-
             location:
               j.company?.address ||
               j.company?.address_detail ||
@@ -114,17 +111,18 @@ const JobListings = () => {
             skills: Array.isArray(j.skills)
               ? j.skills
               : Array.isArray(j.job_posting_skill)
-                ? j.job_posting_skill
+              ? j.job_posting_skill
                   .map((s) => s.skill?.skill_name)
                   .filter(Boolean)
-                : [],
+              : [],
             industries: Array.isArray(j.industries)
               ? j.industries
               : Array.isArray(j.job_posting_industry)
-                ? j.job_posting_industry
+              ? j.job_posting_industry
                   .map((i) => i.industry?.name)
                   .filter(Boolean)
-                : [],
+              : [],
+            createdAt: j.create_at || "lỗi",
             type,
             experienceYears: j.experienceYears ?? j.experience_years ?? 0,
             salary: j.salary ?? 0,
@@ -134,6 +132,7 @@ const JobListings = () => {
 
         console.log("✅ Dữ liệu sau khi map ở FE123:", mapped);
         setJobs(mapped);
+        console.log("jobs123123:", jobs);
       } catch (e) {
         console.error("❌ Lỗi khi fetch jobs:", e);
         setError(e.message || "Không thể tải danh sách công việc");
@@ -152,15 +151,15 @@ const JobListings = () => {
     if (agentFilters) {
       console.log("🤖 Agent filters detected, applying to JobListings...");
 
-      setSearchData((prev) => ({ 
-        ...prev, 
+      setSearchData((prev) => ({
+        ...prev,
         keywords: agentFilters.title || "",
         location: agentFilters.location || "",
         skills: Array.isArray(agentFilters.skills)
           ? agentFilters.skills.join(", ")
           : agentFilters.skills || "",
       }));
-      
+
       if (agentFilters.workType) {
         setActiveFilters((prev) => ({
           ...prev,
@@ -192,21 +191,20 @@ const JobListings = () => {
           // Áp dụng filters vào searchData
 
           setSearchData((prev) => ({
-            ...prev, 
+            ...prev,
             keywords: agentFilters.title || "",
             location: agentFilters.location || "",
             skills: Array.isArray(agentFilters.skills)
               ? agentFilters.skills.join(", ")
               : agentFilters.skills || "",
           }));
-          
+
           if (agentFilters.workType) {
             setActiveFilters((prev) => ({
               ...prev,
               workType: [agentFilters.workType],
             }));
           }
-
 
           // Reset current page to 1 when new filters are applied
           setCurrentPage(1);
@@ -225,19 +223,22 @@ const JobListings = () => {
     const handleAgentNavigation = (event) => {
       // Ưu tiên sử dụng filters từ event.detail nếu có
       if (event.detail?.filters) {
-        console.log("🔄 New agent filters received from event:", event.detail.filters);
+        console.log(
+          "🔄 New agent filters received from event:",
+          event.detail.filters
+        );
         const agentFilters = event.detail.filters;
-        
+
         setTimeout(() => {
           setSearchData((prev) => ({
-            ...prev, 
+            ...prev,
             keywords: agentFilters.title || "",
             location: agentFilters.location || "",
             skills: Array.isArray(agentFilters.skills)
               ? agentFilters.skills.join(", ")
               : agentFilters.skills || "",
           }));
-          
+
           if (agentFilters.workType) {
             setActiveFilters((prev) => ({
               ...prev,
@@ -247,7 +248,7 @@ const JobListings = () => {
 
           setCurrentPage(1);
           window.scrollTo({ top: 0, behavior: "smooth" });
-          
+
           console.log("✅ Agent filters from event applied successfully");
         }, 100);
       } else {
@@ -307,8 +308,7 @@ const JobListings = () => {
     if (searchData.keywords && searchData.keywords.trim()) {
       const keyword = searchData.keywords.toLowerCase();
       filtered = filtered.filter(
-        (job) =>
-          job.title.toLowerCase().includes(keyword)
+        (job) => job.title.toLowerCase().includes(keyword)
         // job.company.toLowerCase().includes(keyword) ||
         // job.description.toLowerCase().includes(keyword) ||
         // job.skills.some((skill) => skill.toLowerCase().includes(keyword))
@@ -490,7 +490,7 @@ const JobListings = () => {
     if (diff === 1) return "1 ngày trước";
     if (diff < 7) return `${diff} ngày trước`;
     if (diff < 30) return `${Math.floor(diff / 7)} tuần trước`;
-    return `${Math.floor(diff / 30)} tháng trước`;
+    return `Ngày tạo: ${Math.floor(diff / 30)}  `;
   };
 
   const paginate = (pageNumber) => {
@@ -882,10 +882,11 @@ const JobListings = () => {
                       key={job.id}
                       id={`job-${job.id}`}
                       data-animate
-                      className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 transform hover:scale-[1.02] ${isVisible[`job-${job.id}`]
+                      className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 transform hover:scale-[1.02] ${
+                        isVisible[`job-${job.id}`]
                           ? "opacity-100 translate-y-0"
                           : "opacity-0 translate-y-4"
-                        }`}
+                      }`}
                       style={{ transitionDelay: `${index * 50}ms` }}
                     >
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -900,7 +901,7 @@ const JobListings = () => {
                                     "https://placehold.co/200x200?text=No+Logo"
                                   }
                                   alt={job.company}
-                                // className="w-20 h-20 object-cover rounded-2xl"
+                                  // className="w-20 h-20 object-cover rounded-2xl"
                                 />
                                 {/* {job.company.charAt(0)} */}
                               </span>
@@ -1030,6 +1031,7 @@ const JobListings = () => {
                           </button>
                           <span className="text-sm text-gray-500 mt-2">
                             {getTimeAgo(job.postedDate)}
+                            {job.createdAt}
                           </span>
                         </div>
                       </div>
@@ -1043,10 +1045,11 @@ const JobListings = () => {
                       <button
                         onClick={() => paginate(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${currentPage === 1
+                        className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
+                          currentPage === 1
                             ? "opacity-50 cursor-not-allowed"
                             : "hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         Trước
                       </button>
@@ -1063,10 +1066,11 @@ const JobListings = () => {
                             <button
                               key={pageNumber}
                               onClick={() => paginate(pageNumber)}
-                              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${currentPage === pageNumber
+                              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                                currentPage === pageNumber
                                   ? "bg-blue-600 text-white"
                                   : "border border-gray-300 hover:bg-gray-50"
-                                }`}
+                              }`}
                             >
                               {pageNumber}
                             </button>
@@ -1087,10 +1091,11 @@ const JobListings = () => {
                       <button
                         onClick={() => paginate(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${currentPage === totalPages
+                        className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors ${
+                          currentPage === totalPages
                             ? "opacity-50 cursor-not-allowed"
                             : "hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         Sau
                       </button>

@@ -44,6 +44,7 @@ import NotFound from "./pages/NotFound";
 import CreateCVIndex from "./pages/CreateCV";
 import CVselfMade from "./pages/CreateCV/CVselfMade";
 import CreateCVTeacherFixed from "./pages/CreateCV/createCV";
+import CompanyHome from "./pages/Arecruiter/companyHome";
 
 function App() {
   return (
@@ -105,6 +106,7 @@ function App() {
         {/* 🏢 Employer chỉ được vào RecruiterLayout */}
         <Route element={<ProtectedRoute allowedRoles={["Employer"]} />}>
           <Route path="/companyAdmin" element={<RecruiterLayout />}>
+            <Route path="CompanyHome" element={<CompanyHome />} />
             <Route path="companyInformation" element={<CompanyInformation />} />
             <Route path="companyJobPosting" element={<CompanyJobPosting />} />
             <Route path="companyAddJobPosting" element={<AddJobPosting />} />

@@ -361,6 +361,7 @@ const postJobPosting = async (req, res) => {
       industry_ids = [], // 👈 mảng id ngành nghề
       skill_ids = [], // 👈 mảng id kỹ năng
       work_type_name, // 👈 hình thức làm việc
+      create_at,
     } = req.body;
 
     if (!account_id || !company_id || !position_name || !job_description) {
@@ -389,6 +390,7 @@ const postJobPosting = async (req, res) => {
           working_time: working_time || "",
           status: status || "inactive",
           deleted: deleted || false,
+          create_at: new Date(),
         },
       ])
       .select()

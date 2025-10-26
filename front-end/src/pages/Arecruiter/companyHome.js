@@ -50,16 +50,21 @@ function CompanyHome() {
         const jobs = resJobs.jobs.filter(
           (j) => Number(j.company.id) === Number(userData.company_id)
         );
+
+        console.log("jobs12345:", jobs);
+
         const apps = resApps.jobApplications.filter(
           (a) => a.job_posting?.company?.company_id === userData.company_id
         );
+        console.log("jobs12345:", apps);
 
         // 🔹 Gom nhóm theo tháng
         const jobCountByMonth = {};
         const appCountByMonth = {};
 
         jobs.forEach((job) => {
-          const month = new Date(job.created_at).getMonth() + 1;
+          const month = new Date(job.create_at).getMonth() + 1;
+
           jobCountByMonth[month] = (jobCountByMonth[month] || 0) + 1;
         });
 

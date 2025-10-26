@@ -168,6 +168,16 @@ const JobApplicationModal = ({ open, onClose, job }) => {
             {/* CV: chọn 1 trong 2 */}
             <section>
               <h4 className="font-semibold mb-2">CV của bạn</h4>
+              <span className="inline-flex items-center text-gray-800">
+                Nếu chưa có bạn có thể&nbsp;
+                <a
+                  href="/createCV"
+                  className="text-blue-500 hover:text-blue-700 font-medium"
+                >
+                  bấm vào đây
+                </a>
+                &nbsp;để tạo CV
+              </span>
 
               {/* Chọn từ danh sách */}
               <div>

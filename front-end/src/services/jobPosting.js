@@ -32,11 +32,11 @@ const listJobsPosting = async (params = {}) => {
     // 🎯 Chuẩn hóa dữ liệu
     const jobs = rawJobs.map((j) => {
       // Log để kiểm tra các key quan trọng
-      console.log("🧩 Kiểm tra job:", {
-        id: j.job_posting_id,
-        work_type: j.work_type,
-        job_posting_skill: j.job_posting_skill,
-      });
+      // console.log("🧩 Kiểm tra job:", {
+      //   id: j.job_posting_id,
+      //   work_type: j.work_type,
+      //   job_posting_skill: j.job_posting_skill,
+      // });
 
       return {
         id: j.job_posting_id,
@@ -56,6 +56,7 @@ const listJobsPosting = async (params = {}) => {
         // 🏢 Công ty
         company: {
           id: j.company?.company_id || null,
+          company_id: j.company?.company_id || null,
           name: j.company?.name || "",
           logo: j.company?.logo_url || "",
           website: j.company?.website || "",
@@ -141,6 +142,7 @@ const listJobPostingById = async (id) => {
       // 🏢 Thông tin công ty
       company: {
         id: j.company?.company_id || null,
+        company_id: j.company?.company_id || null,
         name: j.company?.name || "",
         logo: j.company?.logo_url || "",
         website: j.company?.website || "",
@@ -229,6 +231,7 @@ const listJobPostingAdmin = async (params = {}) => {
       status: j.status,
       company: {
         id: j.company?.company_id || null,
+        company_id: j.company?.company_id || null,
         name: j.company?.name || "",
         logo: j.company?.logo_url || "",
         website: j.company?.website || "",

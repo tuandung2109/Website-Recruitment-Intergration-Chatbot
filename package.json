@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "fastmcp": "^3.22.0",
+    "html2canvas": "^1.4.1",
     "react-select": "^5.10.2"
   }
 }

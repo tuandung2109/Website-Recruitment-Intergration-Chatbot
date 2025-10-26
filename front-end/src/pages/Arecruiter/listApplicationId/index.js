@@ -12,6 +12,7 @@ import {
   message,
 } from "antd";
 import UseTitle from "../../../hooks/useTitle";
+import { sendEmail } from "../../../services/email";
 import {
   listJobApplication,
   updateApplicationStatus,
@@ -91,7 +92,7 @@ function CompanyListJobPosting() {
   };
 
   // ✅ Hàm cập nhật trạng thái đơn ứng tuyển
-  const handleUpdateStatus = async (id, newStatus) => {
+  const handleUpdateStatus1 = async (id, newStatus) => {
     try {
       const res = await updateApplicationStatus(id, newStatus);
       if (res.success) {
@@ -102,6 +103,49 @@ function CompanyListJobPosting() {
             app.job_application_id === id ? { ...app, status: newStatus } : app
           )
         );
+      } else {
+        message.error(res.message);
+      }
+    } catch (error) {
+      console.error(error);
+      message.error("Lỗi khi cập nhật trạng thái");
+    }
+  };
+  const handleUpdateStatus = async (id, newStatus, record) => {
+    try {
+      const res = await updateApplicationStatus(id, newStatus);
+      if (res.success) {
+        message.success(res.message);
+
+        // ✅ Cập nhật trạng thái trong danh sách
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.job_application_id === id ? { ...app, status: newStatus } : app
+          )
+        );
+
+        // ✅ Nếu là chấp nhận thì gửi email
+        if (newStatus === "accepted") {
+          const emailData = {
+            to: record.account?.email,
+            subject: "Chúc mừng! Đơn ứng tuyển của bạn đã được chấp nhận 🎉",
+            html: `
+            <p>Xin chào ${record.account?.email},</p>
+            <p>Chúc mừng bạn! Đơn ứng tuyển vị trí <b>${record.job_posting?.position_name}</b> tại công ty <b>${record.job_posting?.company?.name}</b> đã được <b>chấp nhận</b>.</p>
+            <p>Chúng tôi sẽ sớm liên hệ với bạn để trao đổi thêm chi tiết.</p>
+            <p>Trân trọng,<br/>Đội ngũ JobVip</p>
+          `,
+          };
+
+          const emailRes = await sendEmail(emailData);
+          console.log("emailRes:", emailRes); // 👈 kiểm tra xem có success không
+          if (emailRes?.success) {
+            message.success("✅ Email thông báo đã được gửi cho ứng viên");
+          } else {
+            console.error("SendEmail error:", emailRes);
+            message.warning("⚠️ Cập nhật thành công nhưng gửi email thất bại");
+          }
+        }
       } else {
         message.error(res.message);
       }
@@ -215,11 +259,16 @@ function CompanyListJobPosting() {
                 <Button
                   type="primary"
                   onClick={() =>
-                    handleUpdateStatus(record.job_application_id, "accepted")
+                    handleUpdateStatus(
+                      record.job_application_id,
+                      "accepted",
+                      record
+                    )
                   }
                 >
                   Chấp nhận
                 </Button>
+
                 <Button
                   danger
                   onClick={() =>

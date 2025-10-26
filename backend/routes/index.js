@@ -18,6 +18,7 @@ const routerJobPostingIndustry = require("./job_posting_industry");
 const routerJobPostingSkill = require("./job_posting_skill.js");
 const routerWordType = require("./work_type");
 const routerAddress = require("./address.js");
+const routerEmail = require("./sendEmail.js");
 
 module.exports = (app) => {
   app.use("/api/account", routerAccount);
@@ -30,6 +31,7 @@ module.exports = (app) => {
   app.use("/api/industry", routerIndustry);
   app.use("/api/skill", routerSkill);
   app.use("/api/message", routerMessage);
+  app.use("/api/email", routerEmail);
 
   app.use("/api/account_account_type", routerAccountAccountType);
   app.use("/api/account_type", routerAccountType);

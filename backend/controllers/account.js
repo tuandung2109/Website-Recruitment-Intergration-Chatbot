@@ -369,48 +369,6 @@ const userOtp = async (req, res) => {
   }
 };
 //
-const userResetPassword1 = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Thiếu dữ liệu đầu vào (email hoặc password)!",
-      });
-    }
-    // Kiểm tra xem OTP đã được xác minh chưa
-    if (!verifiedOtpStore.get(email)) {
-      return res.status(400).json({
-        success: false,
-        message: "Chưa xác minh OTP hoặc OTP đã hết hạn",
-      });
-    }
-    // Hash password mới
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    // Cập nhật password vào bảng account
-    const { data, error } = await supabase
-      .from("account")
-      .update({ password: password })
-      .eq("email", email);
-
-    if (error) {
-      console.error("❌ Lỗi khi cập nhật password:", error);
-      return res.status(500).json({ success: false, message: "Lỗi server" });
-    }
-    // Sau khi đổi mật khẩu, xóa email khỏi verifiedOtpStore
-    verifiedOtpStore.delete(email);
-    return res.status(200).json({
-      success: true,
-      message: "Đổi mật khẩu thành công!",
-    });
-  } catch (error) {
-    console.error("Error in userResetPassword : ", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi máy chủ, vui lòng thử lại sau!",
-    });
-  }
-};
 const userResetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;

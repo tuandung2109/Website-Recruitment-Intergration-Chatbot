@@ -65,16 +65,60 @@ function CreateCVTeacherFixed() {
     }
   };
   const handleDownloadPDF = async () => {
-    const cvElement = cvRef.current;
-    const canvas = await html2canvas(cvElement, { scale: 2, useCORS: true });
-    const dataURL = canvas.toDataURL("image/png", 1);
+    try {
+      setLoading(true);
+      const cvElement = cvRef.current;
+      
+      // ✅ Tạo style override để force RGB colors
+      const styleOverride = document.createElement('style');
+      styleOverride.id = 'pdf-color-fix';
+      styleOverride.innerHTML = `
+        * {
+          color: inherit !important;
+          background-color: transparent !important;
+        }
+        .bg-white { background-color: #ffffff !important; }
+        .bg-gray-50 { background-color: #f9fafb !important; }
+        .bg-gray-100 { background-color: #f3f4f6 !important; }
+        .bg-gray-200 { background-color: #e5e7eb !important; }
+        .bg-emerald-50 { background-color: #ecfdf5 !important; }
+        .bg-emerald-100 { background-color: #d1fae5 !important; }
+        .text-black { color: #000000 !important; }
+        .text-gray-700 { color: #374151 !important; }
+        .text-gray-600 { color: #4b5563 !important; }
+        .text-emerald-600 { color: #059669 !important; }
+        .border-gray-300 { border-color: #d1d5db !important; }
+      `;
+      document.head.appendChild(styleOverride);
+      
+      // Render canvas với style đã override
+      const canvas = await html2canvas(cvElement, { 
+        scale: 2, 
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+      
+      // Xóa style override
+      document.head.removeChild(styleOverride);
+      
+      const dataURL = canvas.toDataURL("image/png", 1);
 
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    pdf.addImage(dataURL, "PNG", 0, 0, imgWidth, imgHeight);
-    pdf.save("my_cv.pdf");
+      pdf.addImage(dataURL, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save("CV_GiaoVien.pdf");
+      
+      alert("✅ Tải PDF thành công!");
+    } catch (err) {
+      alert("❌ Không thể tải PDF: " + err.message);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

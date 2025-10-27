@@ -145,6 +145,9 @@ function CreateCVTeacherFixed() {
           <button
             onClick={addNewBlock}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow-md"
+            style={{
+              marginLeft: "2px",
+            }}
           >
             ➕ Thêm Text mới
           </button>
@@ -152,7 +155,12 @@ function CreateCVTeacherFixed() {
 
         <div
           ref={cvRef}
-          className="max-w-[850px] mx-auto bg-white border rounded-lg shadow-lg overflow-hidden flex"
+          className="max-w-[850px] mx-auto"
+          style={{
+            backgroundColor: "#ffffff", // thay vì bg-white
+            border: "1px solid #ccc",
+            display: "flex",
+          }}
         >
           {blocks.map((block) => (
             <Draggable
@@ -189,7 +197,12 @@ function CreateCVTeacherFixed() {
           ))}
 
           {/* Cột trái */}
-          <div className="w-1/3 bg-emerald-100 p-6 text-gray-800 flex flex-col items-center">
+          <div
+            className="w-1/3 p-6 text-gray-800 flex flex-col items-center"
+            style={{ backgroundColor: "#d1fae5" }}
+          >
+            {" "}
+            {/* Màu emerald-100 */}
             {/* Avatar */}
             <div
               className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md cursor-pointer hover:opacity-80 transition"
@@ -209,7 +222,6 @@ function CreateCVTeacherFixed() {
               onChange={handleAvatarChange}
               className="hidden"
             />
-
             {/* Tên & chức danh */}
             <div className="text-center mt-4">
               <Draggable>
@@ -234,7 +246,6 @@ function CreateCVTeacherFixed() {
                 </p>
               </Draggable>
             </div>
-
             {/* Thông tin */}
             <div className="mt-6 text-sm space-y-2 w-full">
               <p contentEditable suppressContentEditableWarning>
@@ -256,12 +267,16 @@ function CreateCVTeacherFixed() {
                 📍 Ba Đình, Hà Nội
               </p>
             </div>
-
             <hr className="my-4 border-gray-300 w-full" />
-
             {/* Kỹ năng */}
             <div className="w-full">
-              <h3 className="font-semibold text-emerald-700 mb-2">Kỹ năng</h3>
+              <h3
+                className="font-semibold text-emerald-700 mb-2"
+                suppressContentEditableWarning
+                contentEditable
+              >
+                Kỹ năng
+              </h3>
               <ul className="list-disc list-inside text-sm space-y-1">
                 <Draggable>
                   <li contentEditable suppressContentEditableWarning>
@@ -290,13 +305,15 @@ function CreateCVTeacherFixed() {
                 </Draggable>
               </ul>
             </div>
-
             <hr className="my-4 border-gray-300 w-full" />
-
             {/* Chứng chỉ */}
             <div className="w-full">
               <Draggable>
-                <h3 className="font-semibold text-emerald-700 mb-2">
+                <h3
+                  suppressContentEditableWarning
+                  contentEditable
+                  className="font-semibold text-emerald-700 mb-2"
+                >
                   Chứng chỉ
                 </h3>
               </Draggable>
@@ -323,16 +340,16 @@ function CreateCVTeacherFixed() {
           {/* Cột phải */}
           <div
             className="w-2/3 p-6"
-            style={{
-              backgroundColor: "#f3f4f6",
-              color: "#1f2937",
-              borderRight: "1px solid #d1d5db",
-            }}
+            style={{ backgroundColor: "#f3f4f6", color: "#1f2937" }}
           >
             {/* Mục tiêu */}
             <div className="mb-6">
               <Draggable>
-                <h3 className="text-lg font-bold text-emerald-700 mb-1">
+                <h3
+                  suppressContentEditableWarning
+                  contentEditable
+                  className="text-lg font-bold text-emerald-700 mb-1"
+                >
                   🎯 Mục tiêu nghề nghiệp
                 </h3>
               </Draggable>
@@ -352,7 +369,11 @@ function CreateCVTeacherFixed() {
             {/* Học vấn */}
             <div className="mb-6">
               <Draggable>
-                <h3 className="text-lg font-bold text-emerald-700 mb-1">
+                <h3
+                  className="text-lg font-bold text-emerald-700 mb-1"
+                  suppressContentEditableWarning
+                  contentEditable
+                >
                   🎓 Học vấn
                 </h3>
               </Draggable>
@@ -380,7 +401,11 @@ function CreateCVTeacherFixed() {
             {/* Kinh nghiệm */}
             <div className="mb-6">
               <Draggable>
-                <h3 className="text-lg font-bold text-emerald-700 mb-1">
+                <h3
+                  className="text-lg font-bold text-emerald-700 mb-1"
+                  suppressContentEditableWarning
+                  contentEditable
+                >
                   💼 Kinh nghiệm làm việc
                 </h3>
               </Draggable>
@@ -436,7 +461,11 @@ function CreateCVTeacherFixed() {
             {/* Hoạt động */}
             <div>
               <Draggable>
-                <h3 className="text-lg font-bold text-emerald-700 mb-1">
+                <h3
+                  suppressContentEditableWarning
+                  contentEditable
+                  className="text-lg font-bold text-emerald-700 mb-1"
+                >
                   🤝 Hoạt động
                 </h3>
               </Draggable>

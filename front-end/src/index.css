@@ -21,8 +21,10 @@ html {
   color-scheme: light;
   --tw-bg-opacity: 1 !important;
 }
+/* force màu Tailwind không dùng oklch */
 :root {
   color-scheme: light;
+  --tw-bg-opacity: 1;
 }
 
 code {

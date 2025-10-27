@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, FileText, ChevronDown } from "lucide-react";
+import { User, LogOut, FileText, ChevronDown, Bell } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -8,6 +8,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const handleSearch = (e) => {
     if (e.key === "Enter" || e.type === "click") {
@@ -36,6 +37,10 @@ const Header = () => {
       }
     }
   }, []);
+  const toggleNotif = () => {
+    setIsNotifOpen(!isNotifOpen);
+    setIsUserMenuOpen(false); // đóng menu user khi mở thông báo
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -71,7 +76,7 @@ const Header = () => {
           {/* Thanh tìm kiếm và Điều hướng */}
           <div className="hidden md:flex items-center flex-grow mx-8">
             {/* Thanh tìm kiếm */}
-            <div className="flex-grow max-w-2xl">
+            <div className="flex-grow max-w-md">
               <div className="flex">
                 <input
                   type="text"
@@ -79,14 +84,14 @@ const Header = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleSearch}
-                  className="w-full px-4 py-2 rounded-l-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm rounded-l-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={handleSearch}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-md transition-colors"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-r-md transition-colors"
                 >
                   <svg
-                    className="h-5 w-5"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -146,6 +151,38 @@ const Header = () => {
                 >
                   Đã ứng tuyển
                 </a>
+                {/* Nút thông báo */}
+                <div className="relative">
+                  <button
+                    onClick={toggleNotif}
+                    className="text-white hover:text-blue-200 relative p-2 rounded-full transition-colors"
+                  >
+                    <Bell className="h-6 w-6" />
+                    {/* Dấu chấm đỏ hiển thị số lượng thông báo */}
+                    <span className="absolute top-1 right-1 block h-2 w-2 bg-red-500 rounded-full"></span>
+                  </button>
+
+                  {/* Dropdown thông báo */}
+                  {isNotifOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-2 z-50">
+                      <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
+                        Thông báo
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          🎉 Bạn đã ứng tuyển thành công vào vị trí “Kế toán
+                          viên”.
+                        </div>
+                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          💼 Hồ sơ công ty bạn được phê duyệt!
+                        </div>
+                        <div className="px-4 py-2 text-sm text-gray-500 italic text-center">
+                          Không có thêm thông báo
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* User Menu */}
                 <div className="relative">

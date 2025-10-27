@@ -8,7 +8,7 @@ const sendEmail = async (req, res) => {
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER, // ví dụ: jobvip.company@gmail.com
-        pass: process.env.EMAIL_PASS, // mật khẩu ứng dụng (App password)
+        pass: process.env.EMAIL_PASSWORD, // mật khẩu ứng dụng (App password)
       },
     });
 

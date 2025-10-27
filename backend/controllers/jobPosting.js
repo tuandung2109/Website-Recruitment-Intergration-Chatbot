@@ -363,6 +363,7 @@ const postJobPosting = async (req, res) => {
       work_type_name, // 👈 hình thức làm việc
       create_at,
     } = req.body;
+    // --- Kiểm tra deadline ---
 
     if (!account_id || !company_id || !position_name || !job_description) {
       return res.status(400).json({
@@ -371,7 +372,18 @@ const postJobPosting = async (req, res) => {
           "Thiếu dữ liệu bắt buộc (account_id, company_id, position_name, job_description)",
       });
     }
+    if (deadline) {
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
 
+      // Nếu deadline <= hiện tại → báo lỗi
+      if (deadlineDate <= now) {
+        return res.status(400).json({
+          success: false,
+          message: "Ngày hết hạn phải lớn hơn ngày hiện tại!",
+        });
+      }
+    }
     // === 1️⃣ Thêm job_posting chính ===
     const { data, error } = await supabase
       .from("job_posting")

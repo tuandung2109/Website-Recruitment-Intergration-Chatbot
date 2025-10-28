@@ -448,12 +448,9 @@ const JobListings = () => {
     if (isNaN(dateObj.getTime())) return "";
     
     const now = new Date();
-<<<<<<< HEAD
-    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-=======
+    // const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
 
->>>>>>> 41ca52cee9bb934ae41587aa66d6d3a4690be247
     if (diff === 0) return "Hôm nay";
     if (diff === 1) return "1 ngày trước";
     if (diff < 7) return `${diff} ngày trước`;

@@ -69,39 +69,176 @@ function CreateCVTeacherFixed() {
       setLoading(true);
       const cvElement = cvRef.current;
       
-      // ✅ Tạo style override để force RGB colors
-      const styleOverride = document.createElement('style');
-      styleOverride.id = 'pdf-color-fix';
-      styleOverride.innerHTML = `
-        * {
-          color: inherit !important;
-          background-color: transparent !important;
-        }
-        .bg-white { background-color: #ffffff !important; }
-        .bg-gray-50 { background-color: #f9fafb !important; }
-        .bg-gray-100 { background-color: #f3f4f6 !important; }
-        .bg-gray-200 { background-color: #e5e7eb !important; }
-        .bg-emerald-50 { background-color: #ecfdf5 !important; }
-        .bg-emerald-100 { background-color: #d1fae5 !important; }
-        .text-black { color: #000000 !important; }
-        .text-gray-700 { color: #374151 !important; }
-        .text-gray-600 { color: #4b5563 !important; }
-        .text-emerald-600 { color: #059669 !important; }
-        .border-gray-300 { border-color: #d1d5db !important; }
-      `;
-      document.head.appendChild(styleOverride);
+      // ✅ KHÔNG DÙNG window.getComputedStyle - chỉ dùng map cứng
+      const tailwindToStyle = {
+        // Background colors
+        'bg-white': 'background-color: #ffffff',
+        'bg-gray-50': 'background-color: #f9fafb',
+        'bg-gray-100': 'background-color: #f3f4f6',
+        'bg-gray-200': 'background-color: #e5e7eb',
+        'bg-gray-300': 'background-color: #d1d5db',
+        'bg-gray-400': 'background-color: #9ca3af',
+        'bg-gray-600': 'background-color: #4b5563',
+        'bg-gray-700': 'background-color: #374151',
+        'bg-gray-800': 'background-color: #1f2937',
+        'bg-emerald-50': 'background-color: #ecfdf5',
+        'bg-emerald-100': 'background-color: #d1fae5',
+        'bg-emerald-600': 'background-color: #059669',
+        'bg-emerald-700': 'background-color: #047857',
+        'bg-emerald-800': 'background-color: #065f46',
+        'bg-blue-600': 'background-color: #2563eb',
+        'bg-blue-700': 'background-color: #1d4ed8',
+        
+        // Text colors & sizes
+        'text-black': 'color: #000000',
+        'text-white': 'color: #ffffff',
+        'text-sm': 'font-size: 14px; line-height: 20px',
+        'text-lg': 'font-size: 18px; line-height: 28px',
+        'text-xl': 'font-size: 20px; line-height: 28px',
+        'text-gray-600': 'color: #4b5563',
+        'text-gray-700': 'color: #374151',
+        'text-gray-800': 'color: #1f2937',
+        'text-emerald-600': 'color: #059669',
+        'text-emerald-700': 'color: #047857',
+        'text-emerald-800': 'color: #065f46',
+        'text-center': 'text-align: center',
+        
+        // Border
+        'border-white': 'border-color: #ffffff; border-style: solid',
+        'border-gray-300': 'border-color: #d1d5db; border-style: solid',
+        'border-4': 'border-width: 4px; border-style: solid',
+        'border': 'border-width: 1px; border-style: solid',
+        'rounded-full': 'border-radius: 9999px',
+        'rounded-lg': 'border-radius: 8px',
+        'rounded-md': 'border-radius: 6px',
+        
+        // Layout
+        'flex': 'display: flex',
+        'flex-col': 'flex-direction: column',
+        'items-center': 'align-items: center',
+        'justify-center': 'justify-content: center',
+        'overflow-hidden': 'overflow: hidden',
+        
+        // Spacing
+        'w-32': 'width: 128px',
+        'h-32': 'height: 128px',
+        'w-full': 'width: 100%',
+        'w-1/3': 'width: 33.333333%',
+        'w-2/3': 'width: 66.666667%',
+        'p-6': 'padding: 24px',
+        'px-4': 'padding-left: 16px; padding-right: 16px',
+        'px-5': 'padding-left: 20px; padding-right: 20px',
+        'py-2': 'padding-top: 8px; padding-bottom: 8px',
+        'mt-1': 'margin-top: 4px',
+        'mt-3': 'margin-top: 12px',
+        'mt-4': 'margin-top: 16px',
+        'mt-6': 'margin-top: 24px',
+        'mb-1': 'margin-bottom: 4px',
+        'mb-2': 'margin-bottom: 8px',
+        'mb-4': 'margin-bottom: 16px',
+        'mb-6': 'margin-bottom: 24px',
+        'my-4': 'margin-top: 16px; margin-bottom: 16px',
+        'gap-1': 'gap: 4px',
+        'gap-3': 'gap: 12px',
+        'max-w-[850px]': 'max-width: 850px',
+        'mx-auto': 'margin-left: auto; margin-right: auto',
+        'min-h-screen': 'min-height: 100vh',
+        
+        // Typography
+        'font-bold': 'font-weight: 700',
+        'font-semibold': 'font-weight: 600',
+        'leading-relaxed': 'line-height: 1.625',
+        
+        // List
+        'list-disc': 'list-style-type: disc',
+        'list-inside': 'list-style-position: inside',
+        
+        // Effects
+        'shadow-md': 'box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1)',
+        'shadow-lg': 'box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1)',
+        'cursor-pointer': 'cursor: pointer',
+        'cursor-move': 'cursor: move',
+        'transition': 'transition: all 0.3s',
+        
+        // Display
+        'hidden': 'display: none',
+        'object-cover': 'object-fit: cover',
+      };
       
-      // Render canvas với style đã override
-      const canvas = await html2canvas(cvElement, { 
+      // ✅ Disable TẤT CẢ stylesheets trước khi clone
+      const allStylesheets = Array.from(document.styleSheets);
+      const disabledStates = allStylesheets.map(sheet => {
+        try {
+          const disabled = sheet.disabled;
+          sheet.disabled = true;
+          return { sheet, disabled };
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+      
+      // Clone và inject inline styles
+      const clone = cvElement.cloneNode(true);
+      clone.style.cssText = 'position: absolute; left: -9999px; top: 0; background-color: #ffffff; border: 1px solid #ccc; display: flex; max-width: 850px;';
+      document.body.appendChild(clone);
+      
+      // Replace TẤT CẢ Tailwind classes bằng inline styles
+      const allElements = clone.querySelectorAll('*');
+      allElements.forEach(el => {
+        const classes = Array.from(el.classList);
+        let inlineStyles = el.getAttribute('style') || '';
+        
+        classes.forEach(className => {
+          if (tailwindToStyle[className]) {
+            inlineStyles += '; ' + tailwindToStyle[className];
+          }
+        });
+        
+        // Handle space-y-* classes (apply margin-top to children)
+        if (classes.some(c => c.startsWith('space-y-'))) {
+          const spaceClass = classes.find(c => c.startsWith('space-y-'));
+          const spacing = spaceClass === 'space-y-1' ? '4px' : spaceClass === 'space-y-2' ? '8px' : '0';
+          Array.from(el.children).forEach((child, index) => {
+            if (index > 0) {
+              const childStyle = child.getAttribute('style') || '';
+              child.setAttribute('style', childStyle + `; margin-top: ${spacing}`);
+            }
+          });
+        }
+        
+        if (inlineStyles) {
+          el.setAttribute('style', inlineStyles);
+        }
+        
+        // XÓA class attribute hoàn toàn
+        el.removeAttribute('class');
+      });
+      
+      // Đợi render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Render canvas
+      const canvas = await html2canvas(clone, { 
         scale: 2, 
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Xóa TẤT CẢ <style> và <link> tags trong clone
+          clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => el.remove());
+        }
       });
       
-      // Xóa style override
-      document.head.removeChild(styleOverride);
+      // Restore stylesheets
+      disabledStates.forEach(({ sheet, disabled }) => {
+        try {
+          sheet.disabled = disabled;
+        } catch (e) {}
+      });
+      
+      // Cleanup
+      document.body.removeChild(clone);
       
       const dataURL = canvas.toDataURL("image/png", 1);
 
@@ -115,7 +252,7 @@ function CreateCVTeacherFixed() {
       alert("✅ Tải PDF thành công!");
     } catch (err) {
       alert("❌ Không thể tải PDF: " + err.message);
-      console.error(err);
+      console.error('PDF Error:', err);
     } finally {
       setLoading(false);
     }

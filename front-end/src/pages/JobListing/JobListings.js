@@ -62,15 +62,6 @@ const JobListings = () => {
         }
 
         const mapped = json.jobs.map((j) => {
-          // debug nhanh: bật lên console để thấy key thật sự
-          // console.log("DBG work keys:", {
-          //   workTypes: j.workTypes,
-          //   work_type: j.work_type,
-          //   workingTime: j.workingTime,
-          //   working_time: j.working_time,
-          // });
-
-          // type: ưu tiên array -> map -> join, fallback sang string fields
           const type =
             Array.isArray(j.workTypes) && j.workTypes.length > 0
               ? j.workTypes.join(", ")
@@ -177,9 +168,7 @@ const JobListings = () => {
     }
   }, [jobs]); // Chạy khi jobs đã được load
 
-  // �� Add additional effect to handle navigation to same route
   useEffect(() => {
-    // Check for agent filters on every render/mount or location change
     const checkForNewFilters = () => {
       const agentFilters = getAgentFilters();
 
@@ -206,10 +195,8 @@ const JobListings = () => {
             }));
           }
 
-          // Reset current page to 1 when new filters are applied
           setCurrentPage(1);
 
-          // Scroll to top to show filtered results
           window.scrollTo({ top: 0, behavior: "smooth" });
 
           console.log("✅ Agent filters re-applied on navigation");
@@ -219,9 +206,7 @@ const JobListings = () => {
 
     checkForNewFilters();
 
-    // Also listen for custom event when navigating from agent
     const handleAgentNavigation = (event) => {
-      // Ưu tiên sử dụng filters từ event.detail nếu có
       if (event.detail?.filters) {
         console.log(
           "🔄 New agent filters received from event:",
@@ -256,9 +241,7 @@ const JobListings = () => {
         checkForNewFilters();
       }
     };
-
     window.addEventListener("agentNavigation", handleAgentNavigation);
-
     return () => {
       window.removeEventListener("agentNavigation", handleAgentNavigation);
     };
@@ -275,18 +258,10 @@ const JobListings = () => {
       },
       { threshold: 0.1 }
     );
-
     const elements = document.querySelectorAll("[data-animate]");
     elements.forEach((el) => observer.observe(el));
-
     return () => observer.disconnect();
-  }, [
-    /* reattach when list changes */ jobs,
-    currentPage,
-    sortBy,
-    activeFilters,
-    searchData,
-  ]);
+  }, [jobs, currentPage, sortBy, activeFilters, searchData]);
 
   useEffect(() => {
     const fetchSkillList = async () => {
@@ -303,18 +278,13 @@ const JobListings = () => {
   // Hàm lọc công việc
   const filterJobs = () => {
     let filtered = [...jobs];
-
     // Lọc theo từ khóa
     if (searchData.keywords && searchData.keywords.trim()) {
       const keyword = searchData.keywords.toLowerCase();
-      filtered = filtered.filter(
-        (job) => job.title.toLowerCase().includes(keyword)
-        // job.company.toLowerCase().includes(keyword) ||
-        // job.description.toLowerCase().includes(keyword) ||
-        // job.skills.some((skill) => skill.toLowerCase().includes(keyword))
+      filtered = filtered.filter((job) =>
+        job.title.toLowerCase().includes(keyword)
       );
     }
-
     // Lọc theo địa điểm
     if (searchData.location && searchData.location.trim()) {
       const location = searchData.location.toLowerCase();
@@ -322,14 +292,12 @@ const JobListings = () => {
         job.location.toLowerCase().includes(location)
       );
     }
-
     // 🔍 Lọc theo kỹ năng (hỗ trợ nhiều kỹ năng, ví dụ: "React, Node")
     if (searchData.skills && searchData.skills.trim()) {
       const querySkills = searchData.skills
         .split(",")
         .map((s) => s.trim().toLowerCase())
         .filter(Boolean);
-
       filtered = filtered.filter((job) => {
         const jobSkills = (Array.isArray(job.skills) ? job.skills : []).map(
           (x) => (x || "").toLowerCase()
@@ -337,7 +305,6 @@ const JobListings = () => {
         return querySkills.some((q) => jobSkills.some((js) => js.includes(q)));
       });
     }
-
     // Lọc theo loại công việc (từ DB: work_types)
     if (activeFilters.workType.length > 0) {
       filtered = filtered.filter((job) => {
@@ -348,7 +315,6 @@ const JobListings = () => {
         return activeFilters.workType.some((t) => types.includes(t));
       });
     }
-
     // Lọc theo mức lương
     if (activeFilters.salary.length > 0) {
       filtered = filtered.filter((job) => {
@@ -363,7 +329,6 @@ const JobListings = () => {
         });
       });
     }
-
     // Lọc theo kinh nghiệm (experience_years)
     if (activeFilters.experience.length > 0) {
       filtered = filtered.filter((job) => {
@@ -388,7 +353,6 @@ const JobListings = () => {
         });
       });
     }
-
     // Lọc theo ngành nghề (từ DB: industries array)
     if (activeFilters.industry.length > 0) {
       filtered = filtered.filter((job) => {
@@ -396,14 +360,11 @@ const JobListings = () => {
         return activeFilters.industry.some((i) => inds.includes(i));
       });
     }
-
     return filtered;
   };
-
   // Hàm sắp xếp
   const sortJobs = (jobs) => {
     const sorted = [...jobs];
-
     switch (sortBy) {
       case "newest":
         return sorted.sort((a, b) => b.postedDate - a.postedDate);
@@ -480,24 +441,20 @@ const JobListings = () => {
       0
     );
   };
-
   // Format thời gian đăng
   const getTimeAgo = (date) => {
     const now = new Date();
     const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
     if (diff === 0) return "Hôm nay";
     if (diff === 1) return "1 ngày trước";
     if (diff < 7) return `${diff} ngày trước`;
     if (diff < 30) return `${Math.floor(diff / 7)} tuần trước`;
     return `Ngày tạo: ${Math.floor(diff / 30)}  `;
   };
-
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {loading && (
@@ -901,9 +858,7 @@ const JobListings = () => {
                                     "https://placehold.co/200x200?text=No+Logo"
                                   }
                                   alt={job.company}
-                                  // className="w-20 h-20 object-cover rounded-2xl"
                                 />
-                                {/* {job.company.charAt(0)} */}
                               </span>
                             </div>
 

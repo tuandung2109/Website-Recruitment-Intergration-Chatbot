@@ -136,7 +136,29 @@ function CompanyListJobPosting() {
             <p>Trân trọng,<br/>Đội ngũ JobVip</p>
           `,
           };
-
+          const emailRes = await sendEmail(emailData);
+          console.log("emailRes:", emailRes); // 👈 kiểm tra xem có success không
+          if (emailRes?.success) {
+            message.success("✅ Email thông báo đã được gửi cho ứng viên");
+          } else {
+            console.error("SendEmail error:", emailRes);
+            message.warning("⚠️ Cập nhật thành công nhưng gửi email thất bại");
+          }
+        }
+        if (newStatus === "rejected") {
+          const emailData = {
+            to: record.account?.email,
+            subject: `Thông báo! Thân gửi bạn:  ${record.account?.email} .`,
+            html: `
+            <p>Xin chào ${record.account?.email},</p>
+            <p>Công ty <b>${record.job_posting?.company?.name}</b> cảm ơn bạn đã quan tâm đến lời mời hợp tác của chúng tôi trong đợt tuyển dụng vị trí <b>${record.job_posting?.position_name}</b> vừa qua.  Chúng tôi rất tiếc vì hồ sơ ứng tuyển của bạn chưa phù hợp với công ty ở thời điểm hiện tại. 
+            Tuy nhiên, chúng tôi xin phép lưu hồ sơ của bạn cho những đợt tuyển dụng tiếp theo. 
+            Rất mong có thể hợp tác với bạn trong thời gian tới.
+            </p>
+            <p>Bạn vui lòng liên hệ với bộ phận Tuyển dụng qua địa chỉ email này khi cần sự trợ giúp liên quan đến thông tin việc làm từ: <b>${record.job_posting?.company?.name}</b></p>
+            <p>Trân trọng,<br/>Đội ngũ JobVip</p>
+          `,
+          };
           const emailRes = await sendEmail(emailData);
           console.log("emailRes:", emailRes); // 👈 kiểm tra xem có success không
           if (emailRes?.success) {
@@ -272,7 +294,11 @@ function CompanyListJobPosting() {
                 <Button
                   danger
                   onClick={() =>
-                    handleUpdateStatus(record.job_application_id, "rejected")
+                    handleUpdateStatus(
+                      record.job_application_id,
+                      "rejected",
+                      record
+                    )
                   }
                 >
                   Từ chối

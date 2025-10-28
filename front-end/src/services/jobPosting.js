@@ -138,6 +138,7 @@ const listJobPostingById = async (id) => {
       workingTime: j.working_time || "",
       status: j.status || "inactive",
       account: j.account || {},
+      create_at: j.create_at || "",
 
       // 🏢 Thông tin công ty
       company: {

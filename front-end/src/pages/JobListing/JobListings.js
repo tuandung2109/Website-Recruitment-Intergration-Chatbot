@@ -483,8 +483,12 @@ const JobListings = () => {
 
   // Format thời gian đăng
   const getTimeAgo = (date) => {
+    if (!date) return "";
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return "";
+    
     const now = new Date();
-    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
 
     if (diff === 0) return "Hôm nay";
     if (diff === 1) return "1 ngày trước";
@@ -1030,7 +1034,7 @@ const JobListings = () => {
                             </svg>
                           </button>
                           <span className="text-sm text-gray-500 mt-2">
-                            {getTimeAgo(job.postedDate)}
+                            Ngày tạo : {getTimeAgo(job.postedDate)}
                             {job.createdAt}
                           </span>
                         </div>

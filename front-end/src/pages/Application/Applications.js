@@ -54,7 +54,7 @@ const Applications = () => {
           <table className="min-w-full border border-gray-200 rounded-lg">
             <thead className="bg-blue-600 text-white">
               <tr>
-                <th className="py-3 px-4 text-left">Mã đơn</th>
+                <th className="py-3 px-4 text-left">STT</th>
                 <th className="py-3 px-4 text-left">Công việc</th>
                 <th className="py-3 px-4 text-left">CV</th>
                 <th className="py-3 px-4 text-left">Thư ứng tuyển</th>
@@ -63,12 +63,12 @@ const Applications = () => {
               </tr>
             </thead>
             <tbody>
-              {applications.map((app) => (
+              {applications.map((app, index) => (
                 <tr
                   key={app.job_application_id}
                   className="border-b hover:bg-gray-50 transition cursor-pointer"
                 >
-                  <td className="py-2 px-4">{app.job_application_id}</td>
+                  <td className="py-2 px-4">{index + 1}</td>
 
                   <td
                     className="py-2 px-4 text-blue-600 hover:underline"

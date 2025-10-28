@@ -29,7 +29,12 @@ const JobDetail = () => {
 
         const job = job_posting;
 
-        console.log("📦 Chi tiết job chuẩn:", job);
+        // console.log("📦 Chi tiết job chuẩn:", job);
+        // console.log("🔍 Debug created_at:", {
+        //   create_at: job.create_at,
+        //   created_at: job.created_at,
+        //   createdAt: job.createdAt,
+        // });
 
         // ✅ Map dữ liệu giống format bạn muốn
         const mapped = {
@@ -74,7 +79,8 @@ const JobDetail = () => {
               ? `${job.experienceYears} năm`
               : "",
           deadline: job.deadline || "",
-          postedDate: job.created_at ? new Date(job.created_at) : new Date(),
+          // ✅ Sử dụng create_at giống như JobListings
+          postedDate: job.create_at || "",
           requirements: job.requirements || "",
           benefits: job.benefits || "",
         };
@@ -114,13 +120,31 @@ const JobDetail = () => {
   }, [id]);
 
   const getTimeAgo = (date) => {
+    if (!date) return "";
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return "";
+    
     const now = new Date();
-    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
+
     if (diff === 0) return "Hôm nay";
     if (diff === 1) return "1 ngày trước";
     if (diff < 7) return `${diff} ngày trước`;
     if (diff < 30) return `${Math.floor(diff / 7)} tuần trước`;
     return `${Math.floor(diff / 30)} tháng trước`;
+  };
+
+  // Format ngày tháng cụ thể
+  const formatDate = (date) => {
+    if (!date) return "";
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return "";
+    
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   };
 
   const handleApply = () => setOpenApply(true);
@@ -232,7 +256,8 @@ const JobDetail = () => {
                           clipRule="evenodd"
                         />
                       </svg>
-                      {job.type}
+                      {/* {job.type} */}
+                      {formatDate(job.postedDate)}
                     </span>
                   </div>
                   <div className="flex items-center text-green-600 font-semibold text-xl">

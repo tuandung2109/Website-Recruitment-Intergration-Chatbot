@@ -30,4 +30,10 @@ router.post(
   controllerJobsApplication.addApplicationFile
 );
 
+// 📍 Kiểm tra user đã ứng tuyển job này chưa
+router.get(
+  "/checkApplied/:job_posting_id/:account_id",
+  controllerJobsApplication.checkApplied
+);
+
 module.exports = router;

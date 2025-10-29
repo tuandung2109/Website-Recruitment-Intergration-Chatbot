@@ -5,6 +5,7 @@ import { getAgentFilters } from "../../controller/agentController";
 import { listJobsPosting } from "../../services/jobPosting";
 import UseTitle from "../../hooks/useTitle";
 import { listSkills } from "../../services/skill";
+import { checkApplied } from "../../services/jobApplication";
 
 const JobListings = () => {
   UseTitle("JobVip - Việc làm");
@@ -39,6 +40,9 @@ const JobListings = () => {
     workType: [],
     industry: [],
   });
+
+  // 🆕 State lưu trạng thái ứng tuyển của từng job
+  const [appliedJobs, setAppliedJobs] = useState({});
 
   useEffect(() => {
     if (location.state?.searchData) {
@@ -134,6 +138,28 @@ const JobListings = () => {
 
     fetchJobs();
   }, []);
+
+  // 🆕 Kiểm tra trạng thái ứng tuyển cho tất cả jobs
+  useEffect(() => {
+    const checkAllAppliedJobs = async () => {
+      const account_id = localStorage.getItem("account_id");
+      if (!account_id || jobs.length === 0) return;
+
+      const appliedStatus = {};
+      
+      // Kiểm tra từng job (có thể tối ưu bằng cách gọi API hàng loạt nếu backend hỗ trợ)
+      await Promise.all(
+        jobs.map(async (job) => {
+          const result = await checkApplied(job.id, account_id);
+          appliedStatus[job.id] = result.applied;
+        })
+      );
+
+      setAppliedJobs(appliedStatus);
+    };
+
+    checkAllAppliedJobs();
+  }, [jobs]);
 
   // 🤖 Áp dụng agent filters khi có (từ chatbot agent mode)
   useEffect(() => {
@@ -971,9 +997,14 @@ const JobListings = () => {
                         <div className="flex flex-col gap-2 md:items-end">
                           <button
                             onClick={() => navigate(`/job/${job.id}`)}
-                            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap"
+                            disabled={appliedJobs[job.id]}
+                            className={`px-6 py-3 rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform whitespace-nowrap ${
+                              appliedJobs[job.id]
+                                ? "bg-gray-400 text-white cursor-not-allowed"
+                                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:scale-105"
+                            }`}
                           >
-                            Ứng tuyển ngay
+                            {appliedJobs[job.id] ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
                           </button>
                           <button className="text-gray-500 hover:text-blue-600 transition-colors">
                             <svg

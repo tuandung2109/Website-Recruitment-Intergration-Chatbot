@@ -369,6 +369,56 @@ const addApplicationFile = async (req, res) => {
   });
 };
 
+// 📍 Kiểm tra user đã ứng tuyển job này chưa
+const checkApplied = async (req, res) => {
+  try {
+    const { job_posting_id, account_id } = req.params;
+
+    if (!job_posting_id || !account_id) {
+      return res.status(400).json({ 
+        success: false,
+        error: "Thiếu job_posting_id hoặc account_id" 
+      });
+    }
+
+    // Kiểm tra trong bảng job_application
+    const { data, error } = await supabase
+      .from("job_application")
+      .select("job_application_id, status, submitted_at")
+      .eq("job_posting_id", job_posting_id)
+      .eq("account_id", account_id)
+      .single();
+
+    if (error) {
+      // Nếu không tìm thấy (PGRST116) => chưa ứng tuyển
+      if (error.code === "PGRST116") {
+        return res.status(200).json({
+          success: true,
+          applied: false,
+          application: null,
+        });
+      }
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+
+    // Đã ứng tuyển
+    return res.status(200).json({
+      success: true,
+      applied: true,
+      application: data,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi kiểm tra ứng tuyển:", err);
+    return res.status(500).json({ 
+      success: false,
+      error: "Lỗi server" 
+    });
+  }
+};
+
 module.exports = {
   listApplication,
   addApplication,
@@ -378,4 +428,5 @@ module.exports = {
   deleteApplication,
   rejectApplication,
   addApplicationFile,
+  checkApplied,
 };

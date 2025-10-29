@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JobApplicationModal from "../../components/Modal/JobApplicationModal";
 import { listJobPostingById } from "../../services/jobPosting";
+import { checkApplied } from "../../services/jobApplication";
+
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -13,6 +15,10 @@ const JobDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openApply, setOpenApply] = useState(false);
+  
+  // 🆕 State kiểm tra đã ứng tuyển
+  const [hasApplied, setHasApplied] = useState(false);
+  const [checkingApplied, setCheckingApplied] = useState(false);
 
   // Fetch job detail by id
   useEffect(() => {
@@ -112,6 +118,21 @@ const JobDetail = () => {
       }
     }
     fetchDetail();
+  }, [id]);
+
+  // 🆕 Kiểm tra user đã ứng tuyển job này chưa
+  useEffect(() => {
+    const checkUserApplied = async () => {
+      const account_id = localStorage.getItem("account_id");
+      if (!account_id || !id) return;
+
+      setCheckingApplied(true);
+      const result = await checkApplied(id, account_id);
+      setHasApplied(result.applied);
+      setCheckingApplied(false);
+    };
+
+    checkUserApplied();
   }, [id]);
 
   // Scroll to top khi component mount
@@ -448,9 +469,20 @@ const JobDetail = () => {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <button
                   onClick={handleApply}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 mb-3"
+                  disabled={hasApplied || checkingApplied}
+                  className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg mb-3 ${
+                    hasApplied
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : checkingApplied
+                      ? "bg-gray-300 text-gray-600 cursor-wait"
+                      : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:scale-105"
+                  }`}
                 >
-                  Ứng tuyển ngay
+                  {checkingApplied
+                    ? "Đang kiểm tra..."
+                    : hasApplied
+                    ? "Đã ứng tuyển"
+                    : "Ứng tuyển ngay"}
                 </button>
                 <button
                   onClick={() => setIsSaved(!isSaved)}

@@ -4,7 +4,7 @@ import {
   updateAccount,
   changePassword,
 } from "../../services/account";
-import { Spin, message, Modal, Form, Input } from "antd";
+import { Spin, message, Modal, Form, Input, Select, DatePicker } from "antd";
 import { Button } from "antd";
 import { User, CheckCircle, XCircle } from "lucide-react";
 
@@ -66,6 +66,7 @@ function InfoUser() {
       account_id: account.account_id,
       ...values,
     });
+
     if (res.success) {
       message.success("Cập nhật thành công!");
       setAccount({ ...account, ...values });
@@ -94,7 +95,6 @@ function InfoUser() {
       message.error(res.message);
     }
   };
-
   return (
     <div className="max-w-3xl mx-auto mt-10 px-6">
       <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
@@ -121,7 +121,6 @@ function InfoUser() {
             </Button>
           </div>
         </div>
-
         {/* Info Card */}
         <div className="space-y-4 text-gray-700">
           <div className="flex justify-between border-b pb-2">
@@ -135,6 +134,10 @@ function InfoUser() {
           <div className="flex justify-between border-b pb-2">
             <span className="font-medium">Giới tính:</span>
             <span>{account.gender || "Chưa cập nhật"}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-medium">Ngày sinh:</span>
+            <span>{account.date_of_birth || "Chưa cập nhật"}</span>
           </div>
           <div className="flex justify-between border-b pb-2">
             <span className="font-medium">Số điện thoại:</span>
@@ -170,7 +173,6 @@ function InfoUser() {
           </div>
         </div>
       </div>
-
       {/* Modal cập nhật thông tin */}
       <Modal
         open={isEdit}
@@ -186,18 +188,31 @@ function InfoUser() {
           initialValues={{
             gender: account.gender,
             phone_number: account.phone_number,
+            date_of_birth: account.date_of_birth ? account.date_of_birth : null,
           }}
           onFinish={handleUpdate}
         >
           <Form.Item name="gender" label="Giới tính">
-            <Input placeholder="Nam / Nữ / Khác" />
+            <Select placeholder="Chọn giới tính">
+              <Select.Option value="Male">Nam</Select.Option>
+              <Select.Option value="Female">Nữ</Select.Option>
+              <Select.Option value="Other">Khác</Select.Option>
+            </Select>
           </Form.Item>
+
           <Form.Item name="phone_number" label="Số điện thoại">
             <Input placeholder="Nhập số điện thoại" />
           </Form.Item>
+
+          <Form.Item name="date_of_birth" label="Ngày sinh">
+            <DatePicker
+              format="DD/MM/YYYY"
+              className="w-full"
+              placeholder="Chọn ngày sinh"
+            />
+          </Form.Item>
         </Form>
       </Modal>
-
       {/* Modal đổi mật khẩu */}
       <Modal
         open={isChangePw}
@@ -227,5 +242,4 @@ function InfoUser() {
     </div>
   );
 }
-
 export default InfoUser;

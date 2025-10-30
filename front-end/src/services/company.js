@@ -1,4 +1,5 @@
-import { _get, _post } from "../utils/request";
+import { _get, _patch, _post } from "../utils/request";
+import axios from "axios";
 const listCompany = async () => {
   try {
     const res = await _get(`/company/listCompany`);
@@ -69,5 +70,15 @@ const postCompany = async (companyData) => {
     };
   }
 };
+// 📂 /services/company.js
+const updateCompany = async (id, data) => {
+  try {
+    const res = await _patch(`/updateCompany/${id}`, data);
+    return res; // trả về kết quả API
+  } catch (err) {
+    console.error("❌ Lỗi updateCompany:", err);
+    return { success: false, message: err.message };
+  }
+};
 
-export { listCompany, getCompanyById, postCompany };
+export { listCompany, getCompanyById, postCompany, updateCompany };

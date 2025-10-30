@@ -70,9 +70,11 @@ function AdminJobPosting() {
     const res = await listJobPostingById(record.id);
     if (res.success) {
       setSelectedJob(res.job_posting);
+      console.log("res123123:", res);
     } else {
       message.error("Không thể tải thông tin chi tiết");
     }
+    console.log("res123123:", res);
     setModalLoading(false);
   };
 
@@ -167,7 +169,7 @@ function AdminJobPosting() {
             </Divider>
             <Descriptions bordered column={2}>
               <Descriptions.Item label="Vị trí">
-                {selectedJob.position_name}
+                {selectedJob.title}
               </Descriptions.Item>
               <Descriptions.Item label="Công ty">
                 {selectedJob.company?.name}
@@ -179,7 +181,7 @@ function AdminJobPosting() {
                 {selectedJob.deadline}
               </Descriptions.Item>
               <Descriptions.Item label="Kinh nghiệm">
-                {selectedJob.experience_years} năm
+                {selectedJob.experienceYears} năm
               </Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
                 <Tag
@@ -205,26 +207,26 @@ function AdminJobPosting() {
             </Divider>
             <Descriptions bordered column={1}>
               <Descriptions.Item label="Mô tả công việc">
-                {selectedJob.job_description}
+                {selectedJob.description}
               </Descriptions.Item>
               <Descriptions.Item label="Yêu cầu">
                 {selectedJob.requirements}
               </Descriptions.Item>
               <Descriptions.Item label="Địa chỉ">
-                {selectedJob.company?.address?.[0]?.address_detail || "—"}
+                {selectedJob.company.address}
               </Descriptions.Item>
               <Descriptions.Item label="Hình thức làm việc">
                 {selectedJob.work_type?.map((w) => w.work_type_name).join(", ")}
+                {selectedJob.workTypes}
               </Descriptions.Item>
               <Descriptions.Item label="Kỹ năng yêu cầu">
                 {selectedJob.job_posting_skill
                   ?.map((s) => s.skill.skill_name)
                   .join(", ")}
+                {selectedJob.skills}
               </Descriptions.Item>
               <Descriptions.Item label="Ngành nghề">
-                {selectedJob.job_posting_industry
-                  ?.map((i) => i.industry.name)
-                  .join(", ")}
+                {selectedJob.industries}
               </Descriptions.Item>
             </Descriptions>
           </>

@@ -48,13 +48,10 @@ const postInvoice = async ({ password, email }) => {
     };
   }
 };
-
 const createPayment = (account_id, amount) =>
   _post("/invoice/create-qr", { account_id, amount });
-
 // Kiểm tra kết quả thanh toán
 const checkPayment = (query) => _get(`/invoice/check-payment-vnpay?${query}`);
-
 const listInvoice = async () => {
   try {
     const res = await _get(`/invoice/listInvoice`);
@@ -71,7 +68,6 @@ const listInvoice = async () => {
     return { success: false, message: error.message };
   }
 };
-
 const updateInvoiceStatus = async (invoice_id) => {
   try {
     const res = await _patch(`/invoice/updateInvoiceStatus/${invoice_id}`);

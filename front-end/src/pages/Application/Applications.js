@@ -74,8 +74,7 @@ const Applications = () => {
                     className="py-2 px-4 text-blue-600 hover:underline"
                     onClick={() => navigate(`/job/${app.job_posting_id}`)}
                   >
-                    {/* Xem chi tiết công việc #{app.job_posting_id} */}
-                    Xem chi tiết công việc
+                    {app.job_posting.position_name}
                   </td>
 
                   <td className="py-2 px-4 text-blue-500">

@@ -609,7 +609,7 @@ const verifyOtpRegister = async (req, res) => {
   }
 };
 
-const updateAccount = async (req, res) => {
+const updateAccount1 = async (req, res) => {
   try {
     const { account_id, gender, phone_number, date_of_birth, status, amount } =
       req.body;
@@ -627,6 +627,34 @@ const updateAccount = async (req, res) => {
         amount,
         updated_at: new Date(),
       })
+      .eq("account_id", account_id)
+      .select("*");
+    if (error) {
+      console.error("❌ Lỗi Supabase:", error);
+      return res.status(400).json({ error: error.message });
+    }
+    return res.status(200).json({
+      message: "Cập nhật thông tin thành công",
+      account: data[0],
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ error: "Lỗi server" });
+  }
+};
+const updateAccount = async (req, res) => {
+  try {
+    const { account_id, ...fields } = req.body;
+    if (!account_id) {
+      return res.status(400).json({ error: "Thiếu account_id" });
+    }
+    // Xóa các key có giá trị undefined
+    const updateFields = Object.fromEntries(
+      Object.entries(fields).filter(([_, v]) => v !== undefined)
+    );
+    const { data, error } = await supabase
+      .from("account")
+      .update({ ...updateFields, updated_at: new Date() })
       .eq("account_id", account_id)
       .select("*");
     if (error) {

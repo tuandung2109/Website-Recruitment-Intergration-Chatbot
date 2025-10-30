@@ -11,10 +11,7 @@ function Recruiter() {
       key: "sub1",
       label: "Trang chủ",
       icon: <AppstoreOutlined />,
-      children: [
-        { key: "home", label: "Trang chủ" },
-        { key: "6", label: "Đồ thị doanh thu CV online" },
-      ],
+      children: [{ key: "home", label: "Trang chủ" }],
     },
     {
       key: "sub3",
@@ -39,15 +36,6 @@ function Recruiter() {
       label: "Quản lý đơn ứng tuyển",
       icon: <SettingOutlined />,
       children: [{ key: "job_application", label: "Danh sách Đơn ứng tuyển" }],
-    },
-    {
-      key: "sub422",
-      label: "Quản lý công việc",
-      icon: <SettingOutlined />,
-      children: [
-        { key: "jobPosting", label: "Danh sách công việc" },
-        { key: "10", label: "Thêm công việc" },
-      ],
     },
   ];
 

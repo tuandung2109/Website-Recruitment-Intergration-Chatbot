@@ -87,13 +87,13 @@ function InvoicePage() {
     <div style={{ padding: 24 }}>
       <h2>💳 Nạp tiền vào tài khoản</h2>
       <div style={{ marginBottom: 20 }}>
-        <Button type="primary" onClick={() => handleRecharge(10000)}>
+        <Button type="primary" onClick={() => handleRecharge(100)}>
           Nạp 10.000đ
         </Button>
-        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(20000)}>
+        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(200)}>
           Nạp 20.000đ
         </Button>
-        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(50000)}>
+        <Button style={{ marginLeft: 8 }} onClick={() => handleRecharge(500)}>
           Nạp 50.000đ
         </Button>
       </div>

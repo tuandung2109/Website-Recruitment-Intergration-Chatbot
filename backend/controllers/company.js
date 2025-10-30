@@ -111,11 +111,12 @@ const unlockCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-// 📍 Cập nhật thông tin công ty
-const updateCompany = async (req, res) => {
+
+// ✅ Controller cập nhật thông tin công ty
+const updateCompany1 = async (req, res) => {
   try {
     const company_id = req.params.id;
-    const updateData = req.body; // Dữ liệu cần cập nhật (ví dụ: { name, address, phone })
+    const updateData = req.body; // dữ liệu gửi từ frontend
 
     if (!company_id) {
       return res.status(400).json({ error: "Thiếu ID công ty" });
@@ -128,14 +129,86 @@ const updateCompany = async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
+
     return res
       .status(200)
-      .json({ message: "Cập nhật công ty thành công", data });
+      .json({ success: true, message: "Cập nhật công ty thành công", data });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+
+const updateCompany = async (req, res) => {
+  try {
+    const company_id = req.params.id;
+    const updateData = req.body.company; // nhận toàn bộ dữ liệu "company" từ frontend
+
+    if (!company_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu ID công ty" });
+    }
+
+    // 1️⃣ Cập nhật bảng company
+    const companyFields = {
+      name: updateData.name,
+      website: updateData.website,
+      logo_url: updateData.logo_url,
+      size: updateData.size,
+      description: updateData.description,
+      status: updateData.status,
+      deleted: updateData.deleted,
+    };
+
+    const { data: companyUpdated, error: companyError } = await supabase
+      .from("company")
+      .update(companyFields)
+      .eq("company_id", company_id)
+      .select();
+
+    if (companyError)
+      return res
+        .status(400)
+        .json({ success: false, message: companyError.message });
+
+    // 2️⃣ Cập nhật ngành nghề (company_industry)
+    if (updateData.company_industry && updateData.company_industry.length > 0) {
+      // Xóa cũ → Thêm mới (cách đơn giản nhất)
+      await supabase
+        .from("company_industry")
+        .delete()
+        .eq("company_id", company_id);
+
+      const industryData = updateData.company_industry.map((ci) => ({
+        company_id,
+        industry_id: ci.industry.industry_id,
+      }));
+      await supabase.from("company_industry").insert(industryData);
+    }
+
+    // 3️⃣ Cập nhật địa chỉ (address)
+    if (updateData.address && updateData.address.length > 0) {
+      await supabase.from("address").delete().eq("company_id", company_id);
+
+      const addressData = updateData.address.map((a) => ({
+        company_id,
+        address_detail: a.address_detail,
+      }));
+      await supabase.from("address").insert(addressData);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật công ty thành công",
+      company: companyUpdated[0],
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 // 📍 Xóa công ty
 const deleteCompany = async (req, res) => {
   try {

@@ -1,19 +1,43 @@
 import { useEffect, useState } from "react";
-import { Card, Spin, Alert, Tag, Table, Button, message, Modal } from "antd";
+import {
+  Card,
+  Spin,
+  Alert,
+  Tag,
+  Table,
+  Button,
+  message,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  DatePicker,
+  Select,
+} from "antd";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import UseTitle from "../../../hooks/useTitle";
 import { getCompanyById } from "../../../services/company";
-import { listJobsPosting } from "../../../services/jobPosting";
+import {
+  listJobsPosting,
+  updateJobPosting,
+} from "../../../services/jobPosting";
+
 function CompanyJobPosting() {
   UseTitle("JobVip - Company Job Postings");
   const navigate = useNavigate();
+
   const [company, setCompany] = useState(null);
   const [jobPostings, setJobPostings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [selectedJob, setSelectedJob] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModal, setIsViewModal] = useState(false);
+  const [isEditModal, setIsEditModal] = useState(false);
+  const [isLockModal, setIsLockModal] = useState(false);
+
+  const [form] = Form.useForm();
 
   const fetchAll = async () => {
     try {
@@ -24,22 +48,15 @@ function CompanyJobPosting() {
         return;
       }
 
-      // 🔹 Lấy thông tin công ty
       const resCompany = await getCompanyById(userData.company_id);
-      console.log("userData.company_id: ", userData.company_id);
       if (!resCompany.success) {
         setError(resCompany.message || "Không thể tải thông tin công ty");
         setLoading(false);
         return;
       }
       setCompany(resCompany.company);
-      console.log("company123321:", company);
 
-      // 🔹 Lấy toàn bộ jobPosting rồi lọc theo company_id
       const resJobs = await listJobsPosting();
-      console.log("📋 Tất cả job posting111111111:", resJobs);
-      console.log("🏢 company_id hiện tại22222222:", userData.company_id);
-
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
           (job) => Number(job.company.id) === Number(userData.company_id)
@@ -60,14 +77,56 @@ function CompanyJobPosting() {
     fetchAll();
   }, []);
 
+  const handleEdit = (job) => {
+    setSelectedJob(job);
+    form.setFieldsValue({
+      position_name: job.title,
+      job_description: job.description,
+      requirements: job.requirements,
+      salary: job.salary,
+      deadline: job.deadline ? dayjs(job.deadline) : null,
+      working_time: job.workingTime,
+      status: job.status,
+    });
+    setIsEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const values = await form.validateFields();
+
+      const updatedJob = {
+        position_name: values.position_name,
+        job_description: values.job_description,
+        requirements: values.requirements,
+        salary: values.salary,
+        deadline: values.deadline,
+        working_time: values.working_time,
+        status: values.status,
+      };
+
+      const res = await updateJobPosting(
+        selectedJob.job_posting_id,
+        updatedJob
+      );
+
+      if (res.success) {
+        message.success("Cập nhật bài đăng thành công!");
+        setIsEditModal(false);
+        // Gọi lại API hoặc cập nhật state danh sách job
+      } else {
+        message.error(res.message || "Cập nhật thất bại!");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Lỗi khi cập nhật bài đăng!");
+    }
+  };
+
   if (loading) return <Spin tip="Đang tải dữ liệu..." />;
   if (error) return <Alert message={error} type="error" showIcon />;
-
   return (
     <div className="p-6 flex flex-col items-center gap-8">
-      {/* 🏢 Thông tin công ty */}
-
-      {/* 💼 Danh sách bài đăng tuyển */}
       <Card
         style={{
           maxWidth: 1000,
@@ -79,15 +138,14 @@ function CompanyJobPosting() {
       >
         <Table
           dataSource={jobPostings}
-          rowKey="job_posting_id"
+          rowKey="id"
           bordered
           pagination={{ pageSize: 5 }}
           columns={[
             { title: "ID", dataIndex: "id", width: 70 },
             { title: "Vị trí", dataIndex: "title" },
-
             {
-              title: "Mức lương (USD)",
+              title: "Mức lương (VNĐ)",
               dataIndex: "salary",
               render: (salary) => salary?.toLocaleString() || "—",
               width: 120,
@@ -128,12 +186,20 @@ function CompanyJobPosting() {
                 >
                   <Button
                     type="link"
+                    style={{ background: "#8dff91" }}
                     onClick={() => {
                       setSelectedJob(record);
-                      setIsModalOpen(true);
+                      setIsViewModal(true);
                     }}
                   >
                     Xem chi tiết
+                  </Button>
+                  <Button
+                    type="link"
+                    style={{ background: "#eeff8d" }}
+                    onClick={() => handleEdit(record)}
+                  >
+                    Sửa bài đăng
                   </Button>
                   <Button
                     type="primary"
@@ -154,12 +220,14 @@ function CompanyJobPosting() {
             },
           ]}
         />
+
+        {/* Modal Xem chi tiết */}
         <Modal
           title={`📝 Thông tin chi tiết - ${selectedJob?.title || ""}`}
-          open={isModalOpen}
-          onCancel={() => setIsModalOpen(false)}
+          open={isViewModal}
+          onCancel={() => setIsViewModal(false)}
           footer={[
-            <Button key="close" onClick={() => setIsModalOpen(false)}>
+            <Button key="close" onClick={() => setIsViewModal(false)}>
               Đóng
             </Button>,
           ]}
@@ -178,9 +246,7 @@ function CompanyJobPosting() {
               </p>
               <p>
                 <strong>Mức lương:</strong>{" "}
-                {selectedJob.salary
-                  ? selectedJob.salary.toLocaleString() + " USD"
-                  : "—"}
+                {selectedJob.salary?.toLocaleString() || "—"} VNĐ
               </p>
               <p>
                 <strong>Hạn nộp:</strong>{" "}
@@ -189,37 +255,68 @@ function CompanyJobPosting() {
                   : "—"}
               </p>
               <p>
-                <strong>Kỹ năng:</strong>{" "}
-                {selectedJob.skills?.length
-                  ? selectedJob.skills.join(", ")
-                  : "—"}
-              </p>
-              <p>
-                <strong>Hình thức làm việc:</strong>{" "}
-                {selectedJob.workTypes?.length
-                  ? selectedJob.workTypes.join(", ")
-                  : "—"}
-              </p>
-              <p>
-                <strong>Ngành nghề:</strong>{" "}
-                {selectedJob.industries?.length
-                  ? selectedJob.industries.join(", ")
-                  : "—"}
-              </p>
-              <p>
-                <strong>Thời gian làm việc:</strong>{" "}
-                {selectedJob.workingTime || "—"}
-              </p>
-              <p>
-                <strong>Công ty:</strong> {selectedJob.company?.name || "—"}
-              </p>
-              <p>
-                <strong>Địa chỉ:</strong> {selectedJob.company?.address || "—"}
+                <strong>Trạng thái:</strong> {selectedJob.status}
               </p>
             </div>
           ) : (
             <Spin tip="Đang tải..." />
           )}
+        </Modal>
+
+        {/* Modal Sửa bài đăng */}
+        <Modal
+          title={`📝 Sửa bài đăng - ${selectedJob?.title || ""}`}
+          open={isEditModal}
+          onCancel={() => setIsEditModal(false)}
+          onOk={handleUpdate}
+          okText="Lưu thay đổi"
+          cancelText="Hủy"
+          width={700}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              name="position_name"
+              label="Tên vị trí"
+              rules={[{ required: true, message: "Vui lòng nhập tên vị trí" }]}
+            >
+              <Input placeholder="Nhập tên vị trí" />
+            </Form.Item>
+            <Form.Item name="job_description" label="Mô tả công việc">
+              <Input.TextArea rows={3} />
+            </Form.Item>
+            <Form.Item name="requirements" label="Yêu cầu">
+              <Input.TextArea rows={3} />
+            </Form.Item>
+            <Form.Item name="salary" label="Mức lương (VNĐ)">
+              <InputNumber style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item name="deadline" label="Hạn nộp">
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item name="working_time" label="Thời gian làm việc">
+              <Input />
+            </Form.Item>
+            <Form.Item name="status" label="Trạng thái">
+              <Select
+                options={[
+                  { label: "Hoạt động", value: "active" },
+                  { label: "Đã khóa", value: "inactive" },
+                ]}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Modal Khóa bài đăng */}
+        <Modal
+          title={`⚠️ Khóa bài đăng - ${selectedJob?.title || ""}`}
+          open={isLockModal}
+          onCancel={() => setIsLockModal(false)}
+          onOk={() => message.info("Tính năng khóa bài đang được phát triển")}
+          okText="Khóa"
+          cancelText="Hủy"
+        >
+          <p>Bạn có chắc muốn khóa bài đăng này không?</p>
         </Modal>
       </Card>
     </div>

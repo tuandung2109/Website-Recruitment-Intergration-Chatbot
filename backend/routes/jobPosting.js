@@ -13,6 +13,7 @@ router.get(
 router.post("/postJobPosting", controllerJobsPostings.postJobPosting); //Đăng bài
 router.patch("/softJobPosting/:id", controllerJobsPostings.softJobPosting); //Xóa bài đăng
 router.patch("/unlockJobPosting/:id", controllerJobsPostings.unlockJobPosting); //Cập nhật bài đăng
+router.patch("/updateJobPosting/:id", controllerJobsPostings.updateJobPosting); //Cập nhật bài đăng
 
 router.get("/byCompany/:companyId", controllerJobsPostings.listJobsByCompany); // Lấy danh sách job theo công ty
 

@@ -277,7 +277,6 @@ const unlockJobPosting = async (job_posting_id) => {
     return { success: false, message: error.message || "Lỗi" };
   }
 };
-
 const postJobPosting = async (jobs) => {
   try {
     const res = await _post(`/jobPosting/postJobPosting`, jobs);
@@ -303,6 +302,33 @@ const postJobPosting = async (jobs) => {
     };
   }
 };
+const updateJobPosting = async (job_posting_id, jobData) => {
+  try {
+    const res = await _patch(
+      `/jobPosting/updateJobPosting/${job_posting_id}`,
+      jobData
+    );
+    const result = await res.json();
+
+    if (res.ok) {
+      return {
+        success: true,
+        job_posting: result.job_posting,
+        message: result.message || "Cập nhật thành công",
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Cập nhật thất bại",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối máy chủ",
+    };
+  }
+};
 
 export {
   softJobPosting,
@@ -312,4 +338,5 @@ export {
   listJobsByCompany,
   listJobPostingAdmin,
   postJobPosting,
+  updateJobPosting,
 };

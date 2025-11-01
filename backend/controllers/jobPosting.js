@@ -467,7 +467,6 @@ const softJobPosting = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Thiếu ID bài đăng" });
     }
-
     const { error } = await supabase
       .from("job_posting")
       .update({ status: "inactive" })
@@ -476,7 +475,6 @@ const softJobPosting = async (req, res) => {
     if (error) {
       return res.status(500).json({ success: false, message: error.message });
     }
-
     return res.status(200).json({
       success: true,
       message: "Đã khóa bài đăng thành công",
@@ -553,6 +551,51 @@ const listJobsByCompany = async (req, res) => {
   }
 };
 
+const updateJobPosting = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const jobData = req.body.job_posting;
+
+    if (!jobData) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu dữ liệu job_posting" });
+    }
+
+    // ✅ Tìm bản ghi bằng Sequelize
+    const jobPosting = await db.JobPosting.findByPk(id);
+    if (!jobPosting) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy bài đăng" });
+    }
+
+    // ✅ Cập nhật bằng model Sequelize
+    await jobPosting.update({
+      position_name: jobData.position_name,
+      job_description: jobData.job_description,
+      requirements: jobData.requirements,
+      salary: jobData.salary,
+      deadline: jobData.deadline,
+      experience_years: jobData.experience_years,
+      education_level: jobData.education_level,
+      benefits: jobData.benefits,
+      working_time: jobData.working_time,
+      status: jobData.status,
+    });
+
+    // ✅ Trả về kết quả mới
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật thành công",
+      job_posting: jobPosting,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 module.exports = {
   listJobPostings,
   postJobPosting,
@@ -562,4 +605,5 @@ module.exports = {
   listJobPostingsDeleted,
   listJobsByCompany,
   listJobPostingsAdmin,
+  updateJobPosting,
 };

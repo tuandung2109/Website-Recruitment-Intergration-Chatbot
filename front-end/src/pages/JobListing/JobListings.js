@@ -146,7 +146,7 @@ const JobListings = () => {
       if (!account_id || jobs.length === 0) return;
 
       const appliedStatus = {};
-      
+
       // Kiểm tra từng job (có thể tối ưu bằng cách gọi API hàng loạt nếu backend hỗ trợ)
       await Promise.all(
         jobs.map(async (job) => {
@@ -472,7 +472,7 @@ const JobListings = () => {
     if (!date) return "";
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return "";
-    
+
     const now = new Date();
     // const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
@@ -884,7 +884,7 @@ const JobListings = () => {
                             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
                               <span className="text-white font-bold text-xl">
                                 <img
-                                  style={{ border: "1px solid red" }}
+                                  // style={{ border: "1px solid red" }}
                                   src={
                                     job.companyLogo ||
                                     "https://placehold.co/200x200?text=No+Logo"
@@ -1004,7 +1004,9 @@ const JobListings = () => {
                                 : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:scale-105"
                             }`}
                           >
-                            {appliedJobs[job.id] ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
+                            {appliedJobs[job.id]
+                              ? "Đã ứng tuyển"
+                              : "Ứng tuyển ngay"}
                           </button>
                           <button className="text-gray-500 hover:text-blue-600 transition-colors">
                             <svg

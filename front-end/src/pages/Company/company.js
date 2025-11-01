@@ -386,11 +386,11 @@ function Company() {
 
                 {/* Card Body */}
                 <div className="p-6 -mt-4">
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2" title={company.name}>
                     {company.name}
                   </h3>
 
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-3 h-16 mb-4">
+                  <p className="text-sm text-gray-600 mt-2 line-clamp-3 mb-4" title={company.description}>
                     {company.description || "Không có mô tả chi tiết."}
                   </p>
 
@@ -399,8 +399,11 @@ function Company() {
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <span className="text-blue-600 font-bold text-xs">👥</span>
                       </div>
-                      <div>
-                        <span className="font-semibold text-gray-800">Quy mô:</span> {company.size}
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-gray-800">Quy mô:</span>{" "}
+                        <span className="truncate inline-block max-w-full align-bottom" title={company.size}>
+                          {company.size}
+                        </span>
                       </div>
                     </div>
 
@@ -409,9 +412,13 @@ function Company() {
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <span className="text-purple-600 font-bold text-xs">💼</span>
                         </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-gray-800">Ngành:</span>{" "}
-                          <span className="line-clamp-2">{industries.join(", ")}</span>
+                        <div className="flex-1 min-w-0">
+                          <div>
+                            <span className="font-semibold text-gray-800">Ngành:</span>{" "}
+                            <span className="line-clamp-2 inline" title={industries.join(", ")}>
+                              {industries.join(", ")}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -421,9 +428,11 @@ function Company() {
                         <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <span className="text-green-600 font-bold text-xs">📍</span>
                         </div>
-                        <div className="flex-1 line-clamp-2">
-                          <span className="font-semibold text-gray-800">Địa chỉ:</span>{" "}
-                          {addresses.join(" • ")}
+                        <div className="flex-1 min-w-0">
+                          <div className="line-clamp-2" title={addresses.join(" • ")}>
+                            <span className="font-semibold text-gray-800">Địa chỉ:</span>{" "}
+                            {addresses.join(" • ")}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -433,13 +442,14 @@ function Company() {
                         <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <span className="text-orange-600 font-bold text-xs">🌐</span>
                         </div>
-                        <div className="flex-1 truncate">
+                        <div className="flex-1 min-w-0">
                           <span className="font-semibold text-gray-800">Website:</span>{" "}
                           <a
                             href={company.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
+                            className="text-blue-500 hover:underline truncate inline-block max-w-full align-bottom"
+                            title={company.website}
                           >
                             {company.website.replace(/^https?:\/\//, "")}
                           </a>

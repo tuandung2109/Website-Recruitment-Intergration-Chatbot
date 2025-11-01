@@ -8,10 +8,12 @@ export const filterCategories = {
   salary: {
     name: "Mức lương",
     options: [
-      { label: "10-15 triệu", min: 10000, max: 15000 },
-      { label: "15-20 triệu", min: 15000, max: 20000 },
-      { label: "20-30 triệu", min: 20000, max: 30000 },
-      { label: "30+ triệu", min: 30000, max: 100000 }
+      { label: "Dưới 5 triệu", min: 0, max: 5000000 },
+      { label: "5-10 triệu", min: 5000000, max: 10000000 }, 
+      { label: "10-15 triệu", min: 10000000, max: 15000000 },
+      { label: "15-20 triệu", min: 15000000, max: 20000000 },
+      { label: "20-30 triệu", min: 20000000, max: 30000000 },
+      { label: "30+ triệu", min: 30000000, max: 100000000 }
     ]
   },
   experience: {

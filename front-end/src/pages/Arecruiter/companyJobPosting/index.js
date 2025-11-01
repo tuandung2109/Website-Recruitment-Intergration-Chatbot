@@ -106,14 +106,16 @@ function CompanyJobPosting() {
       };
 
       const res = await updateJobPosting(
-        selectedJob.job_posting_id,
+        selectedJob.id || selectedJob.job_posting_id,
         updatedJob
       );
 
       if (res.success) {
         message.success("Cập nhật bài đăng thành công!");
         setIsEditModal(false);
-        // Gọi lại API hoặc cập nhật state danh sách job
+        form.resetFields();
+        // ✅ Reload lại danh sách job
+        await fetchAll();
       } else {
         message.error(res.message || "Cập nhật thất bại!");
       }

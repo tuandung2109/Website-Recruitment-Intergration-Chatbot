@@ -554,41 +554,73 @@ const listJobsByCompany = async (req, res) => {
 const updateJobPosting = async (req, res) => {
   try {
     const id = req.params.id;
-    const jobData = req.body.job_posting;
 
-    if (!jobData) {
+    // ✅ Kiểm tra ID có hợp lệ không
+    if (!id || id === "undefined" || isNaN(parseInt(id))) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID bài đăng không hợp lệ" });
+    }
+
+    // ✅ Nhận dữ liệu từ req.body.job_posting HOẶC req.body trực tiếp
+    const jobData = req.body.job_posting || req.body;
+
+    if (!jobData || Object.keys(jobData).length === 0) {
       return res
         .status(400)
         .json({ success: false, message: "Thiếu dữ liệu job_posting" });
     }
 
-    // ✅ Tìm bản ghi bằng Sequelize
-    const jobPosting = await db.JobPosting.findByPk(id);
-    if (!jobPosting) {
+    console.log("🔍 Đang cập nhật job với ID:", id);
+    console.log("📦 Dữ liệu nhận được:", jobData);
+
+    // ✅ Kiểm tra bài đăng có tồn tại không
+    const { data: existingJob, error: fetchError } = await supabase
+      .from("job_posting")
+      .select("job_posting_id")
+      .eq("job_posting_id", parseInt(id))
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("❌ Lỗi khi kiểm tra job:", fetchError);
+      return res.status(400).json({ success: false, message: fetchError.message });
+    }
+
+    if (!existingJob) {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy bài đăng" });
     }
 
-    // ✅ Cập nhật bằng model Sequelize
-    await jobPosting.update({
-      position_name: jobData.position_name,
-      job_description: jobData.job_description,
-      requirements: jobData.requirements,
-      salary: jobData.salary,
-      deadline: jobData.deadline,
-      experience_years: jobData.experience_years,
-      education_level: jobData.education_level,
-      benefits: jobData.benefits,
-      working_time: jobData.working_time,
-      status: jobData.status,
-    });
+    // ✅ Cập nhật bằng Supabase
+    const { data: updatedJob, error: updateError } = await supabase
+      .from("job_posting")
+      .update({
+        position_name: jobData.position_name,
+        job_description: jobData.job_description,
+        requirements: jobData.requirements,
+        salary: jobData.salary,
+        deadline: jobData.deadline,
+        experience_years: jobData.experience_years,
+        education_level: jobData.education_level,
+        benefits: jobData.benefits,
+        working_time: jobData.working_time,
+        status: jobData.status,
+      })
+      .eq("job_posting_id", parseInt(id))
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("❌ Lỗi khi cập nhật:", updateError);
+      return res.status(400).json({ success: false, message: updateError.message });
+    }
 
     // ✅ Trả về kết quả mới
     return res.status(200).json({
       success: true,
       message: "Cập nhật thành công",
-      job_posting: jobPosting,
+      job_posting: updatedJob,
     });
   } catch (err) {
     console.error("❌ Lỗi server:", err);

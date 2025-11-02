@@ -276,6 +276,8 @@ const Chatbot = () => {
       .replace(/\*/g, "")
       // Remove heading markdown (# text)
       .replace(/^#+\s+/gm, "")
+      // Add line break after sentences ending with period (except if followed by newline)
+      .replace(/\.(\s)(?=[A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴĐ0-9🔍📊✅❌🎯👋💼🌟⚡])/g, ".\n\n$1")
       // Clean up extra spaces
       .trim();
   };
@@ -853,7 +855,7 @@ const Chatbot = () => {
                         : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
                     }`}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <p className="text-sm whitespace-pre-line">{message.text}</p>
                     <p
                       className={`text-xs mt-1 ${
                         message.sender === "user"

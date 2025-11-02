@@ -92,10 +92,27 @@ class AgentKatCoder(BaseAI):
                 filter_query={"id": id}
             )
 
+            # Clean markdown code blocks
             cleaned_output = re.sub(r"```(?:json)?", "", evaluation).strip()
-
+            
+            # Try to extract JSON object from the response
+            # Look for the first { and last }
+            json_start = cleaned_output.find('{')
+            json_end = cleaned_output.rfind('}')
+            
+            if json_start != -1 and json_end != -1:
+                json_str = cleaned_output[json_start:json_end + 1]
+            else:
+                json_str = cleaned_output
+            
             # Parse thành JSON thật
-            data = json.loads(cleaned_output)
+            try:
+                data = json.loads(json_str)
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON parse error: {str(e)}")
+                logging.error(f"Cleaned output: {cleaned_output[:500]}...")
+                logging.error(f"Attempted JSON: {json_str[:500]}...")
+                raise
             
             mongo_client.create_document(
                 "recruitment website intergrate ai",
@@ -301,23 +318,25 @@ class AgentKatCoder(BaseAI):
                 }
                 return result
         except ConnectionError as e:
-            error_msg = f"Cannot connect to Ollama server. Please ensure Ollama is running at {self.client.base_url}"
-            logging.error(f"{error_msg}: {str(e)}")
+            error_msg = f"Cannot connect to AI server. Please check your connection: {str(e)}"
+            logging.error(f"{error_msg}")
             return error_msg
         except TimeoutError as e:
-            error_msg = f"Connection to Ollama server timed out. Please check your network and Ollama service."
+            error_msg = f"Connection to AI server timed out. Please check your network."
             logging.error(f"{error_msg}: {str(e)}")
             return error_msg
         except Exception as e:
-            error_msg = f"Error communicating with Ollama: {str(e)}"
+            error_msg = f"Error processing request: {str(e)}"
             logging.error(error_msg)
+            import traceback
+            logging.error(traceback.format_exc())
             return error_msg
 
 
     def chat(self, message: str, include_history: bool = True) -> str:
         self.add_user_message(message)
         
-        # Prepare messages for Ollama API
+        # Prepare messages for API
         if include_history:
             messages = self.conversation_history.copy()
         else:
@@ -389,13 +408,17 @@ class AgentKatCoder(BaseAI):
                 self.add_assistant_message(self._strip_think(assistant_response))
                 return assistant_response
             
-            # Default fallback
-            assistant_response = self._strip_think(self.client.generate_content(messages))
+            # Default fallback - use general conversation
+            fallback_prompt = self.prompt_config.get_prompt("intent_chitchat", user_input=summarise_convervation)
+            assistant_response = self._strip_think(self.generate_content([{"role": "user", "content": fallback_prompt}]))
             self.add_assistant_message(assistant_response)
             return assistant_response
             
         except Exception as e:
-            error_msg = f"Error communicating with Ollama: {str(e)}"
+            error_msg = f"Error processing chat request: {str(e)}"
+            logging.error(error_msg)
+            import traceback
+            logging.error(traceback.format_exc())
             self.add_assistant_message(error_msg)
             return error_msg
         

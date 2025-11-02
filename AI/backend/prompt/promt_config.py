@@ -93,87 +93,92 @@ CHỈ TRẢ VỀ JSON, KHÔNG VIẾT THÊM BẤT KỲ TEXT NÀO KHÁC"""
           ),
             "evaluate_jd": (
               """
-              Bạn là 1 chuyên gia phân tích và đánh giá mô tả công việc (JD) trong lĩnh vực tuyển dụng IT.
-              Hãy trả về **JSON hợp lệ** với format:
-              Ví dụ:
-              OUTPUT:
-              {{
-      overallScore: 78,
-      scores: {{
-        clarity: 85,
-        completeness: 75,
-        attractiveness: 70,
-        seo: 80,
-        inclusivity: 75
-      }},
-      strengths: [
-        {{
-          category: "Mô tả công việc",
-          point: "Mô tả công việc rõ ràng, chi tiết về trách nhiệm và nhiệm vụ",
-          icon: "✓"
-        }},
-        {{
-          category: "Thông tin lương",
-          point: "Đã công khai mức lương, tăng tính minh bạch và thu hút ứng viên",
-          icon: "✓"
-        }},
-        {{
-          category: "Kỹ năng yêu cầu",
-          point: "Liệt kê đầy đủ các kỹ năng cần thiết, giúp ứng viên tự đánh giá",
-          icon: "✓"
-        }}
-      ],
-      improvements: [
-        {{
-          category: "Tiêu đề",
-          issue: "Tiêu đề có thể hấp dẫn hơn",
-          suggestion: "Thêm cụm từ thu hút như 'Senior', 'Remote-friendly', hoặc đặc điểm nổi bật của vị trí",
-          priority: "medium",
-          example: `"${{job?.title}}" → "Senior ${{job?.title}} - Remote Flexible"`
-        }},
-        {{
-          category: "Mô tả công ty",
-          issue: "Thiếu thông tin về văn hóa công ty và môi trường làm việc",
-          suggestion: "Bổ sung 2-3 câu về văn hóa công ty, giá trị cốt lõi, hoặc những điểm đặc biệt",
-          priority: "high",
-          example: "Thêm: 'Chúng tôi tạo môi trường sáng tạo, khuyến khích đổi mới và học hỏi liên tục'"
-        }},
-        {{
-          category: "Quyền lợi",
-          issue: "Quyền lợi được mô tả chung chung",
-          suggestion: "Cụ thể hóa các quyền lợi với con số và chi tiết",
-          priority: "high",
-          example: "Thay vì 'Thưởng hấp dẫn' → 'Thưởng lên đến 2-3 tháng lương/năm theo KPI'"
-        }},
-        {{
-          category: "Từ khóa SEO",
-          issue: "Thiếu từ khóa phổ biến trong ngành",
-          suggestion: "Thêm các từ khóa như 'work-life balance', 'career growth', 'modern tech stack'",
-          priority: "medium",
-          example: "Bổ sung vào phần benefits hoặc description"
-        }},
-        {{
-          category: "Call-to-Action",
-          issue: "Không có lời kêu gọi hành động mạnh mẽ",
-          suggestion: "Thêm câu kết thúc động viên ứng viên nộp hồ sơ",
-          priority: "low",
-          example: "Thêm: 'Đừng bỏ lỡ cơ hội gia nhập đội ngũ tài năng của chúng tôi. Ứng tuyển ngay hôm nay!'"
-        }}
-      ],
-      keywordAnalysis: {{
-        missing: ["remote", "flexible", "growth opportunity", "modern"],
-        overused: ["công việc", "yêu cầu"],
-        recommended: ["career development", "team culture", "innovation"]
-      }},
-      competitorComparison: {{
-        betterThan: 65,
-        avgSalary: "Cao hơn 15% so với thị trường",
-        responseRate: "Dự đoán: 8-12 ứng viên phù hợp trong 7 ngày đầu"
-      }}
+Bạn là 1 chuyên gia phân tích và đánh giá mô tả công việc (JD) trong lĩnh vực tuyển dụng IT.
+
+**YÊU CẦU QUAN TRỌNG:** Trả về CHÍNH XÁC JSON hợp lệ, KHÔNG có markdown, KHÔNG có text giải thích.
+
+**FORMAT OUTPUT (JSON thuần túy):**
+```json
+{{
+  "overallScore": 78,
+  "scores": {{
+    "clarity": 85,
+    "completeness": 75,
+    "attractiveness": 70,
+    "seo": 80,
+    "inclusivity": 75
+  }},
+  "strengths": [
+    {{
+      "category": "Mô tả công việc",
+      "point": "Mô tả công việc rõ ràng, chi tiết về trách nhiệm và nhiệm vụ",
+      "icon": "✓"
+    }},
+    {{
+      "category": "Thông tin lương",
+      "point": "Đã công khai mức lương, tăng tính minh bạch và thu hút ứng viên",
+      "icon": "✓"
+    }},
+    {{
+      "category": "Kỹ năng yêu cầu",
+      "point": "Liệt kê đầy đủ các kỹ năng cần thiết, giúp ứng viên tự đánh giá",
+      "icon": "✓"
     }}
-    
-    INPUT: "{user_input}"
-              
+  ],
+  "improvements": [
+    {{
+      "category": "Tiêu đề",
+      "issue": "Tiêu đề có thể hấp dẫn hơn",
+      "suggestion": "Thêm cụm từ thu hút như 'Senior', 'Remote-friendly', hoặc đặc điểm nổi bật của vị trí",
+      "priority": "medium",
+      "example": "Ví dụ cải thiện tiêu đề"
+    }},
+    {{
+      "category": "Mô tả công ty",
+      "issue": "Thiếu thông tin về văn hóa công ty và môi trường làm việc",
+      "suggestion": "Bổ sung 2-3 câu về văn hóa công ty, giá trị cốt lõi, hoặc những điểm đặc biệt",
+      "priority": "high",
+      "example": "Thêm: 'Chúng tôi tạo môi trường sáng tạo, khuyến khích đổi mới và học hỏi liên tục'"
+    }},
+    {{
+      "category": "Quyền lợi",
+      "issue": "Quyền lợi được mô tả chung chung",
+      "suggestion": "Cụ thể hóa các quyền lợi với con số và chi tiết",
+      "priority": "high",
+      "example": "Thay vì 'Thưởng hấp dẫn' → 'Thưởng lên đến 2-3 tháng lương/năm theo KPI'"
+    }},
+    {{
+      "category": "Từ khóa SEO",
+      "issue": "Thiếu từ khóa phổ biến trong ngành",
+      "suggestion": "Thêm các từ khóa như 'work-life balance', 'career growth', 'modern tech stack'",
+      "priority": "medium",
+      "example": "Bổ sung vào phần benefits hoặc description"
+    }},
+    {{
+      "category": "Call-to-Action",
+      "issue": "Không có lời kêu gọi hành động mạnh mẽ",
+      "suggestion": "Thêm câu kết thúc động viên ứng viên nộp hồ sơ",
+      "priority": "low",
+      "example": "Thêm: 'Đừng bỏ lỡ cơ hội gia nhập đội ngũ tài năng của chúng tôi. Ứng tuyển ngay hôm nay!'"
+    }}
+  ],
+  "keywordAnalysis": {{
+    "missing": ["remote", "flexible", "growth opportunity", "modern"],
+    "overused": ["công việc", "yêu cầu"],
+    "recommended": ["career development", "team culture", "innovation"]
+  }},
+  "competitorComparison": {{
+    "betterThan": 65,
+    "avgSalary": "Cao hơn 15% so với thị trường",
+    "responseRate": "Dự đoán: 8-12 ứng viên phù hợp trong 7 ngày đầu"
+  }}
+}}
+```
+
+**INPUT JOB DESCRIPTION:**
+{user_input}
+
+**CHỈ TRẢ VỀ JSON OBJECT, KHÔNG VIẾT THÊM BẤT KỲ TEXT NÀO KHÁC.**
               """
             ),
             

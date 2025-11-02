@@ -540,6 +540,7 @@ Trả lời:
             {data}
 
             Người dùng: "{user_input}"
+            format gọn gàng, dễ nhìn. Xuống dòng hợp lý. 
             Nếu bạn muốn biết thêm thông tin về công ty khác hoặc tìm kiếm theo ngành nghề, hãy cho tôi biết!
             """),
           "classification_agent_intent": (

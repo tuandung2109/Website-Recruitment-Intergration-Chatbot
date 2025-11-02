@@ -7,64 +7,102 @@ class Reflection:
         self.llm = llm
         self.max_items = max_items
 
-    def _collect_user_messages(self, chat_history):
-        """Lấy và ghép nội dung chỉ từ message của người dùng."""
+    def _collect_conversation(self, chat_history):
+        """Lấy toàn bộ hội thoại (cả user và bot) để có đầy đủ ngữ cảnh."""
         if len(chat_history) > self.max_items:
             chat_history = chat_history[-self.max_items:]
 
-        user_texts = []
+        conversation_text = []
         for entry in chat_history:
-            if entry.get("role") == "user":
-                text = ""
-                if entry.get("parts"):
-                    text = " ".join(part.get("text", "") for part in entry["parts"])
-                elif entry.get("content"):
-                    text = entry.get("content", "")
-                if text.strip():
-                    user_texts.append(text.strip())
-        return user_texts
+            role = entry.get("role", "")
+            text = ""
+            
+            # Lấy nội dung từ các format khác nhau
+            if entry.get("parts"):
+                text = " ".join(part.get("text", "") for part in entry["parts"])
+            elif entry.get("content"):
+                text = entry.get("content", "")
+            
+            if text.strip():
+                # Thêm prefix để phân biệt vai trò
+                if role == "user":
+                    conversation_text.append(f"👤 Người dùng: {text.strip()}")
+                elif role in ["assistant", "model", "bot"]:
+                    conversation_text.append(f"🤖 Bot: {text.strip()}")
+                else:
+                    conversation_text.append(f"{role}: {text.strip()}")
+        
+        return conversation_text
 
     def __call__(self, chatHistory, lastItemsConsidereds=None):
         if lastItemsConsidereds is None:
             lastItemsConsidereds = self.max_items
 
-        user_messages = self._collect_user_messages(chatHistory)
-        if not user_messages:
-            return "Không có tin nhắn của người dùng để tóm tắt."
+        conversation = self._collect_conversation(chatHistory)
+        if not conversation:
+            return "Không có hội thoại để phân tích."
 
-        # Nếu chỉ có 1 tin nhắn => lấy luôn
-        if len(user_messages) == 1:
-            return user_messages[-1]
+        # Nếu chỉ có 1 tin nhắn => lấy luôn (bỏ prefix)
+        if len(conversation) == 1:
+            msg = conversation[-1]
+            # Bỏ prefix "👤 Người dùng: " hoặc "🤖 Bot: "
+            if ":" in msg:
+                return msg.split(":", 1)[1].strip()
+            return msg
         
-        # Nếu có nhiều tin nhắn, ghép và tóm tắt thông minh
-        joined_messages = "\n---\n".join(user_messages)
+        # Nếu có nhiều tin nhắn, ghép toàn bộ hội thoại
+        joined_conversation = "\n".join(conversation)
 
-        # Prompt cải tiến để tạo summary thông minh hơn
+        print("Full conversation for reflection:")
+        print(joined_conversation)
+
+        # Prompt mới: Phân tích toàn bộ hội thoại để hiểu ngữ cảnh
         summarize_prompt = f"""
-Bạn là trợ lý phân tích ý định người dùng. Dưới đây là các tin nhắn của người dùng:
+Bạn là trợ lý phân tích hội thoại. Dưới đây là toàn bộ cuộc hội thoại:
 
-{joined_messages}
+{joined_conversation}
 
-Hãy phân tích và xác định **MỤC ĐÍCH CHÍNH** của người dùng:
+🎯 NHIỆM VỤ:
 
-🎯 NGUYÊN TẮC PHÂN TÍCH:
-1. Nếu có nhiều câu hỏi liên quan → Tìm câu hỏi CỐT LÕI nhất
-2. Nếu câu hỏi đầu là ĐIỀU KIỆN để hỏi câu sau → Chỉ lấy câu SAU
-3. Nếu hỏi về thông tin rồi hỏi chi tiết → Ưu tiên CHI TIẾT cụ thể
-4. Tập trung vào HÀNH ĐỘNG hoặc THÔNG TIN người dùng thực sự cần
+1. **ĐỌC TOÀN BỘ HỘI THOẠI** để hiểu ngữ cảnh đầy đủ
+
+2. **PHÂN TÍCH** câu hỏi cuối cùng của người dùng:
+
+   **NẾU câu cuối LIÊN QUAN đến hội thoại trước** (cùng chủ đề, hỏi thêm chi tiết, bổ sung):
+   → Tạo một câu hỏi ĐẦY ĐỦ kết hợp TẤT CẢ thông tin từ hội thoại
+   → Bao gồm: tất cả tên công ty, yêu cầu, chi tiết đã được nhắc đến
+   
+   **NẾU câu cuối KHÔNG LIÊN QUAN** (chủ đề hoàn toàn mới):
+   → CHỈ trả về câu hỏi cuối cùng
 
 📝 VÍ DỤ:
-- "Tìm công ty X, công ty đó tuyển gì?" → "Công ty X đang tuyển dụng vị trí gì?"
-- "Có việc làm nào phù hợp không?" → "Tìm việc làm phù hợp"
-- "Cho tôi biết về công ty A, lương bao nhiêu?" → "Mức lương tại công ty A"
 
-✅ YÊU CẦU OUTPUT:
-- Một câu ngắn gọn, đi thẳng vào ý chính
-- Giữ nguyên tên riêng, từ khóa quan trọng
-- Loại bỏ thông tin phụ, chỉ giữ mục đích chính
-- Trả về trực tiếp, không giải thích
+**Ví dụ 1 - LIÊN QUAN** (lấy tất cả):
+```
+👤 Người dùng: tìm thông tin công ty TechCorp
+🤖 Bot: Đây là thông tin về TechCorp...
+👤 Người dùng: tìm thông tin công ty Novasoft
+🤖 Bot: Đây là thông tin về Novasoft...
+👤 Người dùng: tìm thông tin công ty MediCare
+```
+→ Output: "Tìm thông tin chi tiết về các công ty: TechCorp, Novasoft và MediCare"
 
-Tóm tắt thông minh:""".strip()
+**Ví dụ 2 - KHÔNG LIÊN QUAN**:
+```
+👤 Người dùng: tìm thông tin công ty TechCorp
+🤖 Bot: Đây là thông tin...
+👤 Người dùng: thời tiết hôm nay thế nào?
+```
+→ Output: "Thời tiết hôm nay thế nào?"
+
+✅ QUY TẮC:
+- GIỮ NGUYÊN tất cả tên riêng, từ khóa quan trọng
+- Nếu liên quan: Kết hợp TẤT CẢ thông tin đã hỏi
+- Nếu không liên quan: Chỉ câu cuối
+- Trả về MỘT câu duy nhất, rõ ràng, đầy đủ
+- KHÔNG giải thích, KHÔNG thêm text phụ
+
+Câu hỏi tổng hợp:""".strip()
 
         summary = self.llm.generate_content([{"role": "user", "content": summarize_prompt}])
 

@@ -37,3 +37,17 @@ input[list]::-webkit-calendar-picker-indicator {
   display: none !important;
   -webkit-appearance: none !important;
 }
+
+/* Shimmer animation for context progress bar */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}

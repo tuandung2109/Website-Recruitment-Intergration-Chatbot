@@ -27,6 +27,32 @@ const listCompany = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+const listCompanyAdmin = async (req, res) => {
+  try {
+    const { data: company, error } = await supabase
+      .from("company")
+      .select(
+        `*,
+      company_industry(
+        industry:industry_id(
+          industry_id,
+          name
+        )
+      ),
+      address(
+        address_id,
+        address_detail 
+      )
+      `
+      )
+      .eq("deleted", false);
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ company });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ error: "Lỗi server" });
+  }
+};
 // 📍 Lấy thông tin công ty theo ID
 const listCompanyId = async (req, res) => {
   try {
@@ -65,19 +91,15 @@ const listCompanyId = async (req, res) => {
 const lockCompany = async (req, res) => {
   try {
     const company_id = req.params.id;
-
     if (!company_id) {
       return res.status(400).json({ error: "Thiếu ID công ty" });
     }
-
     // Cập nhật status = 'inactive'
     const { data, error } = await supabase
       .from("company")
       .update({ status: "inactive" })
       .eq("company_id", company_id);
-
     if (error) return res.status(400).json({ error: error.message });
-
     return res
       .status(200)
       .json({ message: "Đã khóa công ty (inactive)", data });
@@ -90,49 +112,18 @@ const lockCompany = async (req, res) => {
 const unlockCompany = async (req, res) => {
   try {
     const company_id = req.params.id;
-
     if (!company_id) {
       return res.status(400).json({ error: "Thiếu ID công ty" });
     }
-
     // Cập nhật status = 'active'
     const { data, error } = await supabase
       .from("company")
       .update({ status: "active" })
       .eq("company_id", company_id);
-
     if (error) return res.status(400).json({ error: error.message });
-
     return res
       .status(200)
       .json({ message: "Đã mở khóa công ty (active)", data });
-  } catch (err) {
-    console.error("❌ Lỗi server:", err);
-    return res.status(500).json({ error: "Lỗi server" });
-  }
-};
-
-// ✅ Controller cập nhật thông tin công ty
-const updateCompany1 = async (req, res) => {
-  try {
-    const company_id = req.params.id;
-    const updateData = req.body; // dữ liệu gửi từ frontend
-
-    if (!company_id) {
-      return res.status(400).json({ error: "Thiếu ID công ty" });
-    }
-
-    const { data, error } = await supabase
-      .from("company")
-      .update(updateData)
-      .eq("company_id", company_id)
-      .select();
-
-    if (error) return res.status(400).json({ error: error.message });
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Cập nhật công ty thành công", data });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
@@ -149,7 +140,6 @@ const updateCompany = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Thiếu ID công ty" });
     }
-
     // 1️⃣ Cập nhật bảng company
     const companyFields = {
       name: updateData.name,
@@ -318,4 +308,5 @@ module.exports = {
   updateCompany,
   unlockCompany,
   postCompany,
+  listCompanyAdmin,
 };

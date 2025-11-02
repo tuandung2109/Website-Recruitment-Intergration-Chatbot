@@ -426,7 +426,7 @@ function CompanyListJobPosting() {
 
             <Descriptions.Item label="Mức lương">
               {selectedApp.job_posting?.salary
-                ? `${selectedApp.job_posting.salary.toLocaleString()} USD`
+                ? `${selectedApp.job_posting.salary.toLocaleString()} VND`
                 : "Không rõ"}
             </Descriptions.Item>
 

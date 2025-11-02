@@ -3,6 +3,8 @@ const router = express.Router();
 const controllerCompany = require("../controllers/company.js");
 
 router.get("/listCompany", controllerCompany.listCompany);
+router.get("/listCompanyAdmin", controllerCompany.listCompanyAdmin);
+
 router.get("/listCompany/:id", controllerCompany.listCompanyId);
 router.get("/listCompanyId/:id", controllerCompany.listCompanyId);
 router.post("/postCompany", controllerCompany.postCompany);

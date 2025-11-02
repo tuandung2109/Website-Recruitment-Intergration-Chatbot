@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, LogOut, FileText, ChevronDown, Bell } from "lucide-react";
+import { listJobApplication } from "../services/jobApplication";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,6 +10,47 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [lastSeenIds, setLastSeenIds] = useState([]); // lưu id đã xem
+
+  useEffect(() => {
+    if (!user?.account_id) return;
+
+    const fetchNotifications = async () => {
+      const res = await listJobApplication();
+      if (res.success) {
+        const userApps = res.jobApplications.filter(
+          (app) => app.account_id === user.account_id
+        );
+
+        // lấy những ứng dụng có id chưa được xem
+        const newOnes = userApps.filter(
+          (app) => !lastSeenIds.includes(app.job_application_id)
+        );
+
+        setNotifications(userApps);
+
+        // nếu có đơn mới hoặc cập nhật mới => tăng số chưa đọc
+        if (newOnes.length > 0) {
+          setUnreadCount(newOnes.length);
+        }
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000); // 15s refresh
+
+    return () => clearInterval(interval);
+  }, [user, lastSeenIds]);
+  const handleNotifClick = () => {
+    setIsNotifOpen(!isNotifOpen);
+    setUnreadCount(0);
+
+    // đánh dấu các id đã xem
+    setLastSeenIds(notifications.map((n) => n.job_application_id));
+  };
 
   const handleSearch = (e) => {
     if (e.key === "Enter" || e.type === "click") {
@@ -154,31 +196,86 @@ const Header = () => {
                 {/* Nút thông báo */}
                 <div className="relative">
                   <button
-                    onClick={toggleNotif}
-                    className="text-white hover:text-blue-200 relative p-2 rounded-full transition-colors"
+                    onClick={handleNotifClick}
+                    className={`relative p-2 text-white hover:text-blue-200 transition-all ${
+                      // unreadCount > 0 ? "animate-gentle-bounce" : ""
+                      unreadCount > 0
+                        ? "animate-bounce [animation-duration:3s]"
+                        : ""
+                    }`}
                   >
                     <Bell className="h-6 w-6" />
-                    {/* Dấu chấm đỏ hiển thị số lượng thông báo */}
-                    <span className="absolute top-1 right-1 block h-2 w-2 bg-red-500 rounded-full"></span>
+
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
                   </button>
 
                   {/* Dropdown thông báo */}
                   {isNotifOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
                         Thông báo
                       </div>
+
                       <div className="max-h-60 overflow-y-auto">
-                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                          🎉 Bạn đã ứng tuyển thành công vào vị trí “Kế toán
-                          viên”.
-                        </div>
-                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                          💼 Hồ sơ công ty bạn được phê duyệt!
-                        </div>
-                        <div className="px-4 py-2 text-sm text-gray-500 italic text-center">
-                          Không có thêm thông báo
-                        </div>
+                        {notifications.length > 0 ? (
+                          notifications.map((app) => {
+                            let message = "";
+                            let color = "";
+
+                            switch (app.status) {
+                              case "accept":
+                                message = `🎉 Đơn ứng tuyển vào “${app.job_posting.position_name}” đã được duyệt!`;
+                                color = "text-green-600";
+                                break;
+                              case "reject":
+                                message = `❌ Đơn ứng tuyển vào “${app.job_posting.position_name}” đã bị từ chối.`;
+                                color = "text-red-600";
+                                break;
+                              case "pending":
+                                message = `⏳ Đơn ứng tuyển vào “${app.job_posting.position_name}” đang chờ duyệt.`;
+                                color = "text-yellow-600";
+                                break;
+                              default:
+                                message = `📄 Trạng thái đơn ứng tuyển chưa xác định.`;
+                            }
+
+                            return (
+                              <div
+                                key={app.job_application_id}
+                                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${color}`}
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <img
+                                    src={
+                                      app.job_posting?.company?.logo_url ||
+                                      "https://placehold.co/40x40?text=No+Logo"
+                                    }
+                                    alt={
+                                      app.job_posting?.company?.name ||
+                                      "Company"
+                                    }
+                                    className="w-8 h-8 rounded-full border"
+                                  />
+                                  <div>
+                                    <div className="font-medium">
+                                      {app.job_posting?.company?.name ||
+                                        "Công ty"}
+                                    </div>
+                                    <div>{message}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-gray-500 italic text-center">
+                            Không có thông báo mới
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

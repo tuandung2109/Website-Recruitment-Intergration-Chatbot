@@ -1,8 +1,31 @@
 import { _get, _patch, _post } from "../utils/request";
-import axios from "axios";
+
 const listCompany = async () => {
   try {
     const res = await _get(`/company/listCompany`);
+    const result = await res.json();
+
+    if (res.ok && result.company) {
+      return {
+        success: true,
+        companys: result.company, // ✅ trả về companys
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Không thể lấy danh sách công ty",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối đến máy chủ",
+    };
+  }
+};
+const listCompanyAdmin = async () => {
+  try {
+    const res = await _get(`/company/listCompanyAdmin`);
     const result = await res.json();
 
     if (res.ok && result.company) {
@@ -80,5 +103,45 @@ const updateCompany = async (id, data) => {
     return { success: false, message: err.message };
   }
 };
+const lockCompany = async (id) => {
+  try {
+    const res = await _patch(`/company/lockCompany/${id}`);
+    const result = await res.json();
+    if (res.ok) {
+      return { success: true, message: result.message };
+    } else {
+      return {
+        success: false,
+        message: result.error || "Khóa công ty thất bại",
+      };
+    }
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
+  }
+};
 
-export { listCompany, getCompanyById, postCompany, updateCompany };
+const unlockCompany = async (id) => {
+  try {
+    const res = await _patch(`/company/unlockCompany/${id}`);
+    const result = await res.json();
+    if (res.ok) {
+      return { success: true, message: result.message };
+    } else {
+      return {
+        success: false,
+        message: result.error || "Mở khóa công ty thất bại",
+      };
+    }
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
+  }
+};
+export {
+  listCompany,
+  getCompanyById,
+  postCompany,
+  updateCompany,
+  unlockCompany,
+  lockCompany,
+  listCompanyAdmin,
+};

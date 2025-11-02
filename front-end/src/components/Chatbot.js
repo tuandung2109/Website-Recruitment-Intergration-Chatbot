@@ -643,19 +643,72 @@ const Chatbot = () => {
                   />
                 </svg>
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold">Trợ lý AI Tuyển dụng</h3>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        isConnected ? "bg-green-400" : "bg-red-400"
+                      }`}
+                    />
+                    <p className="text-xs text-blue-100">
+                      {isConnected
+                        ? "AI đã sẵn sàng"
+                        : "Chế độ cơ bản"}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <svg
+                      className={`w-3.5 h-3.5 ${
+                        contextTokens / MAX_CONTEXT_TOKENS > 0.8
+                          ? "text-red-300"
+                          : contextTokens / MAX_CONTEXT_TOKENS > 0.6
+                          ? "text-yellow-300"
+                          : "text-green-300"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <span className="text-xs text-blue-100 font-medium">
+                      {(contextTokens / 1000).toFixed(1)}K/{MAX_CONTEXT_TOKENS / 1000}K
+                    </span>
+                    {contextTokens / MAX_CONTEXT_TOKENS > 0.7 && (
+                      <button
+                        onClick={resetConversation}
+                        className="ml-1 px-2 py-0.5 text-xs font-medium text-white bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-all"
+                        title="Reset hội thoại"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Mini Progress Bar */}
+                <div className="mt-2 relative h-1 bg-blue-800 bg-opacity-30 rounded-full overflow-hidden">
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      isConnected ? "bg-green-400" : "bg-red-400"
+                    className={`h-full transition-all duration-500 ease-out ${
+                      contextTokens / MAX_CONTEXT_TOKENS > 0.9
+                        ? "bg-red-400 animate-pulse"
+                        : contextTokens / MAX_CONTEXT_TOKENS > 0.8
+                        ? "bg-orange-400"
+                        : contextTokens / MAX_CONTEXT_TOKENS > 0.6
+                        ? "bg-yellow-300"
+                        : "bg-green-400"
                     }`}
-                  />
-                  <p className="text-xs text-blue-100">
-                    {isConnected
-                      ? "AI đã sẵn sàng • Phản hồi thông minh"
-                      : "Chế độ cơ bản • AI không khả dụng"}
-                  </p>
+                    style={{ width: `${Math.min((contextTokens / MAX_CONTEXT_TOKENS) * 100, 100)}%` }}
+                  >
+                    <div className="h-full w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-40 animate-shimmer"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -890,109 +943,6 @@ const Chatbot = () => {
                       )}
                     </div>
                   </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Context Length Progress Bar */}
-          <div className="bg-white border-b border-gray-200 px-4 py-3">
-            <div className="space-y-2">
-              {/* Header with token count and reset button */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className={`w-4 h-4 ${
-                      contextTokens / MAX_CONTEXT_TOKENS > 0.8
-                        ? "text-red-500"
-                        : contextTokens / MAX_CONTEXT_TOKENS > 0.6
-                        ? "text-yellow-500"
-                        : "text-green-500"
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                  <span className="text-xs font-medium text-gray-700">
-                    Context: {(contextTokens / 1000).toFixed(1)}K / {MAX_CONTEXT_TOKENS / 1000}K tokens
-                  </span>
-                </div>
-                
-                {/* Reset button - show when > 50% or always visible for convenience */}
-                {contextTokens / MAX_CONTEXT_TOKENS > 0.5 && (
-                  <button
-                    onClick={resetConversation}
-                    className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                    title="Reset hội thoại để giải phóng bộ nhớ"
-                  >
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    <span>Reset</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Progress bar */}
-              <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ease-out ${
-                    contextTokens / MAX_CONTEXT_TOKENS > 0.9
-                      ? "bg-gradient-to-r from-red-500 to-red-600 animate-pulse"
-                      : contextTokens / MAX_CONTEXT_TOKENS > 0.8
-                      ? "bg-gradient-to-r from-orange-500 to-red-500"
-                      : contextTokens / MAX_CONTEXT_TOKENS > 0.6
-                      ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                      : "bg-gradient-to-r from-green-400 to-blue-500"
-                  }`}
-                  style={{ width: `${Math.min((contextTokens / MAX_CONTEXT_TOKENS) * 100, 100)}%` }}
-                >
-                  {/* Shine effect */}
-                  <div className="h-full w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer"></div>
-                </div>
-              </div>
-
-              {/* Warning message when approaching limit */}
-              {contextTokens / MAX_CONTEXT_TOKENS > 0.8 && (
-                <div className="flex items-start space-x-2 p-2 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
-                  <svg
-                    className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <div className="text-xs text-orange-800">
-                    <span className="font-semibold">Cảnh báo:</span> Context sắp đầy! 
-                    {contextTokens / MAX_CONTEXT_TOKENS > 0.9 ? (
-                      <span className="font-medium"> Vui lòng reset hội thoại để tiếp tục.</span>
-                    ) : (
-                      <span> Nên reset để đảm bảo hiệu suất tốt nhất.</span>
-                    )}
-                  </div>
                 </div>
               )}
             </div>

@@ -13,7 +13,11 @@ const Header = () => {
   const [notifications, setNotifications] = useState([]);
 
   const [unreadCount, setUnreadCount] = useState(0);
-  const [lastSeenIds, setLastSeenIds] = useState([]); // lưu id đã xem
+  const [lastSeenIds, setLastSeenIds] = useState(() => {
+    // Load lastSeenIds từ localStorage khi component mount
+    const saved = localStorage.getItem(`lastSeenIds_${user?.account_id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     if (!user?.account_id) return;
@@ -25,17 +29,20 @@ const Header = () => {
           (app) => app.account_id === user.account_id
         );
 
+        // Load lastSeenIds từ localStorage
+        const savedIds = localStorage.getItem(`lastSeenIds_${user.account_id}`);
+        const seenIds = savedIds ? JSON.parse(savedIds) : [];
+
         // lấy những ứng dụng có id chưa được xem
         const newOnes = userApps.filter(
-          (app) => !lastSeenIds.includes(app.job_application_id)
+          (app) => !seenIds.includes(app.job_application_id)
         );
 
         setNotifications(userApps);
+        setLastSeenIds(seenIds);
 
         // nếu có đơn mới hoặc cập nhật mới => tăng số chưa đọc
-        if (newOnes.length > 0) {
-          setUnreadCount(newOnes.length);
-        }
+        setUnreadCount(newOnes.length);
       }
     };
 
@@ -43,13 +50,20 @@ const Header = () => {
     const interval = setInterval(fetchNotifications, 15000); // 15s refresh
 
     return () => clearInterval(interval);
-  }, [user, lastSeenIds]);
+  }, [user]);
+
   const handleNotifClick = () => {
     setIsNotifOpen(!isNotifOpen);
-    setUnreadCount(0);
-
-    // đánh dấu các id đã xem
-    setLastSeenIds(notifications.map((n) => n.job_application_id));
+    
+    if (!isNotifOpen && notifications.length > 0) {
+      // Khi mở thông báo, đánh dấu tất cả đã xem
+      const allIds = notifications.map((n) => n.job_application_id);
+      setLastSeenIds(allIds);
+      setUnreadCount(0);
+      
+      // Lưu vào localStorage
+      localStorage.setItem(`lastSeenIds_${user?.account_id}`, JSON.stringify(allIds));
+    }
   };
 
   const handleSearch = (e) => {

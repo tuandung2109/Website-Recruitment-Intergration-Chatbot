@@ -144,6 +144,23 @@ const getApplicationStatistics = async (companyId) => {
   }
 };
 
+// Thống kê kết quả ứng tuyển theo công ty
+const getApplicationResults = async (companyId) => {
+  try {
+    const res = await _get(`/jobsApplication/results/${companyId}`);
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, results: result.results };
+    }
+    return {
+      success: false,
+      message: result.message || "Không lấy được kết quả ứng tuyển",
+    };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+};
+
 export {
   listJobApplication,
   addJobApplication,
@@ -152,4 +169,5 @@ export {
   addJobApplicationWithFile,
   checkApplied,
   getApplicationStatistics,
+  getApplicationResults,
 };

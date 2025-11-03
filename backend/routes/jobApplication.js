@@ -42,4 +42,10 @@ router.get(
   controllerJobsApplication.getApplicationStatistics
 );
 
+// 📈 Thống kê kết quả ứng tuyển theo công ty
+router.get(
+  "/results/:companyId",
+  controllerJobsApplication.getApplicationResults
+);
+
 module.exports = router;

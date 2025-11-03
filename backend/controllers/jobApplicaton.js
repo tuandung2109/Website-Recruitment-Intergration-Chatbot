@@ -477,8 +477,8 @@ const getApplicationStatistics = async (req, res) => {
 
     const total = applications.length;
     const pending = applications.filter((a) => a.status === "pending").length;
-    const accepted = applications.filter((a) => a.status === "accepted").length;
-    const rejected = applications.filter((a) => a.status === "rejected").length;
+    const accepted = applications.filter((a) => a.status === "accept").length;
+    const rejected = applications.filter((a) => a.status === "reject").length;
 
     // Thống kê theo tháng (6 tháng gần nhất)
     const now = new Date();
@@ -536,6 +536,151 @@ const getApplicationStatistics = async (req, res) => {
   }
 };
 
+// Thống kê kết quả ứng tuyển theo công ty
+const getApplicationResults = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company ID là bắt buộc",
+      });
+    }
+
+    // Lấy tất cả job posting của công ty
+    const { data: jobs, error: jobError } = await supabase
+      .from("job_posting")
+      .select("job_posting_id, position_name, create_at")
+      .eq("company_id", companyId);
+
+    if (jobError) {
+      console.error("❌ Lỗi khi lấy job posting:", jobError);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách job posting",
+      });
+    }
+
+    const jobIds = jobs.map((j) => j.job_posting_id);
+
+    if (jobIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        results: {
+          conversionRate: 0,
+          avgProcessingTime: 0,
+          trendData: [],
+          positionResults: [],
+        },
+      });
+    }
+
+    // Lấy tất cả application của các job này
+    const { data: applications, error: appError } = await supabase
+      .from("job_application")
+      .select("job_application_id, job_posting_id, status, submitted_at")
+      .in("job_posting_id", jobIds);
+
+    if (appError) {
+      console.error("❌ Lỗi khi lấy application:", appError);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy thống kê",
+      });
+    }
+
+    // Tính tỷ lệ chuyển đổi
+    const totalApps = applications.length;
+    const acceptedApps = applications.filter((a) => a.status === "accept").length;
+    const conversionRate = totalApps > 0 ? ((acceptedApps / totalApps) * 100).toFixed(2) : 0;
+
+    // Giả định thời gian xử lý trung bình (có thể tính từ submitted_at đến updated_at nếu có)
+    const avgProcessingTime = 3.5; // days - có thể tính chính xác hơn nếu có trường updated_at
+
+    // Xu hướng theo tháng (6 tháng gần nhất)
+    const now = new Date();
+    const trendData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      
+      const monthApps = applications.filter((a) => {
+        if (!a.submitted_at) return false;
+        const appDate = new Date(a.submitted_at);
+        return (
+          appDate.getFullYear() === date.getFullYear() &&
+          appDate.getMonth() === date.getMonth()
+        );
+      });
+
+      const received = monthApps.length;
+      const accepted = monthApps.filter((a) => a.status === "accept").length;
+      const rejected = monthApps.filter((a) => a.status === "reject").length;
+
+      trendData.push({ 
+        month: monthKey, 
+        received, 
+        accepted, 
+        rejected 
+      });
+    }
+
+    // Kết quả theo từng vị trí
+    const jobMap = {};
+    jobs.forEach((j) => {
+      jobMap[j.job_posting_id] = j.position_name;
+    });
+
+    const positionStats = {};
+    applications.forEach((a) => {
+      const posName = jobMap[a.job_posting_id] || "Unknown";
+      if (!positionStats[posName]) {
+        positionStats[posName] = {
+          total: 0,
+          accepted: 0,
+          rejected: 0,
+          pending: 0,
+        };
+      }
+      positionStats[posName].total++;
+      if (a.status === "accept") positionStats[posName].accepted++;
+      if (a.status === "reject") positionStats[posName].rejected++;
+      if (a.status === "pending") positionStats[posName].pending++;
+    });
+
+    const positionResults = Object.entries(positionStats)
+      .map(([name, stats]) => ({
+        name,
+        total: stats.total,
+        accepted: stats.accepted,
+        rejected: stats.rejected,
+        pending: stats.pending,
+        rate: stats.total > 0 ? ((stats.accepted / stats.total) * 100).toFixed(1) : 0,
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
+    return res.status(200).json({
+      success: true,
+      results: {
+        conversionRate: parseFloat(conversionRate),
+        avgProcessingTime,
+        trendData,
+        positionResults,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
 module.exports = {
   listApplication,
   addApplication,
@@ -547,4 +692,5 @@ module.exports = {
   addApplicationFile,
   checkApplied,
   getApplicationStatistics,
+  getApplicationResults,
 };

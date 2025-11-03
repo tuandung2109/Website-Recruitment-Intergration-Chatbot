@@ -16,5 +16,6 @@ router.patch("/unlockJobPosting/:id", controllerJobsPostings.unlockJobPosting); 
 router.patch("/updateJobPosting/:id", controllerJobsPostings.updateJobPosting); //Cập nhật bài đăng
 
 router.get("/byCompany/:companyId", controllerJobsPostings.listJobsByCompany); // Lấy danh sách job theo công ty
+router.get("/statistics/:companyId", controllerJobsPostings.getJobPostingStatistics); // Thống kê số tin đã đăng
 
 module.exports = router;

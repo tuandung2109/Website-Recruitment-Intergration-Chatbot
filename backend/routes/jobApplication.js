@@ -36,4 +36,10 @@ router.get(
   controllerJobsApplication.checkApplied
 );
 
+// 📊 Thống kê hồ sơ ứng tuyển theo công ty
+router.get(
+  "/statistics/:companyId",
+  controllerJobsApplication.getApplicationStatistics
+);
+
 module.exports = router;

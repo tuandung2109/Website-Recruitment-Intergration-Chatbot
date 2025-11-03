@@ -330,6 +330,23 @@ const updateJobPosting = async (job_posting_id, jobData) => {
   }
 };
 
+// Thống kê số tin đã đăng theo công ty
+const getJobPostingStatistics = async (companyId) => {
+  try {
+    const res = await _get(`/jobPosting/statistics/${companyId}`);
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, statistics: result.statistics };
+    }
+    return {
+      success: false,
+      message: result.message || "Không lấy được thống kê",
+    };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+};
+
 export {
   softJobPosting,
   unlockJobPosting,
@@ -339,4 +356,5 @@ export {
   listJobPostingAdmin,
   postJobPosting,
   updateJobPosting,
+  getJobPostingStatistics,
 };

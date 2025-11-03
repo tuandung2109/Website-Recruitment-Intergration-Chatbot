@@ -38,6 +38,8 @@ import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
 import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
 import CandidateEvaluation from "./pages/Recruiter/CandidateEvaluation";
+import PostedJobsStatistics from "./pages/Arecruiter/Statistics/PostedJobsStatistics";
+import ApplicationProfilesStatistics from "./pages/Arecruiter/Statistics/ApplicationProfilesStatistics";
 
 import "./App.css";
 import NotFound from "./pages/NotFound";
@@ -117,6 +119,14 @@ function App() {
             <Route
               path="evaluateCandidates/:jobPostingId"
               element={<CandidateEvaluation />}
+            />
+            <Route
+              path="statistics/postedJobs"
+              element={<PostedJobsStatistics />}
+            />
+            <Route
+              path="statistics/applicationProfiles"
+              element={<ApplicationProfilesStatistics />}
             />
           </Route>
         </Route>

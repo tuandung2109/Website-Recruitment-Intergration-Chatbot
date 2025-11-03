@@ -37,6 +37,16 @@ function Recruiter() {
       icon: <SettingOutlined />,
       children: [{ key: "job_application", label: "Danh sách Đơn ứng tuyển" }],
     },
+    {
+      key: "sub5",
+      label: "Thống Kê",
+      icon: <SettingOutlined />,
+      children: [
+        { key: "postedJobs", label: "Số tin đã đăng" },
+        { key: "applicationProfiles", label: "Hồ sơ ứng tuyển" },
+        { key: "applicationResults", label: "Kết quả ứng tuyển" },
+      ],
+    },
   ];
 
   // ✅ Đưa onClick ra ngoài
@@ -61,6 +71,15 @@ function Recruiter() {
     }
     if (e.key === "job_application") {
       navigate("/companyAdmin/companyListJobPosting");
+    }
+    if (e.key === "postedJobs") {
+      navigate("/companyAdmin/statistics/postedJobs");
+    }
+    if (e.key === "applicationProfiles") {
+      navigate("/companyAdmin/statistics/applicationProfiles");
+    }
+    if (e.key === "applicationResults") {
+      navigate("/companyAdmin/statistics/applicationResults");
     }
   };
 

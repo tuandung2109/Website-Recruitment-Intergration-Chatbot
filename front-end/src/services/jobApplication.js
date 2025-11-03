@@ -127,6 +127,23 @@ const checkApplied = async (job_posting_id, account_id) => {
   }
 };
 
+// Thống kê hồ sơ ứng tuyển theo công ty
+const getApplicationStatistics = async (companyId) => {
+  try {
+    const res = await _get(`/jobsApplication/statistics/${companyId}`);
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, statistics: result.statistics };
+    }
+    return {
+      success: false,
+      message: result.message || "Không lấy được thống kê hồ sơ",
+    };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+};
+
 export {
   listJobApplication,
   addJobApplication,
@@ -134,4 +151,5 @@ export {
   updateApplicationStatus,
   addJobApplicationWithFile,
   checkApplied,
+  getApplicationStatistics,
 };

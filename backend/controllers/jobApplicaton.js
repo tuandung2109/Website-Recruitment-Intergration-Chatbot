@@ -419,6 +419,123 @@ const checkApplied = async (req, res) => {
   }
 };
 
+// Thống kê hồ sơ ứng tuyển theo công ty
+const getApplicationStatistics = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company ID là bắt buộc",
+      });
+    }
+
+    // Lấy tất cả job posting của công ty
+    const { data: jobs, error: jobError } = await supabase
+      .from("job_posting")
+      .select("job_posting_id, position_name")
+      .eq("company_id", companyId);
+
+    if (jobError) {
+      console.error("❌ Lỗi khi lấy job posting:", jobError);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách job posting",
+      });
+    }
+
+    const jobIds = jobs.map((j) => j.job_posting_id);
+
+    if (jobIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        statistics: {
+          total: 0,
+          pending: 0,
+          accepted: 0,
+          rejected: 0,
+          monthlyData: [],
+          topPositions: [],
+        },
+      });
+    }
+
+    // Lấy tất cả application của các job này
+    const { data: applications, error: appError } = await supabase
+      .from("job_application")
+      .select("job_application_id, job_posting_id, status, submitted_at")
+      .in("job_posting_id", jobIds);
+
+    if (appError) {
+      console.error("❌ Lỗi khi lấy application:", appError);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy thống kê hồ sơ",
+      });
+    }
+
+    const total = applications.length;
+    const pending = applications.filter((a) => a.status === "pending").length;
+    const accepted = applications.filter((a) => a.status === "accepted").length;
+    const rejected = applications.filter((a) => a.status === "rejected").length;
+
+    // Thống kê theo tháng (6 tháng gần nhất)
+    const now = new Date();
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      const count = applications.filter((a) => {
+        if (!a.submitted_at) return false;
+        const appDate = new Date(a.submitted_at);
+        return (
+          appDate.getFullYear() === date.getFullYear() &&
+          appDate.getMonth() === date.getMonth()
+        );
+      }).length;
+      monthlyData.push({ month: monthKey, count });
+    }
+
+    // Top 5 vị trí nhận nhiều hồ sơ nhất
+    const jobMap = {};
+    jobs.forEach((j) => {
+      jobMap[j.job_posting_id] = j.position_name;
+    });
+
+    const positionCount = {};
+    applications.forEach((a) => {
+      const posName = jobMap[a.job_posting_id] || "Unknown";
+      positionCount[posName] = (positionCount[posName] || 0) + 1;
+    });
+
+    const topPositions = Object.entries(positionCount)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return res.status(200).json({
+      success: true,
+      statistics: {
+        total,
+        pending,
+        accepted,
+        rejected,
+        monthlyData,
+        topPositions,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
 module.exports = {
   listApplication,
   addApplication,
@@ -429,4 +546,5 @@ module.exports = {
   rejectApplication,
   addApplicationFile,
   checkApplied,
+  getApplicationStatistics,
 };

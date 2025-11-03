@@ -628,6 +628,73 @@ const updateJobPosting = async (req, res) => {
   }
 };
 
+// Thống kê số tin đã đăng theo công ty
+const getJobPostingStatistics = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company ID là bắt buộc",
+      });
+    }
+
+    // Lấy tất cả job posting của công ty
+    const { data: jobs, error } = await supabase
+      .from("job_posting")
+      .select("job_posting_id, position_name, status, create_at, deadline")
+      .eq("company_id", companyId);
+
+    if (error) {
+      console.error("❌ Lỗi khi lấy thống kê:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy thống kê",
+      });
+    }
+
+    const total = jobs.length;
+    const active = jobs.filter((j) => j.status === "active").length;
+    const inactive = jobs.filter((j) => j.status === "inactive").length;
+
+    // Thống kê theo tháng (6 tháng gần nhất)
+    const now = new Date();
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      const count = jobs.filter((j) => {
+        if (!j.create_at) return false;
+        const jobDate = new Date(j.create_at);
+        return (
+          jobDate.getFullYear() === date.getFullYear() &&
+          jobDate.getMonth() === date.getMonth()
+        );
+      }).length;
+      monthlyData.push({ month: monthKey, count });
+    }
+
+    return res.status(200).json({
+      success: true,
+      statistics: {
+        total,
+        active,
+        inactive,
+        monthlyData,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
 module.exports = {
   listJobPostings,
   postJobPosting,
@@ -638,4 +705,5 @@ module.exports = {
   listJobsByCompany,
   listJobPostingsAdmin,
   updateJobPosting,
+  getJobPostingStatistics,
 };

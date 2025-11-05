@@ -24,10 +24,26 @@ export const getStatisticsOverview = async () => {
   }
 };
 
-// Lấy thống kê ứng viên
-export const getStatisticsCandidates = async () => {
+// Lấy thống kê tài khoản
+export const getStatisticsAccounts = async (filters = {}) => {
   try {
-    const res = await _get(`/statistics/candidates`);
+    const queryParams = new URLSearchParams();
+    
+    if (filters.accountType && filters.accountType !== "all") {
+      queryParams.append("accountType", filters.accountType);
+    }
+    if (filters.status && filters.status !== "all") {
+      queryParams.append("status", filters.status);
+    }
+    if (filters.dateRange && filters.dateRange.length === 2) {
+      queryParams.append("startDate", filters.dateRange[0]);
+      queryParams.append("endDate", filters.dateRange[1]);
+    }
+
+    const queryString = queryParams.toString();
+    const res = await _get(
+      `/statistics/accounts${queryString ? `?${queryString}` : ""}`
+    );
     const result = await res.json();
     if (res.ok) {
       return {
@@ -37,7 +53,7 @@ export const getStatisticsCandidates = async () => {
     } else {
       return {
         success: false,
-        message: result.message || "Không thể tải thống kê ứng viên",
+        message: result.message || "Không thể tải thống kê tài khoản",
       };
     }
   } catch (error) {

@@ -361,6 +361,182 @@ async function getRecentActivities() {
   return activities.slice(0, 10);
 }
 
+// Thống kê tài khoản
+const getStatisticsAccounts = async (req, res) => {
+  try {
+    const { accountType, status, startDate, endDate } = req.query;
+
+    // Build query với filters
+    let query = supabase.from("account").select(
+      `
+      account_id,
+      email,
+      phone_number,
+      status,
+      updated_at,
+      account_account_type (
+        account_type (
+          role_name
+        )
+      )
+    `
+    );
+
+    // Apply filters
+    if (status && status !== "all") {
+      query = query.eq("status", status);
+    }
+
+    if (startDate && endDate) {
+      query = query.gte("updated_at", startDate).lte("updated_at", endDate);
+    }
+
+    const { data: accounts, error } = await query.order("updated_at", {
+      ascending: false,
+    });
+
+    if (error) throw error;
+
+    // Transform data to include role
+    const transformedAccounts = accounts.map((acc) => ({
+      account_id: acc.account_id,
+      email: acc.email,
+      phone_number: acc.phone_number,
+      status: acc.status,
+      create_at: acc.updated_at, // Sử dụng updated_at vì không có create_at
+      role:
+        acc.account_account_type?.[0]?.account_type?.role_name || "Unknown",
+    }));
+
+    // Filter by accountType if provided
+    let filteredAccounts = transformedAccounts;
+    if (accountType && accountType !== "all") {
+      filteredAccounts = transformedAccounts.filter(
+        (acc) => acc.role === accountType
+      );
+    }
+
+    // Calculate statistics
+    const totalAccounts = filteredAccounts.length;
+    const activeAccounts = filteredAccounts.filter(
+      (acc) => acc.status === "active"
+    ).length;
+    const inactiveAccounts = filteredAccounts.filter(
+      (acc) => acc.status === "inactive"
+    ).length;
+
+    // New accounts in last 30 days (based on updated_at)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const newAccountsLast30Days = filteredAccounts.filter(
+      (acc) => acc.create_at && new Date(acc.create_at) >= thirtyDaysAgo
+    ).length;
+
+    // Accounts by role
+    const roleCount = {};
+    filteredAccounts.forEach((acc) => {
+      const role = acc.role || "Unknown";
+      roleCount[role] = (roleCount[role] || 0) + 1;
+    });
+    const accountsByRole = Object.keys(roleCount).map((role) => ({
+      role,
+      count: roleCount[role],
+    }));
+
+    // Accounts by status
+    const accountsByStatus = [
+      {
+        status: "Hoạt động",
+        count: activeAccounts,
+      },
+      {
+        status: "Ngừng hoạt động",
+        count: inactiveAccounts,
+      },
+    ];
+
+    // Accounts by month (last 6 months)
+    const accountsByMonth = getAccountsByMonth(filteredAccounts, 6);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalAccounts,
+        activeAccounts,
+        inactiveAccounts,
+        newAccountsLast30Days,
+        accountsByRole,
+        accountsByStatus,
+        accountsByMonth,
+        accounts: filteredAccounts,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getStatisticsAccounts:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê tài khoản",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function for accounts by month
+function getAccountsByMonth(accounts, monthCount = 6) {
+  const monthNames = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
+
+  const result = {};
+  const currentDate = new Date();
+
+  // Initialize last N months
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1
+    );
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+    result[key] = {
+      month: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+      count: 0,
+    };
+  }
+
+  // Count accounts
+  if (accounts && accounts.length > 0) {
+    accounts.forEach((acc) => {
+      if (acc.create_at) {
+        const date = new Date(acc.create_at);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (result[key]) {
+          result[key].count++;
+        }
+      }
+    });
+  }
+
+  return Object.values(result);
+}
+
 module.exports = {
   getStatisticsOverview,
+  getStatisticsAccounts,
 };

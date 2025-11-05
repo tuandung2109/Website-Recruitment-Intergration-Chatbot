@@ -81,10 +81,10 @@ function AdminPage() {
       icon: <AppstoreOutlined />,
       children: [
         { key: "statistics-overview", label: "Thống kê tổng quan" },
-        { key: "statistics-candidates", label: "Thống kê ứng viên" },
+        { key: "statistics-accounts", label: "Thống kê tài khoản" },
         { key: "statistics-job-posting", label: "Thống kê bài đăng tuyển dụng" },
         { key: "statistics-revenue", label: "Thống kê doanh thu" },
-        { key: "statistics-report", label: "Báo cáo tuyển dụng" },
+        { key: "statistics-report", label: "Báo cáo tổng hợp" },
       ],
     },
   ];
@@ -123,8 +123,8 @@ function AdminPage() {
     if (e.key === "statistics-overview") {
       navigate("/admin/statistics/overview");
     }
-    if (e.key === "statistics-candidates") {
-      navigate("/admin/statistics/candidates");
+    if (e.key === "statistics-accounts") {
+      navigate("/admin/statistics/accounts");
     }
     if (e.key === "statistics-job-posting") {
       navigate("/admin/statistics/job-posting");

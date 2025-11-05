@@ -82,7 +82,7 @@ function AdminPage() {
       children: [
         { key: "statistics-overview", label: "Thống kê tổng quan" },
         { key: "statistics-accounts", label: "Thống kê tài khoản" },
-        { key: "statistics-job-posting", label: "Thống kê bài đăng tuyển dụng" },
+        { key: "statistics-recruitment", label: "Thống kê tuyển dụng" },
         { key: "statistics-revenue", label: "Thống kê doanh thu" },
         { key: "statistics-report", label: "Báo cáo tổng hợp" },
       ],
@@ -126,8 +126,8 @@ function AdminPage() {
     if (e.key === "statistics-accounts") {
       navigate("/admin/statistics/accounts");
     }
-    if (e.key === "statistics-job-posting") {
-      navigate("/admin/statistics/job-posting");
+    if (e.key === "statistics-recruitment") {
+      navigate("/admin/statistics/recruitment");
     }
     if (e.key === "statistics-revenue") {
       navigate("/admin/statistics/revenue");

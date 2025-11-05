@@ -34,6 +34,7 @@ import AdminJobPosting from "./pages/Admin/jobPosting";
 import AdminSkill from "./pages/Admin/skill";
 import StatisticsOverview from "./pages/Admin/Statistics/Overview";
 import StatisticsAccounts from "./pages/Admin/Statistics/Accounts";
+import StatisticsRecruitment from "./pages/Admin/Statistics/Recruitment";
 
 import CompanyInformation from "./pages/Arecruiter/companyInformation";
 import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
@@ -107,6 +108,7 @@ function App() {
             <Route path="adminSkills" element={<AdminSkill />} />
             <Route path="statistics/overview" element={<StatisticsOverview />} />
             <Route path="statistics/accounts" element={<StatisticsAccounts />} />
+            <Route path="statistics/recruitment" element={<StatisticsRecruitment />} />
           </Route>
         </Route>
 

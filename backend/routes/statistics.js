@@ -8,4 +8,7 @@ router.get("/overview", statisticsController.getStatisticsOverview);
 // Route thống kê tài khoản
 router.get("/accounts", statisticsController.getStatisticsAccounts);
 
+// Route thống kê tuyển dụng
+router.get("/recruitment", statisticsController.getStatisticsRecruitment);
+
 module.exports = router;

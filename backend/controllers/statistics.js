@@ -536,7 +536,266 @@ function getAccountsByMonth(accounts, monthCount = 6) {
   return Object.values(result);
 }
 
+// Thống kê tuyển dụng
+const getStatisticsRecruitment = async (req, res) => {
+  try {
+    const { status, companyId, startDate, endDate } = req.query;
+
+    // Build query for job postings
+    let jobQuery = supabase.from("job_posting").select(
+      `
+      job_posting_id,
+      position_name,
+      status,
+      deadline,
+      company:company_id (
+        company_id,
+        name
+      )
+    `
+    );
+
+    // Apply filters
+    if (status && status !== "all") {
+      jobQuery = jobQuery.eq("status", status);
+    }
+
+    if (companyId && companyId !== "all") {
+      jobQuery = jobQuery.eq("company_id", companyId);
+    }
+
+    if (startDate && endDate) {
+      jobQuery = jobQuery.gte("deadline", startDate).lte("deadline", endDate);
+    }
+
+    const { data: jobPostings, error: jobError } = await jobQuery;
+
+    if (jobError) throw jobError;
+
+    // Get all applications
+    const { data: applications, error: appError } = await supabase
+      .from("job_application")
+      .select("job_application_id, job_posting_id, status, submitted_at");
+
+    if (appError) throw appError;
+
+    // Get all companies for filter dropdown
+    const { data: companies, error: compError } = await supabase
+      .from("company")
+      .select("company_id, name")
+      .order("name");
+
+    if (compError) throw compError;
+
+    // Transform job postings with application count
+    const jobPostingsWithApps = jobPostings.map((job) => {
+      const jobApps = applications.filter(
+        (app) => app.job_posting_id === job.job_posting_id
+      );
+      return {
+        job_posting_id: job.job_posting_id,
+        position_name: job.position_name,
+        status: job.status,
+        deadline: job.deadline,
+        company_name: job.company?.name || "N/A",
+        company_id: job.company?.company_id,
+        application_count: jobApps.length,
+      };
+    });
+
+    // Calculate statistics
+    const totalJobPostings = jobPostingsWithApps.length;
+    const openJobPostings = jobPostingsWithApps.filter(
+      (job) => job.status === "open"
+    ).length;
+    const closedJobPostings = jobPostingsWithApps.filter(
+      (job) => job.status === "closed"
+    ).length;
+
+    // Filter applications by job postings (if filtered)
+    const jobPostingIds = jobPostingsWithApps.map((job) => job.job_posting_id);
+    const filteredApplications = applications.filter((app) =>
+      jobPostingIds.includes(app.job_posting_id)
+    );
+
+    const totalApplications = filteredApplications.length;
+    const pendingApplications = filteredApplications.filter(
+      (app) => app.status === "pending"
+    ).length;
+    const acceptedApplications = filteredApplications.filter(
+      (app) => app.status === "accept"
+    ).length;
+    const rejectedApplications = filteredApplications.filter(
+      (app) => app.status === "reject"
+    ).length;
+
+    // Success rate
+    const processedApps = acceptedApplications + rejectedApplications;
+    const successRate =
+      processedApps > 0
+        ? Math.round((acceptedApplications / processedApps) * 100)
+        : 0;
+
+    // Average applications per job
+    const avgApplicationsPerJob =
+      totalJobPostings > 0
+        ? (totalApplications / totalJobPostings).toFixed(1)
+        : 0;
+
+    // Count unique companies
+    const uniqueCompanies = new Set(
+      jobPostingsWithApps
+        .filter((job) => job.company_id)
+        .map((job) => job.company_id)
+    );
+    const totalCompaniesRecruiting = uniqueCompanies.size;
+
+    // Job postings by status
+    const jobPostingsByStatus = [
+      { status: "Đang mở", count: openJobPostings },
+      { status: "Đã đóng", count: closedJobPostings },
+    ];
+
+    // Applications by status
+    const applicationsByStatus = [
+      { status: "Chờ xử lý", count: pendingApplications },
+      { status: "Chấp nhận", count: acceptedApplications },
+      { status: "Từ chối", count: rejectedApplications },
+    ];
+
+    // Jobs and Applications by month (last 6 months)
+    const jobsAndApplicationsByMonth = getJobsAndApplicationsByMonth(
+      jobPostings,
+      applications,
+      6
+    );
+
+    // Top companies by job count
+    const companyJobCount = {};
+    jobPostingsWithApps.forEach((job) => {
+      if (job.company_id && job.company_name) {
+        if (!companyJobCount[job.company_id]) {
+          companyJobCount[job.company_id] = {
+            company_id: job.company_id,
+            name: job.company_name,
+            job_count: 0,
+            total_applications: 0,
+          };
+        }
+        companyJobCount[job.company_id].job_count++;
+        companyJobCount[job.company_id].total_applications +=
+          job.application_count;
+      }
+    });
+
+    const topCompanies = Object.values(companyJobCount)
+      .sort((a, b) => b.job_count - a.job_count)
+      .slice(0, 5);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalJobPostings,
+        openJobPostings,
+        closedJobPostings,
+        totalApplications,
+        pendingApplications,
+        acceptedApplications,
+        rejectedApplications,
+        successRate,
+        avgApplicationsPerJob: parseFloat(avgApplicationsPerJob),
+        totalCompaniesRecruiting,
+        jobPostingsByStatus,
+        applicationsByStatus,
+        jobsAndApplicationsByMonth,
+        topCompanies,
+        jobPostings: jobPostingsWithApps,
+        companies, // For filter dropdown
+      },
+    });
+  } catch (error) {
+    console.error("Error in getStatisticsRecruitment:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê tuyển dụng",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function for jobs and applications by month
+function getJobsAndApplicationsByMonth(jobs, applications, monthCount = 6) {
+  const monthNames = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
+
+  const result = {};
+  const currentDate = new Date();
+
+  // Initialize last N months
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1
+    );
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+    result[key] = {
+      month: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+      jobs: 0,
+      applications: 0,
+    };
+  }
+
+  // Count jobs by deadline month
+  if (jobs && jobs.length > 0) {
+    jobs.forEach((job) => {
+      if (job.deadline) {
+        const date = new Date(job.deadline);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (result[key]) {
+          result[key].jobs++;
+        }
+      }
+    });
+  }
+
+  // Count applications by submitted month
+  if (applications && applications.length > 0) {
+    applications.forEach((app) => {
+      if (app.submitted_at) {
+        const date = new Date(app.submitted_at);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (result[key]) {
+          result[key].applications++;
+        }
+      }
+    });
+  }
+
+  return Object.values(result);
+}
+
 module.exports = {
   getStatisticsOverview,
   getStatisticsAccounts,
+  getStatisticsRecruitment,
 };

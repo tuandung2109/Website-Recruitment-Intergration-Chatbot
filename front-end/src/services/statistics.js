@@ -64,10 +64,26 @@ export const getStatisticsAccounts = async (filters = {}) => {
   }
 };
 
-// Lấy thống kê bài đăng tuyển dụng
-export const getStatisticsJobPosting = async () => {
+// Lấy thống kê tuyển dụng
+export const getStatisticsRecruitment = async (filters = {}) => {
   try {
-    const res = await _get(`/statistics/job-posting`);
+    const queryParams = new URLSearchParams();
+    
+    if (filters.status && filters.status !== "all") {
+      queryParams.append("status", filters.status);
+    }
+    if (filters.companyId && filters.companyId !== "all") {
+      queryParams.append("companyId", filters.companyId);
+    }
+    if (filters.dateRange && filters.dateRange.length === 2) {
+      queryParams.append("startDate", filters.dateRange[0]);
+      queryParams.append("endDate", filters.dateRange[1]);
+    }
+
+    const queryString = queryParams.toString();
+    const res = await _get(
+      `/statistics/recruitment${queryString ? `?${queryString}` : ""}`
+    );
     const result = await res.json();
     if (res.ok) {
       return {
@@ -77,7 +93,7 @@ export const getStatisticsJobPosting = async () => {
     } else {
       return {
         success: false,
-        message: result.message || "Không thể tải thống kê bài đăng",
+        message: result.message || "Không thể tải thống kê tuyển dụng",
       };
     }
   } catch (error) {

@@ -84,7 +84,6 @@ function AdminPage() {
         { key: "statistics-accounts", label: "Thống kê tài khoản" },
         { key: "statistics-recruitment", label: "Thống kê tuyển dụng" },
         { key: "statistics-revenue", label: "Thống kê doanh thu" },
-        { key: "statistics-report", label: "Báo cáo tổng hợp" },
       ],
     },
   ];
@@ -131,9 +130,6 @@ function AdminPage() {
     }
     if (e.key === "statistics-revenue") {
       navigate("/admin/statistics/revenue");
-    }
-    if (e.key === "statistics-report") {
-      navigate("/admin/statistics/report");
     }
   };
 

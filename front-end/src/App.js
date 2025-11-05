@@ -32,6 +32,7 @@ import AdminIndustry from "./pages/Admin/industry";
 import AdminWorkType from "./pages/Admin/wordType";
 import AdminJobPosting from "./pages/Admin/jobPosting";
 import AdminSkill from "./pages/Admin/skill";
+import StatisticsOverview from "./pages/Admin/Statistics/Overview";
 
 import CompanyInformation from "./pages/Arecruiter/companyInformation";
 import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
@@ -103,6 +104,7 @@ function App() {
             <Route path="adminWorkType" element={<AdminWorkType />} />
             <Route path="adminJobPosting" element={<AdminJobPosting />} />
             <Route path="adminSkills" element={<AdminSkill />} />
+            <Route path="statistics/overview" element={<StatisticsOverview />} />
           </Route>
         </Route>
 

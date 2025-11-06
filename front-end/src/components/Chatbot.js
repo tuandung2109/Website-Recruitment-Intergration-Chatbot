@@ -1412,7 +1412,7 @@ const Chatbot = () => {
         </div>
       )}
 
-      {/* Chat Button */}
+      {/* Chat Buttton */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 group relative"

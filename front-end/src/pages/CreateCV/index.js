@@ -117,7 +117,34 @@ function CreateCVIndex() {
             🎨 CV Content Marketing
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
-            Mẫu CV chuyên nghiệp cho Content Marketing
+            Mẫu CV cho Content Marketing
+          </p>
+        </div>
+
+        {/* CV Software Engineer mẫu */}
+        <div
+          onClick={() => navigate("/cvSoftwareEngineer")}
+          style={{
+            width: "280px",
+            height: "200px",
+            backgroundColor: "#e2e8f0",
+            borderRadius: "12px",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            flexDirection: "column",
+            transition: "transform 0.2s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#0f172a" }}>
+            💻 CV Software Engineer
+          </h2>
+          <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
+            Bố cục hiện đại dành cho kỹ sư phần mềm
           </p>
         </div>
       </div>

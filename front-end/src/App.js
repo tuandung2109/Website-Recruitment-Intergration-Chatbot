@@ -51,6 +51,7 @@ import CreateCVIndex from "./pages/CreateCV";
 import CVselfMade from "./pages/CreateCV/CVselfMade";
 import CreateCVTeacherFixed from "./pages/CreateCV/createCV";
 import CVContentMarketing from "./pages/CreateCV/CVContentMarketing";
+import CVSoftwareEngineer from "./pages/CreateCV/CVSoftwareEngineer";
 import CompanyHome from "./pages/Arecruiter/companyHome";
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
           />
           <Route path="/cvselfMade" element={<CVselfMade />} />
           <Route path="/cvContentMarketing" element={<CVContentMarketing />} />
+          <Route path="/cvSoftwareEngineer" element={<CVSoftwareEngineer />} />
 
           {/* 🧪 TEST: Đánh giá ứng viên - Không cần đăng nhập */}
           <Route

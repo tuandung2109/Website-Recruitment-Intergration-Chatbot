@@ -30,6 +30,8 @@ function CreateCVIndex() {
         style={{
           display: "flex",
           gap: "40px",
+          flexWrap: "wrap",
+          justifyContent: "center",
         }}
       >
         {/* CV tự thiết kế */}
@@ -61,7 +63,7 @@ function CreateCVIndex() {
           </p>
         </div>
 
-        {/* CV mẫu có sẵn */}
+        {/* CV giáo viên mẫu */}
         <div
           onClick={() => navigate("/createCVTeacherFixed")}
           style={{
@@ -87,6 +89,35 @@ function CreateCVIndex() {
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
             Mẫu CV được thiết kế sẵn, chỉ cần chỉnh sửa
+          </p>
+        </div>
+
+        {/* CV Content Marketing mẫu */}
+        <div
+          onClick={() => navigate("/cvContentMarketing")}
+          style={{
+            width: "280px",
+            height: "200px",
+            backgroundColor: "#fef3c7",
+            borderRadius: "12px",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            flexDirection: "column",
+            transition: "transform 0.2s",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.transform = "scale(1.05)")
+          }
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#d97706" }}>
+            🎨 CV Content Marketing
+          </h2>
+          <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
+            Mẫu CV chuyên nghiệp cho Content Marketing
           </p>
         </div>
       </div>

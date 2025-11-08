@@ -64,7 +64,19 @@ const listJobPostings = async (req, res) => {
 };
 const listJobPostingsEmployer = async (req, res) => {
   try {
-    const { data: job_postings, error } = await supabase
+    // 📌 Lấy filter params từ query
+    const {
+      searchText,
+      status,
+      salaryMin,
+      salaryMax,
+      deadlineFrom,
+      deadlineTo,
+      industryIds,
+      skillIds,
+    } = req.query;
+
+    let query = supabase
       .from("job_posting")
       .select(
         `*,
@@ -107,16 +119,67 @@ const listJobPostingsEmployer = async (req, res) => {
       `
       )
       .eq("deleted", false)
-      .eq("company.status", "active") // lọc theo trạng thái công ty
-      .eq("company.deleted", false); // lọc công ty chưa xóa
+      .eq("company.status", "active")
+      .eq("company.deleted", false);
+
+    // 🔍 Tìm kiếm theo tên vị trí
+    if (searchText) {
+      query = query.ilike("position_name", `%${searchText}%`);
+    }
+
+    // 📊 Lọc theo trạng thái
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    // 💰 Lọc theo khoảng lương
+    if (salaryMin) {
+      query = query.gte("salary", Number(salaryMin));
+    }
+    if (salaryMax) {
+      query = query.lte("salary", Number(salaryMax));
+    }
+
+    // 📅 Lọc theo hạn nộp
+    if (deadlineFrom) {
+      query = query.gte("deadline", deadlineFrom);
+    }
+    if (deadlineTo) {
+      query = query.lte("deadline", deadlineTo);
+    }
+
+    const { data: job_postings, error } = await query;
 
     if (error) {
-      console.error("❌ Lỗi Supabase:", error);
+      console.error("❌ Lỗi query:", error);
       return res.status(400).json({ error: error.message });
     }
+
+    let filteredJobs = job_postings || [];
+
+    // 🏢 Lọc theo ngành nghề (sau khi query vì cần check nested data)
+    if (industryIds) {
+      const industryArray = industryIds.split(",").map((id) => Number(id));
+      filteredJobs = filteredJobs.filter((job) =>
+        job.job_posting_industry?.some((jpi) =>
+          industryArray.includes(jpi.industry?.industry_id)
+        )
+      );
+    }
+
+    // 💼 Lọc theo kỹ năng
+    if (skillIds) {
+      const skillArray = skillIds.split(",").map((id) => Number(id));
+      filteredJobs = filteredJobs.filter((job) =>
+        job.job_posting_skill?.some((jps) =>
+          skillArray.includes(jps.skill?.skill_id)
+        )
+      );
+    }
+
     return res.status(200).json({
       success: true,
-      job_postings: job_postings,
+      job_postings: filteredJobs,
     });
   } catch (error) {
     console.error("❌ Lỗi server:", error);

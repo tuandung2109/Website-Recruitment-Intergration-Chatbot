@@ -13,7 +13,16 @@ import {
   InputNumber,
   DatePicker,
   Select,
+  Row,
+  Col,
+  Space,
+  Collapse,
 } from "antd";
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import UseTitle from "../../../hooks/useTitle";
@@ -25,6 +34,11 @@ import {
   listJobPostingsEmployer,
   offJobPosting,
 } from "../../../services/jobPosting";
+import { listIndustry } from "../../../services/industry";
+import { listSkills } from "../../../services/skill";
+
+const { Panel } = Collapse;
+const { RangePicker } = DatePicker;
 
 function CompanyJobPosting() {
   UseTitle("JobVip - Company Job Postings");
@@ -41,9 +55,18 @@ function CompanyJobPosting() {
   const [isLockModal, setIsLockModal] = useState(false);
 
   const [form] = Form.useForm();
+  const [filterForm] = Form.useForm();
 
-  const fetchAll = async () => {
+  // 📌 Dữ liệu cho filter
+  const [industries, setIndustries] = useState([]);
+  const [skills, setSkills] = useState([]);
+
+  // 📌 Trạng thái filter
+  const [filterParams, setFilterParams] = useState({});
+
+  const fetchAll = async (params = {}) => {
     try {
+      setLoading(true);
       const userData = JSON.parse(localStorage.getItem("account"));
       if (!userData || !userData.company_id) {
         setError("Không tìm thấy thông tin công ty của tài khoản này");
@@ -57,13 +80,16 @@ function CompanyJobPosting() {
         return;
       }
       setCompany(resCompany.company);
-      const resJobs = await listJobPostingsEmployer();
+
+      // ✅ Gọi API với filter params
+      const resJobs = await listJobPostingsEmployer(params);
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
           (job) => Number(job.company.id) === Number(userData.company_id)
         );
         setJobPostings(filtered);
       } else {
+        setJobPostings([]);
         message.warning("Không có bài đăng tuyển nào");
       }
     } catch (err) {
@@ -73,9 +99,56 @@ function CompanyJobPosting() {
       setLoading(false);
     }
   };
+
+  const fetchFiltersData = async () => {
+    try {
+      const [indRes, skillRes] = await Promise.all([
+        listIndustry(),
+        listSkills(),
+      ]);
+      if (indRes.success) setIndustries(indRes.industrys || []);
+      if (skillRes.success) setSkills(skillRes.skills || []);
+    } catch (err) {
+      console.error("Lỗi tải filter data:", err);
+    }
+  };
+
   useEffect(() => {
     fetchAll();
+    fetchFiltersData();
   }, []);
+
+  // ✅ Xử lý khi submit filter
+  const handleFilter = (values) => {
+    const params = {};
+
+    if (values.searchText) params.searchText = values.searchText;
+    if (values.status) params.status = values.status;
+    if (values.salaryMin) params.salaryMin = values.salaryMin;
+    if (values.salaryMax) params.salaryMax = values.salaryMax;
+    if (values.deadlineRange && values.deadlineRange[0]) {
+      params.deadlineFrom = values.deadlineRange[0].format("YYYY-MM-DD");
+    }
+    if (values.deadlineRange && values.deadlineRange[1]) {
+      params.deadlineTo = values.deadlineRange[1].format("YYYY-MM-DD");
+    }
+    if (values.industryIds && values.industryIds.length > 0) {
+      params.industryIds = values.industryIds.join(",");
+    }
+    if (values.skillIds && values.skillIds.length > 0) {
+      params.skillIds = values.skillIds.join(",");
+    }
+
+    setFilterParams(params);
+    fetchAll(params);
+  };
+
+  // ✅ Reset filter
+  const handleResetFilter = () => {
+    filterForm.resetFields();
+    setFilterParams({});
+    fetchAll();
+  };
   const handleEdit = (job) => {
     setSelectedJob(job);
     form.setFieldsValue({
@@ -170,13 +243,150 @@ function CompanyJobPosting() {
     <div className="p-6 flex flex-col items-center gap-8">
       <Card
         style={{
-          maxWidth: 1000,
+          maxWidth: 1200,
           width: "100%",
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
           borderRadius: 12,
         }}
         title="💼 Danh sách bài đăng tuyển dụng của công ty"
       >
+        {/* 🔍 BỘ LỌC */}
+        <Collapse
+          defaultActiveKey={["1"]}
+          style={{ marginBottom: 20 }}
+          expandIcon={({ isActive }) => (
+            <FilterOutlined rotate={isActive ? 90 : 0} />
+          )}
+        >
+          <Panel header="🔍 Bộ lọc tìm kiếm" key="1">
+            <Form
+              form={filterForm}
+              layout="vertical"
+              onFinish={handleFilter}
+              autoComplete="off"
+            >
+              <Row gutter={16}>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="searchText" label="Tìm kiếm theo tên vị trí">
+                    <Input
+                      placeholder="Nhập tên vị trí..."
+                      prefix={<SearchOutlined />}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="status" label="Trạng thái">
+                    <Select placeholder="Chọn trạng thái" allowClear>
+                      <Select.Option value="active">
+                        <Tag color="green">Active</Tag>
+                      </Select.Option>
+                      <Select.Option value="inactive">
+                        <Tag color="red">Inactive</Tag>
+                      </Select.Option>
+                      <Select.Option value="pending">
+                        <Tag color="orange">Pending</Tag>
+                      </Select.Option>
+                      <Select.Option value="off">
+                        <Tag color="gray">Off</Tag>
+                      </Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="deadlineRange" label="Hạn nộp hồ sơ">
+                    <RangePicker
+                      style={{ width: "100%" }}
+                      format="DD/MM/YYYY"
+                      placeholder={["Từ ngày", "Đến ngày"]}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="salaryMin" label="Lương tối thiểu (VNĐ)">
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Ví dụ: 10000000"
+                      min={0}
+                      formatter={(value) =>
+                        `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="salaryMax" label="Lương tối đa (VNĐ)">
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Ví dụ: 30000000"
+                      min={0}
+                      formatter={(value) =>
+                        `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="industryIds" label="Ngành nghề">
+                    <Select
+                      mode="multiple"
+                      placeholder="Chọn ngành nghề"
+                      allowClear
+                      maxTagCount={2}
+                    >
+                      {industries.map((ind) => (
+                        <Select.Option
+                          key={ind.industry_id}
+                          value={ind.industry_id}
+                        >
+                          {ind.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="skillIds" label="Kỹ năng">
+                    <Select
+                      mode="multiple"
+                      placeholder="Chọn kỹ năng"
+                      allowClear
+                      maxTagCount={2}
+                    >
+                      {skills.map((skill) => (
+                        <Select.Option
+                          key={skill.skill_id}
+                          value={skill.skill_id}
+                        >
+                          {skill.skill_name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Space>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<SearchOutlined />}
+                >
+                  Tìm kiếm
+                </Button>
+                <Button icon={<ReloadOutlined />} onClick={handleResetFilter}>
+                  Đặt lại
+                </Button>
+              </Space>
+            </Form>
+          </Panel>
+        </Collapse>
+
         <Table
           dataSource={jobPostings}
           rowKey="id"

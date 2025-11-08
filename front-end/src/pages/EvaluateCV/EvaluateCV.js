@@ -8,6 +8,7 @@ import {
     FileText
 } from 'lucide-react';
 import { getAgentFilters } from '../../controller/agentController';
+import jsPDF from 'jspdf';
 import './EvaluateCV.css';
 
 const EvaluateCV = () => {
@@ -30,6 +31,7 @@ const EvaluateCV = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [hasData, setHasData] = useState(false);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     // Lấy dữ liệu từ agent filters khi component mount
     useEffect(() => {
@@ -108,6 +110,270 @@ const EvaluateCV = () => {
         if (score >= 6) return 'Tốt';
         if (score >= 4) return 'Trung bình';
         return 'Cần cải thiện';
+    };
+
+    // Hàm xuất PDF - Tạo PDF trực tiếp từ dữ liệu thay vì HTML
+    const handleDownloadPDF = async () => {
+        setIsGeneratingPDF(true);
+        
+        try {
+            // Tạo PDF với kích thước A4
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pageWidth = 210;
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+            let yPosition = margin;
+            const lineHeight = 7;
+            const titleSize = 20;
+            const headingSize = 14;
+            const textSize = 10;
+
+            // Helper function để thêm text với word wrap
+            const addText = (text, fontSize, isBold = false, color = [0, 0, 0]) => {
+                pdf.setFontSize(fontSize);
+                pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+                pdf.setTextColor(...color);
+                
+                const lines = pdf.splitTextToSize(text, contentWidth);
+                lines.forEach(line => {
+                    if (yPosition > 280) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+                    pdf.text(line, margin, yPosition);
+                    yPosition += lineHeight;
+                });
+            };
+
+            // Helper function để vẽ thanh điểm
+            const drawScoreBar = (label, score, yPos) => {
+                const barWidth = 60;
+                const barHeight = 6;
+                const barX = pageWidth - margin - barWidth - 15;
+                
+                pdf.setFontSize(textSize);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(label, margin, yPos);
+                
+                // Vẽ background bar
+                pdf.setFillColor(230, 230, 230);
+                pdf.rect(barX, yPos - 4, barWidth, barHeight, 'F');
+                
+                // Vẽ filled bar với màu dựa trên điểm
+                let color;
+                if (score >= 8) color = [34, 197, 94]; // green
+                else if (score >= 6) color = [59, 130, 246]; // blue
+                else if (score >= 4) color = [251, 191, 36]; // yellow
+                else color = [239, 68, 68]; // red
+                
+                pdf.setFillColor(...color);
+                pdf.rect(barX, yPos - 4, (barWidth * score) / 10, barHeight, 'F');
+                
+                // Hiển thị điểm số
+                pdf.text(`${score}/10`, barX + barWidth + 3, yPos);
+                
+                return yPos + 10;
+            };
+
+            // Header
+            pdf.setFillColor(59, 130, 246);
+            pdf.rect(0, 0, pageWidth, 40, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(titleSize);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('BÁO CÁO ĐÁNH GIÁ CV', margin, 20);
+            pdf.setFontSize(textSize);
+            pdf.text('Phân tích chi tiết và đề xuất cải thiện', margin, 30);
+            
+            yPosition = 55;
+
+            // Overall Score
+            pdf.setFillColor(245, 247, 250);
+            pdf.rect(margin, yPosition - 5, contentWidth, 35, 'F');
+            
+            pdf.setFontSize(headingSize);
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Điểm Tổng Quan', margin + 5, yPosition + 5);
+            
+            // Vẽ điểm số tròn
+            const scoreX = pageWidth - margin - 20;
+            const scoreY = yPosition + 10;
+            pdf.setFillColor(59, 130, 246);
+            pdf.circle(scoreX, scoreY, 12, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(18);
+            pdf.text(`${cvEvaluation.scores.overall}`, scoreX - 6, scoreY + 2);
+            pdf.setFontSize(10);
+            pdf.text('/10', scoreX - 4, scoreY + 8);
+            
+            pdf.setFontSize(textSize);
+            pdf.setTextColor(100, 100, 100);
+            const summaryLines = pdf.splitTextToSize(cvEvaluation.summary, contentWidth - 40);
+            let summaryY = yPosition + 5;
+            summaryLines.forEach(line => {
+                pdf.text(line, margin + 5, summaryY + 10);
+                summaryY += 5;
+            });
+            
+            yPosition += 45;
+
+            // Detailed Scores
+            yPosition += 5;
+            pdf.setFontSize(headingSize);
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Chi Tiết Điểm Số', margin, yPosition);
+            yPosition += 10;
+            
+            yPosition = drawScoreBar('Độ rõ ràng:', cvEvaluation.scores.clarity, yPosition);
+            yPosition = drawScoreBar('Mức độ liên quan:', cvEvaluation.scores.relevance, yPosition);
+            yPosition = drawScoreBar('Kỹ năng:', cvEvaluation.scores.skills, yPosition);
+            yPosition = drawScoreBar('Dự án:', cvEvaluation.scores.projects, yPosition);
+            yPosition = drawScoreBar('Tính chuyên nghiệp:', cvEvaluation.scores.professionalism, yPosition);
+
+            // Strengths
+            yPosition += 10;
+            pdf.setFillColor(34, 197, 94);
+            pdf.rect(margin, yPosition - 5, contentWidth, 8, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(headingSize);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('✓ Điểm Mạnh', margin + 3, yPosition);
+            yPosition += 10;
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(textSize);
+            pdf.setFont('helvetica', 'normal');
+            cvEvaluation.strengths.forEach((strength, index) => {
+                if (yPosition > 270) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                const lines = pdf.splitTextToSize(`• ${strength}`, contentWidth - 5);
+                lines.forEach(line => {
+                    pdf.text(line, margin + 3, yPosition);
+                    yPosition += 6;
+                });
+            });
+
+            // Weaknesses
+            yPosition += 5;
+            if (yPosition > 250) {
+                pdf.addPage();
+                yPosition = margin;
+            }
+            pdf.setFillColor(251, 191, 36);
+            pdf.rect(margin, yPosition - 5, contentWidth, 8, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(headingSize);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('⚠ Điểm Cần Cải Thiện', margin + 3, yPosition);
+            yPosition += 10;
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(textSize);
+            pdf.setFont('helvetica', 'normal');
+            cvEvaluation.weaknesses.forEach((weakness) => {
+                if (yPosition > 270) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                const lines = pdf.splitTextToSize(`• ${weakness}`, contentWidth - 5);
+                lines.forEach(line => {
+                    pdf.text(line, margin + 3, yPosition);
+                    yPosition += 6;
+                });
+            });
+
+            // Recommendations
+            yPosition += 5;
+            if (yPosition > 250) {
+                pdf.addPage();
+                yPosition = margin;
+            }
+            pdf.setFillColor(59, 130, 246);
+            pdf.rect(margin, yPosition - 5, contentWidth, 8, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(headingSize);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('💡 Đề Xuất Cải Thiện', margin + 3, yPosition);
+            yPosition += 10;
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(textSize);
+            pdf.setFont('helvetica', 'normal');
+            cvEvaluation.recommendations.forEach((recommendation) => {
+                if (yPosition > 270) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                const lines = pdf.splitTextToSize(`• ${recommendation}`, contentWidth - 5);
+                lines.forEach(line => {
+                    pdf.text(line, margin + 3, yPosition);
+                    yPosition += 6;
+                });
+            });
+
+            // Suggested Job Roles
+            yPosition += 5;
+            if (yPosition > 250) {
+                pdf.addPage();
+                yPosition = margin;
+            }
+            pdf.setFillColor(139, 92, 246);
+            pdf.rect(margin, yPosition - 5, contentWidth, 8, 'F');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFontSize(headingSize);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('💼 Vị Trí Công Việc Phù Hợp', margin + 3, yPosition);
+            yPosition += 10;
+            
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(textSize);
+            pdf.setFont('helvetica', 'normal');
+            cvEvaluation.suggested_job_roles.forEach((role) => {
+                if (yPosition > 270) {
+                    pdf.addPage();
+                    yPosition = margin;
+                }
+                pdf.text(`• ${role}`, margin + 3, yPosition);
+                yPosition += 7;
+            });
+
+            // Footer
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setTextColor(150, 150, 150);
+                pdf.text(
+                    `Trang ${i} / ${totalPages} - Tạo ngày ${new Date().toLocaleDateString('vi-VN')}`,
+                    pageWidth / 2,
+                    290,
+                    { align: 'center' }
+                );
+            }
+
+            // Tạo tên file với timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const fileName = `Bao_Cao_Danh_Gia_CV_${timestamp}.pdf`;
+
+            // Lưu file PDF
+            pdf.save(fileName);
+            
+            console.log('✅ PDF đã được tạo thành công:', fileName);
+        } catch (error) {
+            console.error('❌ Lỗi khi tạo PDF:', error);
+            alert('Có lỗi xảy ra khi tạo file PDF. Vui lòng thử lại.');
+        } finally {
+            setIsGeneratingPDF(false);
+        }
     };
 
     return (
@@ -285,8 +551,12 @@ const EvaluateCV = () => {
 
                     {/* Action Buttons */}
                     <div className="action-buttons">
-                        <button className="btn-primary">
-                            Tải Xuống Báo Cáo PDF
+                        <button 
+                            className="btn-primary" 
+                            onClick={handleDownloadPDF}
+                            disabled={isGeneratingPDF}
+                        >
+                            {isGeneratingPDF ? 'Đang tạo PDF...' : 'Tải Xuống Báo Cáo PDF'}
                         </button>
                         <button className="btn-secondary" onClick={() => window.location.href = '/'}>
                             Đánh Giá CV Khác

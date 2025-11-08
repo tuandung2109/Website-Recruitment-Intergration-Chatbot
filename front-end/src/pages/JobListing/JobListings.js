@@ -1006,7 +1006,7 @@ const JobListings = () => {
                           >
                             {appliedJobs[job.id] ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
                           </button>
-                          <button className="text-gray-500 hover:text-blue-600 transition-colors">
+                          {/* <button className="text-gray-500 hover:text-blue-600 transition-colors">
                             <svg
                               className="w-6 h-6"
                               fill="none"
@@ -1020,7 +1020,7 @@ const JobListings = () => {
                                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                               />
                             </svg>
-                          </button>
+                          </button> */}
                           <span className="text-sm text-gray-500 mt-2">
                             Ngày tạo : {getTimeAgo(job.postedDate)}
                             {job.createdAt}

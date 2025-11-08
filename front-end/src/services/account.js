@@ -1,5 +1,4 @@
 import { _get, _patch, _post } from "../utils/request";
-
 const postRegister = async ({ username, password, email, phone_number }) => {
   try {
     const res = await _post(`/account/postRegister`, {
@@ -27,7 +26,6 @@ const postRegister = async ({ username, password, email, phone_number }) => {
     };
   }
 };
-
 const loginAccount = async ({ email, password }) => {
   try {
     const res = await _post(`/account/postLogin`, { email, password });
@@ -48,7 +46,6 @@ const loginAccount = async ({ email, password }) => {
     };
   }
 };
-
 const listAccount = async () => {
   try {
     const res = await _get(`/account/listAccount`);
@@ -69,7 +66,6 @@ const listAccount = async () => {
     };
   }
 };
-
 const listAccountId = async (id) => {
   try {
     const res = await _get(`/account/listAccountId/${id}`);
@@ -145,7 +141,6 @@ const userForgot = async (email) => {
     };
   }
 };
-
 const userOtp = async ({ email, otp }) => {
   try {
     const res = await _post(`/account/otp`, { email, otp });
@@ -203,7 +198,6 @@ const verifyOtpRegister = async (email, otp) => {
   const data = await res.json();
   return data;
 };
-
 const updateAccount = async (body) => {
   try {
     const res = await _patch(`/account/updateAccount`, body);

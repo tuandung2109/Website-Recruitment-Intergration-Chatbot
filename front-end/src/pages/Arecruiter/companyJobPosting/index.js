@@ -21,6 +21,9 @@ import { getCompanyById } from "../../../services/company";
 import {
   listJobsPosting,
   updateJobPosting,
+  unlockJobPosting,
+  listJobPostingsEmployer,
+  offJobPosting,
 } from "../../../services/jobPosting";
 
 function CompanyJobPosting() {
@@ -47,7 +50,6 @@ function CompanyJobPosting() {
         setLoading(false);
         return;
       }
-
       const resCompany = await getCompanyById(userData.company_id);
       if (!resCompany.success) {
         setError(resCompany.message || "Không thể tải thông tin công ty");
@@ -55,8 +57,7 @@ function CompanyJobPosting() {
         return;
       }
       setCompany(resCompany.company);
-
-      const resJobs = await listJobsPosting();
+      const resJobs = await listJobPostingsEmployer();
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
           (job) => Number(job.company.id) === Number(userData.company_id)
@@ -72,11 +73,9 @@ function CompanyJobPosting() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchAll();
   }, []);
-
   const handleEdit = (job) => {
     setSelectedJob(job);
     form.setFieldsValue({
@@ -122,6 +121,46 @@ function CompanyJobPosting() {
     } catch (err) {
       console.error(err);
       message.error("Lỗi khi cập nhật bài đăng!");
+    }
+  };
+  const handleToggleStatus = async (job) => {
+    try {
+      if (job.status === "pending") {
+        return message.warning(
+          "Tin đang chờ duyệt, không thể thay đổi trạng thái"
+        );
+      }
+
+      if (job.status === "inactive") {
+        return message.error("Tin này đã bị admin khóa, bạn không thể mở lại");
+      }
+
+      // Nếu tin đang active → tắt tin
+      if (job.status === "active") {
+        const res = await offJobPosting(job.id || job.job_posting_id);
+        if (res.success) {
+          message.success("Tắt tin thành công!");
+          await fetchAll();
+        } else {
+          message.error(res.message || "Tắt tin thất bại!");
+        }
+        return;
+      }
+
+      // Nếu tin đang off → mở lại tin
+      if (job.status === "off") {
+        const res = await unlockJobPosting(job.id || job.job_posting_id);
+        if (res.success) {
+          message.success("Mở tin thành công!");
+          await fetchAll();
+        } else {
+          message.error(res.message || "Mở tin thất bại!");
+        }
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Lỗi thao tác trạng thái!");
     }
   };
 
@@ -197,12 +236,25 @@ function CompanyJobPosting() {
                     Xem chi tiết
                   </Button>
                   <Button
+                    type={record.status === "active" ? "default" : "primary"}
+                    danger={record.status === "active"}
+                    onClick={() => handleToggleStatus(record)}
+                    disabled={
+                      record.status === "pending" ||
+                      record.status === "inactive"
+                    }
+                  >
+                    {record.status === "active" ? "Tắt tin" : "Mở tin"}
+                  </Button>
+
+                  <Button
                     type="link"
                     style={{ background: "#eeff8d" }}
                     onClick={() => handleEdit(record)}
                   >
                     Sửa bài đăng
                   </Button>
+
                   <Button
                     type="primary"
                     size="small"

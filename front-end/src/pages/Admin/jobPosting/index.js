@@ -45,20 +45,53 @@ function AdminJobPosting() {
   // 🟡 Khóa / mở khóa bài đăng
   const handleToggleStatus = async (record) => {
     try {
-      const isActive = record.status === "active";
-      const res = isActive
-        ? await softJobPosting(record.id)
-        : await unlockJobPosting(record.id);
+      let res;
 
-      if (res.success) {
-        message.success(
-          isActive ? "Đã khóa bài đăng!" : "Đã mở khóa bài đăng!"
-        );
-        await fetchData();
-      } else {
-        message.error(res.message || "Lỗi khi cập nhật trạng thái!");
+      switch (record.status) {
+        case "pending":
+          // Duyệt tin → active
+          res = await unlockJobPosting(record.id);
+          if (res.success) {
+            message.success("Duyệt bài đăng thành công!");
+          }
+          break;
+
+        case "active":
+          // Khóa → inactive
+          res = await softJobPosting(record.id);
+          if (res.success) {
+            message.success("Đã khóa bài đăng!");
+          }
+          break;
+
+        case "off":
+          // Nhà tuyển dụng đã tắt → Admin mở lại active
+          res = await unlockJobPosting(record.id);
+          if (res.success) {
+            message.success("Đã mở lại bài đăng!");
+          }
+          break;
+
+        case "inactive":
+          // Admin mở khóa → active
+          res = await unlockJobPosting(record.id);
+          if (res.success) {
+            message.success("Đã mở khóa bài đăng!");
+          }
+          break;
+
+        default:
+          message.warning("Trạng thái không hợp lệ!");
+          return;
       }
+
+      if (!res.success) {
+        return message.error(res.message || "Lỗi thao tác trạng thái!");
+      }
+
+      await fetchData();
     } catch (err) {
+      console.error(err);
       message.error("Lỗi khi cập nhật trạng thái!");
     }
   };
@@ -110,6 +143,7 @@ function AdminJobPosting() {
       render: (status) => {
         if (status === "active") return <Tag color="green">Đã duyệt</Tag>;
         if (status === "pending") return <Tag color="gold">Chờ duyệt</Tag>;
+        if (status === "off") return <Tag color="gold">Đã tắt</Tag>;
         return <Tag color="red">Bị khóa</Tag>;
       },
     },
@@ -128,10 +162,15 @@ function AdminJobPosting() {
 
           <Button
             danger={record.status === "active"}
-            type={record.status === "active" ? "default" : "primary"}
             onClick={() => handleToggleStatus(record)}
           >
-            {record.status === "active" ? "Khóa" : "Chờ Duyệt"}
+            {record.status === "pending"
+              ? "Duyệt"
+              : record.status === "active"
+              ? "Khóa"
+              : record.status === "off"
+              ? "Mở lại"
+              : "Mở khóa"}
           </Button>
         </>
       ),

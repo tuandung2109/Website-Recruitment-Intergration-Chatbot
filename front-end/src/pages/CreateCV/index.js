@@ -59,7 +59,7 @@ function CreateCVIndex() {
             🧩 CV tự thiết kế
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
-            Kéo thả, tùy chỉnh, sáng tạo tự do
+            Kéo thả, tùy chỉnh, sáng tạo tự do (free)
           </p>
         </div>
 
@@ -88,7 +88,7 @@ function CreateCVIndex() {
             📄 CV giáo viên mẫu
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
-            Mẫu CV được thiết kế sẵn, chỉ cần chỉnh sửa
+            Mẫu CV được thiết kế sẵn, chỉ cần chỉnh sửa (Trả phí)
           </p>
         </div>
 
@@ -117,7 +117,7 @@ function CreateCVIndex() {
             🎨 CV Content Marketing
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
-            Mẫu CV cho Content Marketing
+            Mẫu CV cho Content Marketing (Trả phí)
           </p>
         </div>
 
@@ -137,14 +137,16 @@ function CreateCVIndex() {
             flexDirection: "column",
             transition: "transform 0.2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.transform = "scale(1.05)")
+          }
           onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
           <h2 style={{ fontSize: "18px", fontWeight: "600", color: "#0f172a" }}>
             💻 CV Software Engineer
           </h2>
           <p style={{ fontSize: "14px", color: "#334155", marginTop: "6px" }}>
-            Bố cục hiện đại dành cho kỹ sư phần mềm
+            Bố cục hiện đại dành cho kỹ sư phần mềm (Trả phí)
           </p>
         </div>
       </div>

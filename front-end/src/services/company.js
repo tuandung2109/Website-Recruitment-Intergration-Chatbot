@@ -1,10 +1,8 @@
 import { _get, _patch, _post } from "../utils/request";
-
 const listCompany = async () => {
   try {
     const res = await _get(`/company/listCompany`);
     const result = await res.json();
-
     if (res.ok && result.company) {
       return {
         success: true,
@@ -27,7 +25,6 @@ const listCompanyAdmin = async () => {
   try {
     const res = await _get(`/company/listCompanyAdmin`);
     const result = await res.json();
-
     if (res.ok && result.company) {
       return {
         success: true,
@@ -46,7 +43,6 @@ const listCompanyAdmin = async () => {
     };
   }
 };
-
 const getCompanyById = async (id) => {
   try {
     // const res = await _get(`/company/listCompany/${id}`);
@@ -67,13 +63,11 @@ const getCompanyById = async (id) => {
     };
   }
 };
-
 const postCompany = async (companyData) => {
   try {
     // companyData là object chứa thông tin công ty: name, website, industry_id,...
     const res = await _post(`/company/postCompany`, companyData);
     const result = await res.json();
-
     if (res.ok && result.success) {
       return {
         success: true,
@@ -93,7 +87,6 @@ const postCompany = async (companyData) => {
     };
   }
 };
-// 📂 /services/company.js
 const updateCompany = async (id, data) => {
   try {
     const res = await _patch(`/updateCompany/${id}`, data);
@@ -119,7 +112,6 @@ const lockCompany = async (id) => {
     return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
   }
 };
-
 const unlockCompany = async (id) => {
   try {
     const res = await _patch(`/company/unlockCompany/${id}`);

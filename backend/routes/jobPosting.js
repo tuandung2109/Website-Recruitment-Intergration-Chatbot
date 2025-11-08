@@ -3,6 +3,11 @@ const router = express.Router();
 const controllerJobsPostings = require("../controllers/jobPosting");
 
 router.get("/listJobPosting", controllerJobsPostings.listJobPostings); //Lấy danh sách bài đăng
+router.get(
+  "/listJobPostingsEmployer",
+  controllerJobsPostings.listJobPostingsEmployer
+); //Lấy danh sách bài đăng
+
 router.get("/listJobPostingAdmin", controllerJobsPostings.listJobPostingsAdmin); //Lấy danh sách bài đăng
 router.get("/listJobPostingId/:id", controllerJobsPostings.listJobPostingId); // Chi tiết công việc
 
@@ -14,8 +19,12 @@ router.post("/postJobPosting", controllerJobsPostings.postJobPosting); //Đăng 
 router.patch("/softJobPosting/:id", controllerJobsPostings.softJobPosting); //Xóa bài đăng
 router.patch("/unlockJobPosting/:id", controllerJobsPostings.unlockJobPosting); //Cập nhật bài đăng
 router.patch("/updateJobPosting/:id", controllerJobsPostings.updateJobPosting); //Cập nhật bài đăng
+router.patch("/offJobPosting/:id", controllerJobsPostings.offJobPosting); //Tắt  bài đăng
 
 router.get("/byCompany/:companyId", controllerJobsPostings.listJobsByCompany); // Lấy danh sách job theo công ty
-router.get("/statistics/:companyId", controllerJobsPostings.getJobPostingStatistics); // Thống kê số tin đã đăng
+router.get(
+  "/statistics/:companyId",
+  controllerJobsPostings.getJobPostingStatistics
+); // Thống kê số tin đã đăng
 
 module.exports = router;

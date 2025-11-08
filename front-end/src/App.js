@@ -64,7 +64,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
-
         {/* 🌐 Seeker + Employer đều được xem Main */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
@@ -92,14 +91,12 @@ function App() {
           <Route path="/cvselfMade" element={<CVselfMade />} />
           <Route path="/cvContentMarketing" element={<CVContentMarketing />} />
           <Route path="/cvSoftwareEngineer" element={<CVSoftwareEngineer />} />
-
           {/* 🧪 TEST: Đánh giá ứng viên - Không cần đăng nhập */}
           <Route
             path="/test-candidate-evaluation"
             element={<CandidateEvaluation />}
           />
         </Route>
-
         {/* 👑 Admin chỉ được truy cập nếu role = Admin */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -110,12 +107,20 @@ function App() {
             <Route path="adminWorkType" element={<AdminWorkType />} />
             <Route path="adminJobPosting" element={<AdminJobPosting />} />
             <Route path="adminSkills" element={<AdminSkill />} />
-            <Route path="statistics/overview" element={<StatisticsOverview />} />
-            <Route path="statistics/accounts" element={<StatisticsAccounts />} />
-            <Route path="statistics/recruitment" element={<StatisticsRecruitment />} />
+            <Route
+              path="statistics/overview"
+              element={<StatisticsOverview />}
+            />
+            <Route
+              path="statistics/accounts"
+              element={<StatisticsAccounts />}
+            />
+            <Route
+              path="statistics/recruitment"
+              element={<StatisticsRecruitment />}
+            />
           </Route>
         </Route>
-
         {/* 🏢 Employer chỉ được vào RecruiterLayout */}
         <Route element={<ProtectedRoute allowedRoles={["Employer"]} />}>
           <Route path="/companyAdmin" element={<RecruiterLayout />}>
@@ -149,5 +154,4 @@ function App() {
     </Router>
   );
 }
-
 export default App;

@@ -19,6 +19,8 @@ const listJobPostings = async (req, res) => {
           logo_url,
           size,
           description,
+          status,
+          deleted,
           address:address (
             address_id,
             address_detail
@@ -43,7 +45,9 @@ const listJobPostings = async (req, res) => {
       `
       )
       .eq("deleted", false)
-      .eq("status", "active");
+      .eq("status", "active")
+      .eq("company.status", "active") // lọc theo trạng thái công ty
+      .eq("company.deleted", false); // lọc công ty chưa xóa
 
     if (error) {
       console.error("❌ Lỗi Supabase:", error);
@@ -58,6 +62,68 @@ const listJobPostings = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
+const listJobPostingsEmployer = async (req, res) => {
+  try {
+    const { data: job_postings, error } = await supabase
+      .from("job_posting")
+      .select(
+        `*,
+        account:account_id (
+          account_id,
+          email,
+          gender,
+          phone_number
+        ),
+        company:company_id (
+          company_id,
+          name,
+          website,
+          logo_url,
+          size,
+          description,
+          status,
+          deleted,
+          address:address (
+            address_id,
+            address_detail
+          )
+        ),
+        work_type (
+          work_type_id,
+          work_type_name
+        ),
+        job_posting_skill (
+          skill:skill_id (
+            skill_id,
+            skill_name
+          )
+        ),
+        job_posting_industry(
+          industry:industry_id (
+            industry_id,
+            name
+          )
+        )
+      `
+      )
+      .eq("deleted", false)
+      .eq("company.status", "active") // lọc theo trạng thái công ty
+      .eq("company.deleted", false); // lọc công ty chưa xóa
+
+    if (error) {
+      console.error("❌ Lỗi Supabase:", error);
+      return res.status(400).json({ error: error.message });
+    }
+    return res.status(200).json({
+      success: true,
+      job_postings: job_postings,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi server:", error);
+    return res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
 const listJobPostingsAdmin = async (req, res) => {
   try {
     const { data: job_postings, error } = await supabase
@@ -77,6 +143,9 @@ const listJobPostingsAdmin = async (req, res) => {
           logo_url,
           size,
           description,
+             description,
+          status,
+          deleted,
           address:address (
             address_id,
             address_detail
@@ -136,6 +205,9 @@ const listJobPostingId = async (req, res) => {
               logo_url,
               size,
               description,
+                 description,
+          status,
+          deleted,
               address:address (
                 address_id,
                 address_detail
@@ -189,7 +261,7 @@ const listJobPostingsDeleted = async (req, res) => {
   }
 };
 
-const postJobPosting1 = async (req, res) => {
+const postJobPosting = async (req, res) => {
   try {
     const {
       account_id,
@@ -205,12 +277,12 @@ const postJobPosting1 = async (req, res) => {
       working_time,
       status,
       deleted,
-      skill_id = [], // mảng skill_id
-      industry_id = [], // mảng industry_id
-      work_type_id = [], // mảng work_type_id
+      industry_ids = [],
+      skill_ids = [],
+      work_type_name,
     } = req.body;
 
-    // 🔹 Kiểm tra dữ liệu bắt buộc
+    // --- Kiểm tra dữ liệu bắt buộc ---
     if (!account_id || !company_id || !position_name || !job_description) {
       return res.status(400).json({
         success: false,
@@ -219,8 +291,42 @@ const postJobPosting1 = async (req, res) => {
       });
     }
 
-    // 🔹 1. Thêm job_posting chính
-    const { data: jobData, error: jobError } = await supabase
+    // --- Kiểm tra hạn nộp ---
+    if (deadline) {
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
+      if (deadlineDate <= now) {
+        return res.status(400).json({
+          success: false,
+          message: "Ngày hết hạn phải lớn hơn ngày hiện tại!",
+        });
+      }
+    }
+
+    // --- Kiểm tra trạng thái công ty ---
+    const { data: company, error: companyError } = await supabase
+      .from("company")
+      .select("company_id, status, deleted")
+      .eq("company_id", company_id)
+      .single();
+
+    if (companyError || !company) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy công ty!",
+      });
+    }
+
+    if (company.status !== "active" || company.deleted === true) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Công ty chưa được duyệt hoặc đã bị vô hiệu hóa, không thể đăng tin tuyển dụng!",
+      });
+    }
+
+    // === 1️⃣ Thêm job_posting chính ===
+    const { data, error } = await supabase
       .from("job_posting")
       .insert([
         {
@@ -237,112 +343,57 @@ const postJobPosting1 = async (req, res) => {
           working_time: working_time || "",
           status: status || "inactive",
           deleted: deleted || false,
+          create_at: new Date(),
         },
       ])
       .select()
       .single();
 
-    if (jobError) {
-      console.error("❌ Lỗi khi thêm job_posting:", jobError);
-      return res
-        .status(500)
-        .json({ success: false, message: jobError.message });
-    }
+    if (error) throw error;
 
-    const job_posting_id = jobData.job_posting_id;
+    const job_posting_id = data.job_posting_id;
 
-    // 🔹 2. Thêm vào bảng trung gian job_posting_skill
-    if (skill_id.length > 0) {
-      const skillRows = skill_id.map((skill_id) => ({
+    // === 2️⃣ Thêm kỹ năng (job_posting_skill) ===
+    if (skill_ids.length > 0) {
+      const skillRows = skill_ids.map((skill_id) => ({
         job_posting_id,
         skill_id,
       }));
-
-      const { error: skillError } = await supabase
-        .from("job_posting_skill")
-        .insert(skillRows);
-      if (skillError)
-        console.error("⚠️ Lỗi khi thêm job_posting_skill:", skillError);
+      await supabase.from("job_posting_skill").insert(skillRows);
     }
 
-    // 🔹 3. Thêm vào bảng trung gian job_posting_industry
-    if (industry_id.length > 0) {
-      const industryRows = industry_id.map((industry_id) => ({
+    // === 3️⃣ Thêm ngành nghề (job_posting_industry) ===
+    if (industry_ids.length > 0) {
+      const industryRows = industry_ids.map((industry_id) => ({
         job_posting_id,
         industry_id,
       }));
-
-      const { error: industryError } = await supabase
-        .from("job_posting_industry")
-        .insert(industryRows);
-      if (industryError)
-        console.error("⚠️ Lỗi khi thêm job_posting_industry:", industryError);
+      await supabase.from("job_posting_industry").insert(industryRows);
     }
 
-    // 🔹 4. Thêm vào bảng trung gian job_posting_work_type
-    if (work_type_id.length > 0) {
-      const workTypeRows = work_type_id.map((work_type_id) => ({
-        job_posting_id,
-        work_type_id,
-      }));
-
-      const { error: workTypeError } = await supabase
-        .from("job_posting_work_type")
-        .insert(workTypeRows);
-      if (workTypeError)
-        console.error("⚠️ Lỗi khi thêm job_posting_work_type:", workTypeError);
+    // === 4️⃣ Thêm hình thức làm việc (work_type) ===
+    if (work_type_name) {
+      await supabase
+        .from("work_type")
+        .insert([{ job_posting_id, work_type_name }]);
     }
 
-    // 🔹 5. Truy vấn lại để trả về dữ liệu đầy đủ (join)
-    const { data: fullJob, error: fullError } = await supabase
-      .from("job_posting")
-      .select(
-        `
-        *,
-        account (
-          account_id,
-          email,
-          gender,
-          phone_number
-        ),
-        company (
-          company_id,
-          name,
-          size,
-          website,
-          logo_url,
-          description,
-          address(address_id, address_detail)
-        ),
-        job_posting_skill (
-          skill:skill_id(skill_id, skill_name)
-        ),
-        job_posting_industry (
-          industry:industry_id(industry_id, name)
-        ),
-        job_posting_work_type (
-          work_type:work_type_id(work_type_id, work_type_name)
-        )
-      `
-      )
-      .eq("job_posting_id", job_posting_id)
-      .single();
-
-    if (fullError) {
-      console.error("⚠️ Lỗi khi lấy job_posting đầy đủ:", fullError);
-    }
-
+    // === 5️⃣ Trả kết quả về FE ===
     return res.status(201).json({
       success: true,
       message: "Đăng tin tuyển dụng thành công",
-      job_posting: fullJob || jobData,
+      job_posting: data,
     });
   } catch (error) {
     console.error("❌ Lỗi server:", error);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi server",
+    });
   }
 };
-const postJobPosting = async (req, res) => {
+
+const postJobPosting2 = async (req, res) => {
   try {
     const {
       account_id,
@@ -528,6 +579,48 @@ const unlockJobPosting = async (req, res) => {
   }
 };
 
+// 🟢 Tắt tin (chuyển sang off)
+const offJobPosting = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Thiếu ID" });
+    }
+
+    // Kiểm tra bài đăng có tồn tại không
+    const { data: job, error: fetchError } = await supabase
+      .from("job_posting")
+      .select("job_posting_id")
+      .eq("job_posting_id", id)
+      .maybeSingle();
+
+    if (fetchError)
+      return res
+        .status(500)
+        .json({ success: false, message: fetchError.message });
+    if (!job)
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy bài đăng" });
+
+    // Cập nhật trạng thái
+    const { error } = await supabase
+      .from("job_posting")
+      .update({ status: "off" })
+      .eq("job_posting_id", id);
+
+    if (error)
+      return res.status(500).json({ success: false, message: error.message });
+
+    return res.status(200).json({
+      success: true,
+      message: "Tắt tin bài đăng thành công",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi server:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
 // Thêm của Dũng ( lấy danh sách job theo companyId )
 const listJobsByCompany = async (req, res) => {
   try {
@@ -583,7 +676,9 @@ const updateJobPosting = async (req, res) => {
 
     if (fetchError) {
       console.error("❌ Lỗi khi kiểm tra job:", fetchError);
-      return res.status(400).json({ success: false, message: fetchError.message });
+      return res
+        .status(400)
+        .json({ success: false, message: fetchError.message });
     }
 
     if (!existingJob) {
@@ -613,7 +708,9 @@ const updateJobPosting = async (req, res) => {
 
     if (updateError) {
       console.error("❌ Lỗi khi cập nhật:", updateError);
-      return res.status(400).json({ success: false, message: updateError.message });
+      return res
+        .status(400)
+        .json({ success: false, message: updateError.message });
     }
 
     // ✅ Trả về kết quả mới
@@ -627,7 +724,6 @@ const updateJobPosting = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 // Thống kê số tin đã đăng theo công ty
 const getJobPostingStatistics = async (req, res) => {
   try {
@@ -706,4 +802,6 @@ module.exports = {
   listJobPostingsAdmin,
   updateJobPosting,
   getJobPostingStatistics,
+  offJobPosting,
+  listJobPostingsEmployer,
 };

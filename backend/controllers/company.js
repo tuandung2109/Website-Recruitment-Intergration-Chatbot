@@ -109,12 +109,88 @@ const lockCompany = async (req, res) => {
   }
 };
 
+const postCompany = async (req, res) => {
+  try {
+    const {
+      account_id,
+      name,
+      website,
+      logo_url,
+      size,
+      description,
+      industry_ids,
+      address_detail,
+    } = req.body;
+    if (!account_id || !name || !industry_ids?.length)
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc!",
+      });
+    // 1️⃣ Kiểm tra account có công ty chưa
+    const { data: account } = await supabase
+      .from("account")
+      .select("*")
+      .eq("account_id", account_id)
+      .maybeSingle();
+    if (account?.company_id)
+      return res.status(400).json({
+        success: false,
+        message: "Tài khoản này đã có công ty!",
+      });
+    // 2️⃣ Tạo company
+    const { data: newCompany, error: companyError } = await supabase
+      .from("company")
+      .insert([
+        { name, website, logo_url, size, description, status: "inactive" },
+      ])
+      .select()
+      .single();
+    if (companyError)
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi tạo công ty!",
+      });
+    // 3️⃣ Thêm địa chỉ (nếu có)
+    if (address_detail) {
+      await supabase
+        .from("address")
+        .insert([{ address_detail, company_id: newCompany.company_id }]);
+    }
+    // 4️⃣ Gắn nhiều industry
+    const industryRecords = industry_ids.map((id) => ({
+      company_id: newCompany.company_id,
+      industry_id: id,
+    }));
+    await supabase.from("company_industry").insert(industryRecords);
+    // 5️⃣ Cập nhật account có company_id
+    await supabase
+      .from("account")
+      .update({ company_id: newCompany.company_id })
+      .eq("account_id", account_id);
+    // 6️⃣ Cập nhật role thành Employer (account_type_id = 2)
+    await supabase
+      .from("account_account_type")
+      .update({ account_type_id: 2 }) // hoặc bạn lấy ID động bên dưới
+      .eq("account_id", account_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Tạo công ty thành công!",
+      company_id: newCompany.company_id,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi tạo công ty:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 const unlockCompany = async (req, res) => {
   try {
     const company_id = req.params.id;
     if (!company_id) {
       return res.status(400).json({ error: "Thiếu ID công ty" });
     }
+
     // Cập nhật status = 'active'
     const { data, error } = await supabase
       .from("company")
@@ -219,84 +295,6 @@ const deleteCompany = async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
-  }
-};
-const postCompany = async (req, res) => {
-  try {
-    const {
-      account_id,
-      name,
-      website,
-      logo_url,
-      size,
-      description,
-      industry_ids,
-      address_detail,
-    } = req.body;
-
-    if (!account_id || !name || !industry_ids?.length)
-      return res.status(400).json({
-        success: false,
-        message: "Thiếu thông tin bắt buộc!",
-      });
-
-    // 1️⃣ Kiểm tra account có công ty chưa
-    const { data: account } = await supabase
-      .from("account")
-      .select("*")
-      .eq("account_id", account_id)
-      .maybeSingle();
-
-    if (account?.company_id)
-      return res.status(400).json({
-        success: false,
-        message: "Tài khoản này đã có công ty!",
-      });
-
-    // 2️⃣ Tạo company
-    const { data: newCompany, error: companyError } = await supabase
-      .from("company")
-      .insert([
-        { name, website, logo_url, size, description, status: "active" },
-      ])
-      .select()
-      .single();
-
-    if (companyError)
-      return res.status(500).json({
-        success: false,
-        message: "Lỗi khi tạo công ty!",
-      });
-
-    // 3️⃣ Thêm địa chỉ (nếu có)
-    if (address_detail) {
-      await supabase
-        .from("address")
-        .insert([{ address_detail, company_id: newCompany.company_id }]);
-    }
-
-    // 4️⃣ Gắn nhiều industry
-    const industryRecords = industry_ids.map((id) => ({
-      company_id: newCompany.company_id,
-      industry_id: id,
-    }));
-
-    await supabase.from("company_industry").insert(industryRecords);
-
-    // 5️⃣ Cập nhật account có company_id
-    await supabase
-      .from("account")
-      .update({ company_id: newCompany.company_id })
-      .eq("account_id", account_id);
-
-    return res.status(200).json({
-      success: true,
-      message: "Tạo công ty thành công!",
-      company_id: newCompany.company_id,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi khi tạo công ty:", err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 

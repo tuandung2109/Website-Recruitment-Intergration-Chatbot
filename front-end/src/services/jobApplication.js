@@ -2,9 +2,15 @@ import { _get, _patch, _post } from "../utils/request";
 
 // const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
 
-const listJobApplication = async () => {
+const listJobApplication = async (params = {}) => {
   try {
-    const res = await _get(`/jobsApplication/listApplication`);
+    // 🔍 Tạo query string từ params
+    const query = new URLSearchParams(params).toString();
+    const url = query
+      ? `/jobsApplication/listApplication?${query}`
+      : `/jobsApplication/listApplication`;
+
+    const res = await _get(url);
     const result = await res.json();
 
     if (res.ok && result.applications) {

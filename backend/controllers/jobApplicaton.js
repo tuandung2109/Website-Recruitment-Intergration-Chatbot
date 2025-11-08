@@ -5,7 +5,16 @@ const upload = multer({ storage: multer.memoryStorage() }).single("file");
 // Lấy danh sách account
 const listApplication = async (req, res) => {
   try {
-    const { data: applications, error } = await supabase.from("job_application")
+    // 🔍 Lấy filter params từ query
+    const {
+      searchText,
+      status,
+      job_posting_id,
+      submittedFrom,
+      submittedTo,
+    } = req.query;
+
+    let query = supabase.from("job_application")
       .select(`
         job_application_id,
         account_id,
@@ -49,11 +58,42 @@ const listApplication = async (req, res) => {
         )
       `);
 
+    // 📌 Filter theo trạng thái
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    // 📌 Filter theo job posting
+    if (job_posting_id) {
+      query = query.eq("job_posting_id", job_posting_id);
+    }
+
+    // 📌 Filter theo ngày nộp
+    if (submittedFrom) {
+      query = query.gte("submitted_at", submittedFrom);
+    }
+    if (submittedTo) {
+      query = query.lte("submitted_at", submittedTo);
+    }
+
+    const { data: applications, error } = await query;
+
     if (error) {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.status(200).json({ applications });
+    // 🔍 Filter theo email/phone (backend không support text search tốt, nên filter sau)
+    let filteredApps = applications;
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      filteredApps = applications.filter(
+        (app) =>
+          app.account?.email?.toLowerCase().includes(search) ||
+          app.account?.phone_number?.includes(search)
+      );
+    }
+
+    return res.status(200).json({ applications: filteredApps });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });

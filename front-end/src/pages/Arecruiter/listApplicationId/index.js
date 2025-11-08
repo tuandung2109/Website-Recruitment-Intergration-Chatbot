@@ -10,13 +10,22 @@ import {
   Descriptions,
   Typography,
   message,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Row,
+  Col,
+  Space,
 } from "antd";
+import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
 import UseTitle from "../../../hooks/useTitle";
 import { sendEmail } from "../../../services/email";
 import {
   listJobApplication,
   updateApplicationStatus,
 } from "../../../services/jobApplication";
+import { listJobPostingsEmployer } from "../../../services/jobPosting";
 
 const { Paragraph } = Typography;
 
@@ -27,6 +36,11 @@ function CompanyListJobPosting() {
   const [error, setError] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // 🔍 Filter states
+  const [filterForm] = Form.useForm();
+  const [jobPostings, setJobPostings] = useState([]);
+  const [filters, setFilters] = useState({});
   const handleStatusChange = async (record, newStatus) => {
     const result = await updateApplicationStatus(
       record.job_application_id,
@@ -48,38 +62,89 @@ function CompanyListJobPosting() {
     }
   };
   console.log(handleStatusChange);
+  // 📌 Fetch danh sách job postings của công ty
   useEffect(() => {
-    const fetchApplications = async () => {
+    const fetchJobPostings = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("account"));
         const companyId = user?.company?.company_id;
-
-        if (!companyId) {
-          setError("Không tìm thấy thông tin công ty");
-          setLoading(false);
-          return;
-        }
-
-        const res = await listJobApplication();
-
-        if (res.success) {
-          const filtered = res.jobApplications.filter(
-            (app) => app.job_posting?.company?.company_id === companyId
+        
+        const res = await listJobPostingsEmployer();
+        if (res.success && Array.isArray(res.jobs)) {
+          const filtered = res.jobs.filter(
+            (job) => Number(job.company.id) === Number(companyId)
           );
-          setApplications(filtered);
-        } else {
-          setError(res.message);
+          setJobPostings(filtered);
         }
       } catch (err) {
-        console.error(err);
-        setError("Lỗi khi tải danh sách ứng tuyển");
-      } finally {
-        setLoading(false);
+        console.error("Lỗi tải job postings:", err);
       }
     };
 
-    fetchApplications();
+    fetchJobPostings();
   }, []);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [filters]);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("account"));
+      const companyId = user?.company?.company_id;
+
+      if (!companyId) {
+        setError("Không tìm thấy thông tin công ty");
+        setLoading(false);
+        return;
+      }
+
+      const res = await listJobApplication(filters);
+
+      if (res.success) {
+        const filtered = res.jobApplications.filter(
+          (app) => app.job_posting?.company?.company_id === companyId
+        );
+        setApplications(filtered);
+      } else {
+        setError(res.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi khi tải danh sách ứng tuyển");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔍 Handle filter
+  const handleFilter = (values) => {
+    const newFilters = {
+      searchText: values.searchText || undefined,
+      status: values.status || undefined,
+      job_posting_id: values.job_posting_id || undefined,
+      submittedFrom: values.submittedFrom
+        ? values.submittedFrom.format("YYYY-MM-DD")
+        : undefined,
+      submittedTo: values.submittedTo
+        ? values.submittedTo.format("YYYY-MM-DD")
+        : undefined,
+    };
+
+    // Remove undefined values
+    Object.keys(newFilters).forEach(
+      (key) => newFilters[key] === undefined && delete newFilters[key]
+    );
+
+    setFilters(newFilters);
+  };
+
+  // 🔄 Reset filter
+  const handleResetFilter = () => {
+    filterForm.resetFields();
+    setFilters({});
+  };
 
   const showDetailModal = (record) => {
     setSelectedApp(record);
@@ -314,13 +379,100 @@ function CompanyListJobPosting() {
   return (
     <div className="p-6 flex flex-col items-center gap-8 w-full">
       <Card title="📄 Danh sách đơn ứng tuyển vào công ty" className="w-full">
+        {/* 🔍 Bộ lọc */}
+        <Card
+          title="🔍 Bộ lọc"
+          style={{ marginBottom: 24 }}
+          bodyStyle={{ paddingBottom: 0 }}
+        >
+          <Form
+            form={filterForm}
+            layout="vertical"
+            onFinish={handleFilter}
+          >
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item name="searchText" label="Tìm kiếm">
+                  <Input
+                    prefix={<SearchOutlined />}
+                    placeholder="Email hoặc SĐT ứng viên"
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item name="status" label="Trạng thái">
+                  <Select placeholder="Chọn trạng thái" allowClear>
+                    <Select.Option value="pending">Pending</Select.Option>
+                    <Select.Option value="accept">Accept</Select.Option>
+                    <Select.Option value="reject">Reject</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item name="job_posting_id" label="Vị trí ứng tuyển">
+                  <Select placeholder="Chọn vị trí" allowClear>
+                    {jobPostings.map((job) => (
+                      <Select.Option key={job.id} value={job.id}>
+                        {job.title}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item name="submittedFrom" label="Ngày nộp từ">
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="YYYY-MM-DD"
+                    placeholder="Từ ngày"
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item name="submittedTo" label="Ngày nộp đến">
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="YYYY-MM-DD"
+                    placeholder="Đến ngày"
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={24} md={18}>
+                <Form.Item label=" ">
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<SearchOutlined />}
+                      htmlType="submit"
+                    >
+                      Tìm kiếm
+                    </Button>
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={handleResetFilter}
+                    >
+                      Đặt lại
+                    </Button>
+                  </Space>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Card>
+
         {loading ? (
           <Spin tip="Đang tải dữ liệu..." />
         ) : error ? (
           <Alert message={error} type="error" />
         ) : applications.length === 0 ? (
           <Alert
-            message="Chưa có đơn ứng tuyển nào vào công ty này"
+            message="Không tìm thấy đơn ứng tuyển nào phù hợp"
             type="info"
           />
         ) : (

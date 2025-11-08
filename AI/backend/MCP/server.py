@@ -266,7 +266,41 @@ def retrive_infor_job_posting(query: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"❌ Error retrieving job posting info: {str(e)}")
         return []
+    
+    
+@server.tool()
+def retrive_information_relative(query: str) -> List[Dict[str, Any]]:
+    """
+    Truy xuất thông tin từ Qdrant dựa trên câu hỏi của user
+    Args:
+        query: câu hỏi của user
+    Returns:
+        List[Dict]: danh sách thông tin liên quan
 
+    """
+    try:
+
+        # Lấy Qdrant client
+        from tool.database import QDrant
+        qdrant_client = QDrant(Settings=settings)
+        
+        # Không cần filter vì muốn lấy tất cả entity_type
+        # Tìm kiếm trong Qdrant
+        results = qdrant_client.search_vectors_with_filter(settings, query, "entities", top_k=5, filter=None)
+        
+        # Trích xuất thông tin công ty từ kết quả
+        information = []
+        for res in results:
+            payload = res.payload
+            if payload:
+                information.append(payload)
+
+        print(f"✅ Retrieved {len(information)} information related to the query.")
+        return information
+
+    except Exception as e:
+        print(f"❌ Error retrieving information: {str(e)}")
+        return []
 
 
 # 3️⃣ Chạy server qua STDIO

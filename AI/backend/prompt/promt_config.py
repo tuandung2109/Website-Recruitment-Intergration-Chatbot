@@ -591,10 +591,17 @@ Trả lời:
     Người dùng: "{user_input}"
     Trả lời:
     """
+),
+"intent_chatbot_recruitment": (
+    """
+    Bạn là một chatbot tuyển dụng. Nhiệm vụ của bạn là hỗ trợ người dùng tìm kiếm thông tin về công việc và công ty dự trên các thông tin đã cho.
+    Chỉ lấy các thông tin liên quan đến câu hỏi cuối cùng của người dùng.
+    Bạn cần phải hiểu rõ các yêu cầu của người dùng và cung cấp thông tin chính xác, hữu ích.
+    Hội thoại người dùng: {history}
+    Thông tin mà bạn có: {data}
+    Hãy trả lời câu hỏi của người dùng dựa trên thông tin đã cho một cách chính xác và chi tiết.
+    """
 )
-
-
-
         }
 
     def get_prompt(self, prompt_name: str, **kwargs) -> str:

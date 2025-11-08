@@ -47,18 +47,18 @@ def get_similarity_job_by_skills(filePath: str, use_kat_coder: bool = False):
     # Extract text from CV
     cv = pdf_to_text.extract_text_from_pdf(filePath)
     
-    key = generate_evaluation_key(cv)
+    # key = generate_evaluation_key(cv)
     
-    mongo_client = MongoDBClient(Settings=Settings().load_settings())
+    # mongo_client = MongoDBClient(Settings=Settings().load_settings())
     
     
-    result = mongo_client.read_documents(
-        "job_match_cv",
-        filter_query={"id": key}
-    )
+    # result = mongo_client.read_documents(
+    #     "job_match_cv",
+    #     filter_query={"id": key}
+    # )
     
-    print(f"[INFO] Generated evaluation key: {key}")
-    print(f"[INFO] MongoDB query result: {result}")
+    #print(f"[INFO] Generated evaluation key: {key}")
+    # print(f"[INFO] MongoDB query result: {result}")
     
     # Get prompt for skill extraction
     classification_prompt = client.prompt_config.get_prompt("extract_features_cv", user_input=cv)
@@ -66,40 +66,40 @@ def get_similarity_job_by_skills(filePath: str, use_kat_coder: bool = False):
     # Initialize skills_list variable
     skills_list = []
     
-    if result and len(result) > 0:
-        print("[INFO] Found cached job match results in MongoDB")
-        cached_data = result[0]
-        if '_id' in cached_data:
-            cached_data['_id'] = str(cached_data['_id'])
-        # Get skills from cached data - it's already a list
-        skills_list = cached_data.get("skills", [])
-    else:
-        print("[INFO] No cached results, generating new skill extraction...")
+    # if result and len(result) > 0:
+    #     print("[INFO] Found cached job match results in MongoDB")
+    #     cached_data = result[0]
+    #     if '_id' in cached_data:
+    #         cached_data['_id'] = str(cached_data['_id'])
+    #     # Get skills from cached data - it's already a list
+    #     skills_list = cached_data.get("skills", [])
+    # else:
+    print("[INFO] No cached results, generating new skill extraction...")
         # Generate new skills extraction
-        skills_response = client._strip_think(client.generate_content([{"role": "user", "content": classification_prompt}]))
+    skills_response = client._strip_think(client.generate_content([{"role": "user", "content": classification_prompt}]))
         # Clean the response
-        skills_json = re.sub(r'```json\s*', '', skills_response)
-        skills_json = re.sub(r'```\s*', '', skills_json)
-        skills_json = skills_json.strip()
+    skills_json = re.sub(r'```json\s*', '', skills_response)
+    skills_json = re.sub(r'```\s*', '', skills_json)
+    skills_json = skills_json.strip()
         
         # Parse the JSON string to dictionary for storage
-        try:
-            skills_dict = json.loads(skills_json)
-        except json.JSONDecodeError as e:
-            print(f"[ERROR] Failed to parse skills JSON: {e}")
-            skills_dict = {"skills": []}
+    try:
+        skills_dict = json.loads(skills_json)
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] Failed to parse skills JSON: {e}")
+        skills_dict = {"skills": []}
         
         # Save to MongoDB with proper structure
-        mongo_client.create_document(
-            "job_match_cv",
-            {
-                "id": key,
-                **skills_dict,  # Now unpacking a dict, not a string
-            }
-        )
-        print(f"[INFO] Saved new skills to MongoDB: {skills_dict}")
+        # mongo_client.create_document(
+        #     "job_match_cv",
+        #     {
+        #         "id": key,
+        #         **skills_dict,  # Now unpacking a dict, not a string
+        #     }
+        # )
+    print(f"[INFO] Saved new skills to MongoDB: {skills_dict}")
         # Extract skills list from the dict
-        skills_list = skills_dict.get("skills", [])
+    skills_list = skills_dict.get("skills", [])
     
     # Check if we have skills data
     if not skills_list:

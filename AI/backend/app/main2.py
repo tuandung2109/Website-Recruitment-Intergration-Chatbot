@@ -289,7 +289,7 @@ def chat():
                     })
             else:
                 logger.info(f"💬 Using chat mode for response")
-                response = bot.chat(user_message)
+                response = bot.chat_enhance(user_message)
                 logger.info(f"📤 Chat response: {response[:100]}...")  # Log first 100 chars
 
             # Clean response (remove thinking tags if present)

@@ -82,9 +82,21 @@ nGuyễn Thế
 Trang 1/1
 """
     from tool.database.mongodb import MongoDBClient
-    from tool import extract_text_from_pdf
+    from tool import download_and_extract_pdf
+    
 
-
-    print(extract_text_from_pdf("C:\\Users\\thanh\\Downloads\\NGUYEN THE THANH (1).pdf"))  # Return the dict data
+    # Test download and extract PDF from URL
+    pdf_url = "https://qchjxqztegziqllwgnwb.supabase.co/storage/v1/object/public/cv-files/cv/1/1760328622900-Nguyen-Huy-Quoc-TopCV.vn-180925.95937.pdf"
+    
+    try:
+        extracted_text = download_and_extract_pdf(pdf_url)
+        print("\n" + "="*80)
+        print("EXTRACTED TEXT FROM PDF:")
+        print("="*80)
+        print(extracted_text)
+        print("="*80)
+        print(f"\nTotal characters extracted: {len(extracted_text)}")
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
     
     

@@ -601,7 +601,49 @@ Trả lời:
     Thông tin mà bạn có: {data}
     Hãy trả lời câu hỏi của người dùng dựa trên thông tin đã cho một cách chính xác và chi tiết.
     """
-)
+),
+"intent_extract_features_from_cv": (
+    """
+Bạn là chuyên gia phân tích CV.
+Nhiệm vụ:
+Đọc CV dưới đây {cv} và trả về **JSON hợp lệ** với format:
+{{
+  "general": {{
+  "skills": ["skill1", "skill2", ...],
+  "education": ["degree1", "degree2", ...],
+  "positions": ["position1", "position2", ...],
+  "experience": ["experience1", "experience2", ...]
+  }},
+  "evaluation": {{
+  "strengths": ["strength1", "strength2", ...],
+  "weaknesses": ["weakness1", "weakness2", ...],
+  "recommendations": ["recommendation1", "recommendation2", ...]
+  }}
+}}
+trong đó:
+- skills: Liệt kê tất cả kỹ năng lập trình, công nghệ, framework.
+- education: Chỉ ra trình độ học vấn.
+- positions: Vị trí công việc ứng tuyển.
+- experience: Kinh nghiệm làm việc ở công ty.
+    """
+),
+"intent_evaluate_cv_base_on_jd": (
+    """
+Bạn là chuyên gia tuyển dụng và đánh giá CV dựa trên mô tả công việc (JD).
+Nhiệm vụ:
+Đọc kỹ mô tả đặc trưng của công việc công việc và CV dưới đây và cho điểm số tương ứng đối với từng đặc trưng, sau đó trả về **JSON hợp lệ** với format:
+ví dụ:
+{{
+  "skills": 8,
+  "education": 7,
+  "positions": 9,
+  "experience": 8
+}}
+input:
+JD: {jd}
+CV: {cv}
+        """
+),
         }
 
     def get_prompt(self, prompt_name: str, **kwargs) -> str:
@@ -611,3 +653,4 @@ Trả lời:
         """
         template = self.prompts.get(prompt_name, "Prompt not found.")
         return template.format(**kwargs)  # <-- inject user_input etc.
+    

@@ -302,6 +302,27 @@ def retrive_information_relative(query: str) -> List[Dict[str, Any]]:
         print(f"❌ Error retrieving information: {str(e)}")
         return []
 
+@server.tool()
+def download_and_extract_pdf_from_url(url: str) -> str:
+    """
+    Tải file PDF từ URL, đọc nội dung, sau đó tự động xóa file tạm
+    Args:
+        url: URL của file PDF cần tải và đọc
+    Returns:
+        str: Nội dung text được trích xuất từ PDF
+    """
+    from tool import download_and_extract_pdf
+    
+    try:
+        print(f"\n📥 Processing PDF from URL: {url}")
+        extracted_text = download_and_extract_pdf(url)
+        print(f"✅ Successfully extracted {len(extracted_text)} characters from PDF")
+        return extracted_text
+    except Exception as e:
+        error_msg = f"❌ Error processing PDF from URL: {str(e)}"
+        print(error_msg)
+        return error_msg
+
 
 # 3️⃣ Chạy server qua STDIO
 if __name__ == "__main__":

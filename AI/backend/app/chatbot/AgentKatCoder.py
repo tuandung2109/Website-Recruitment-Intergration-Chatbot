@@ -12,6 +12,7 @@ from setting import Settings
 from llms.llm_manager import llm_manager
 from prompt.promt_config import PromptConfig
 from MCP import get_reflection, get_reflection_openai, retrive_infor_company, retrive_infor_job_posting, retrive_information_relative
+from tool import download_and_extract_pdf
 from openai import OpenAI
 
 class AgentKatCoder(BaseAI):
@@ -203,6 +204,57 @@ class AgentKatCoder(BaseAI):
         except Exception as e:
             logging.error(f"Error evaluating CV: {str(e)}")
             return f"Error evaluating CV: {str(e)}"
+    
+    def handle_ai_evaluation_based_on_features(self,  p_account_id: int,
+                           p_job_posting_id: int,
+                           p_cv_id: int) -> str:
+        """Handle AI evaluation based on extracted features from CV"""
+        from tool.database.postgest import PostgreSQLClient
+
+        try:
+            pg_client = PostgreSQLClient(Settings=self.settings)
+
+            information = pg_client.get_cv_job_detail(p_account_id, p_job_posting_id, p_cv_id)
+
+            job_description = []
+            job_description.append("Vị trí: " + information['position_name'])
+            job_description.append("Mô tả công việc: " + information['job_description'])
+            job_description.append("Yêu cầu: " + information['requirements'])
+            job_description.append("Kinh nghiệm: " + str(information['experience_years']) + " năm")
+            job_description.append("Trình độ học vấn: " + information['education_level'])
+            job_description.append("Kỹ năng: " + information['skills'])
+            
+            cv_url = information['cv_url']
+            if not cv_url:
+                cv_url = information['file_url']
+
+            cv_text = download_and_extract_pdf(cv_url)
+
+            prompt_extracted_features = self.prompt_config.get_prompt("intent_extract_features_from_cv", cv=cv_text)
+        
+            extracted_features = self._strip_think(self.generate_content([{"role": "user", "content": prompt_extracted_features}]))
+
+            extracted_features_json = self.paste_to_json(extracted_features)
+
+            prompt_evaluation = self.prompt_config.get_prompt("intent_evaluate_cv_base_on_jd", jd="\n".join(job_description), cv=extracted_features_json)
+
+            evaluation_result = self._strip_think(self.generate_content([{"role": "user", "content": prompt_evaluation}]))
+            return {
+                "intent": "evaluate_cv",
+                "extracted_features": extracted_features,
+                "evaluation_result": evaluation_result
+            }
+
+        except Exception as e:
+            logging.error(f"Error evaluating based on features: {str(e)}")
+            return f"Error evaluating based on features: {str(e)}"
+    
+    def paste_to_json(self, text: str) -> str:
+        cleaned_text = re.sub(r'```json\s*', '', text)
+        cleaned_text = re.sub(r'```\s*', '', cleaned_text)
+        cleaned_text = cleaned_text.strip()
+        mock_result = json.loads(cleaned_text)
+        return mock_result
 
 
     def chat_with_agent(self, message: str, **kwargs) -> str:

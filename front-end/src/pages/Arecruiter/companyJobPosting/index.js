@@ -83,7 +83,7 @@ function CompanyJobPosting() {
       setCompany(resCompany.company);
 
       // ✅ Gọi API với filter params
-      const resJobs = await listJobPostingsEmployer(params);
+      const resJobs = await listJobsPosting(params);
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
           (job) => Number(job.company.id) === Number(userData.company_id)
@@ -150,6 +150,7 @@ function CompanyJobPosting() {
     setFilterParams({});
     fetchAll();
   };
+  console.log("selectedJob", selectedJob);
   const handleEdit = (job) => {
     setSelectedJob(job);
     form.setFieldsValue({
@@ -161,11 +162,11 @@ function CompanyJobPosting() {
       working_time: job.workingTime,
       status: job.status,
       deleted: job.deleted,
-      account_id: job.account_id,
-      company_id: job.company_id,
+      account_id: job.account.account_id,
+      company_id: job.company.company_id,
       benefits: job.benefits,
-      education_level: job.education_level,
-      experience_years: job.experience_years,
+      education_level: job.educationLevel,
+      experience_years: job.experienceYears,
     });
     setIsEditModal(true);
   };
@@ -534,6 +535,12 @@ function CompanyJobPosting() {
               <p>
                 <strong>Trạng thái:</strong> {selectedJob.status}
               </p>
+              <p>
+                <strong>Ngày tạo:</strong> {selectedJob.create_at}
+              </p>
+              <p>
+                <strong>Ngày cập nhật:</strong> {selectedJob.update_at}
+              </p>
             </div>
           ) : (
             <Spin tip="Đang tải..." />
@@ -584,16 +591,15 @@ function CompanyJobPosting() {
                 ]}
               />
             </Form.Item>
-            <Form.Item name="deleted" label="deleted">
-              <Input />
-            </Form.Item>
-            <Form.Item name="account_id" label="account_ida">
+            <Form.Item name="account_id" label="account_id">
               <Input />
             </Form.Item>
             <Form.Item name="company_id" label="company_id">
               <Input />
             </Form.Item>
-
+            <Form.Item name="deleted" label="deleted">
+              <Input />
+            </Form.Item>
             <Form.Item name="education_level" label="education_level">
               <Input />
             </Form.Item>

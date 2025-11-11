@@ -301,49 +301,33 @@ const listUpdateJobPosting = async (req, res) => {
     if (!id) {
       return res.status(400).json({ error: "Thiếu ID bài đăng" });
     }
+
     const { data: job_posting, error } = await supabase
       .from("job_posting_updates")
       .select(
         `
-            *,
-            account:account_id (
-              account_id,
-              email,
-              gender,
-              phone_number
-            ),
-            company:company_id (
-              company_id,
-              name,
-              website,
-              logo_url,
-              size,
-              description,
-                 description,
-          status,
-          deleted,
-              address:address (
-                address_id,
-                address_detail
-              )
-            ),
-            work_type (
-              work_type_id,
-              work_type_name
-            ),
-            job_posting_skill (
-              skill:skill_id (
-                skill_id,
-                skill_name
-              )
-            ),
-            job_posting_industry (
-              industry:industry_id (
-                industry_id,
-                name
-              )
-            )
-          `
+      *,
+      account:account_id (
+        account_id,
+        email,
+        gender,
+        phone_number
+      ),
+      company:company_id (
+        company_id,
+        name,
+        website,
+        logo_url,
+        size,
+        description,
+        status,
+        deleted,
+        address:address (
+          address_id,
+          address_detail
+        )
+      )
+    `
       )
       .eq("job_posting_updates_id", id)
       .single();
@@ -352,7 +336,8 @@ const listUpdateJobPosting = async (req, res) => {
       console.error("❌ Lỗi Supabase:", error);
       return res.status(400).json({ error: error.message });
     }
-    return res.status(200).json({ job_posting_updates });
+
+    return res.status(200).json({ job_posting }); // ✅ trả về biến đúng
   } catch (error) {
     console.error("❌ Lỗi server:", error);
     return res.status(500).json({ error: "Lỗi server" });
@@ -952,7 +937,8 @@ const handleUpdate = async () => {
     message.error("Lỗi khi gửi cập nhật!");
   }
 };
-const submitJobUpdate = async (req, res) => {
+
+const submitJobUpdate1 = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const jobData = req.body;
@@ -971,56 +957,119 @@ const submitJobUpdate = async (req, res) => {
     return res.status(500).json({ success: false, message: e.message });
   }
 };
-const approveJobUpdate = async (req, res) => {
+// POST /api/jobPosting/submitUpdate/:jobPostingId
+const submitJobUpdate = async (req, res) => {
   try {
-    const updateId = parseInt(req.params.updateId);
+    const jobPostingId = req.params.jobPostingId;
+    const {
+      position_name,
+      job_description,
+      requirements,
+      salary,
+      deadline,
+      experience_years,
+      education_level,
+      benefits,
+      working_time,
+    } = req.body;
 
-    // Lấy bản cập nhật
-    const { data: draft } = await supabase
+    if (!jobPostingId)
+      return res.status(400).json({ error: "Thiếu ID bài đăng" });
+
+    const { data, error } = await supabase
       .from("job_posting_updates")
-      .select("*")
-      .eq("update_id", updateId)
+      .insert({
+        job_posting_id: jobPostingId,
+        position_name,
+        job_description,
+        requirements,
+        salary,
+        deadline,
+        experience_years,
+        education_level,
+        benefits,
+        working_time,
+        status: "pending", // trạng thái chờ duyệt
+      })
       .single();
 
-    if (!draft) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy bản cập nhật" });
-    }
+    if (error) throw error;
 
-    // Update job_posting bằng dữ liệu mới
-    const { error: updateError } = await supabase
-      .from("job_posting")
-      .update(draft.updated_data)
-      .eq("job_posting_id", draft.job_posting_id);
-
-    if (updateError)
-      return res
-        .status(400)
-        .json({ success: false, message: updateError.message });
-
-    // Xóa bản chờ duyệt
-    await supabase
-      .from("job_posting_updates")
-      .delete()
-      .eq("update_id", updateId);
-
-    return res.json({ success: true, message: "Duyệt cập nhật thành công" });
+    res.status(200).json({
+      success: true,
+      message: "Gửi yêu cầu chỉnh sửa thành công",
+      data,
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+const approveJobUpdate = async (req, res) => {
+  try {
+    const id = req.params.id; // id của job_posting_updates
+    if (!id) return res.status(400).json({ error: "Thiếu ID" });
+
+    // Lấy dữ liệu cập nhật
+    const { data: updateData, error } = await supabase
+      .from("job_posting_updates")
+      .select("*")
+      .eq("job_posting_updates_id", id)
+      .single();
+
+    if (error) throw error;
+
+    // Cập nhật vào job_posting
+    const { error: updateError } = await supabase
+      .from("job_posting")
+      .update({
+        position_name: updateData.position_name,
+        job_description: updateData.job_description,
+        requirements: updateData.requirements,
+        salary: updateData.salary,
+        deadline: updateData.deadline,
+        experience_years: updateData.experience_years,
+        education_level: updateData.education_level,
+        benefits: updateData.benefits,
+        working_time: updateData.working_time,
+      })
+      .eq("job_posting_id", updateData.job_posting_id);
+
+    if (updateError) throw updateError;
+
+    // Xóa hoặc đánh dấu bản cập nhật đã duyệt
+    await supabase
+      .from("job_posting_updates")
+      .update({ status: "approved" })
+      .eq("job_posting_updates_id", id);
+
+    res.status(200).json({ success: true, message: "Đã duyệt bản cập nhật" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
 const rejectJobUpdate = async (req, res) => {
-  const updateId = req.params.updateId;
-  await supabase.from("job_posting_updates").delete().eq("update_id", updateId);
-  return res.json({ success: true, message: "Đã từ chối bản cập nhật" });
+  try {
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ error: "Thiếu ID" });
+
+    await supabase
+      .from("job_posting_updates")
+      .update({ status: "rejected" })
+      .eq("job_posting_updates_id", id);
+
+    res.status(200).json({ success: true, message: "Đã từ chối bản cập nhật" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // controllers/jobPosting.js
 
-const listPendingUpdates = async (req, res) => {
+const listPendingJobUpdates = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("job_posting_updates")
@@ -1049,7 +1098,7 @@ const listPendingUpdates = async (req, res) => {
 
 module.exports = {
   listJobPostings,
-  listPendingUpdates,
+  listPendingJobUpdates,
   submitJobUpdate,
   postJobPosting,
   handleUpdate,

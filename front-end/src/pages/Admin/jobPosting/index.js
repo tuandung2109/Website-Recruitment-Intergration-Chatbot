@@ -305,5 +305,4 @@ function AdminJobPosting() {
     </>
   );
 }
-
 export default AdminJobPosting;

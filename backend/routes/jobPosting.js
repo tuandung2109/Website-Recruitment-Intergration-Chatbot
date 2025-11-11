@@ -38,5 +38,5 @@ router.patch("/approveUpdate/:id", controllerJobsPostings.approveJobUpdate);
 // Admin từ chối chỉnh sửa
 router.patch("/rejectUpdate/:id", controllerJobsPostings.rejectJobUpdate);
 // routes/jobPosting.js
-router.get("/listPendingUpdates", controllerJobsPostings.listPendingUpdates);
+router.get("/listPendingUpdates", controllerJobsPostings.listPendingJobUpdates);
 module.exports = router;

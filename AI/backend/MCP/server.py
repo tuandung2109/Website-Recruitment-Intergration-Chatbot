@@ -266,7 +266,62 @@ def retrive_infor_job_posting(query: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"❌ Error retrieving job posting info: {str(e)}")
         return []
+    
+    
+@server.tool()
+def retrive_information_relative(query: str) -> List[Dict[str, Any]]:
+    """
+    Truy xuất thông tin từ Qdrant dựa trên câu hỏi của user
+    Args:
+        query: câu hỏi của user
+    Returns:
+        List[Dict]: danh sách thông tin liên quan
 
+    """
+    try:
+
+        # Lấy Qdrant client
+        from tool.database import QDrant
+        qdrant_client = QDrant(Settings=settings)
+        
+        # Không cần filter vì muốn lấy tất cả entity_type
+        # Tìm kiếm trong Qdrant
+        results = qdrant_client.search_vectors_with_filter(settings, query, "entities", top_k=5, filter=None)
+        
+        # Trích xuất thông tin công ty từ kết quả
+        information = []
+        for res in results:
+            payload = res.payload
+            if payload:
+                information.append(payload)
+
+        print(f"✅ Retrieved {len(information)} information related to the query.")
+        return information
+
+    except Exception as e:
+        print(f"❌ Error retrieving information: {str(e)}")
+        return []
+
+@server.tool()
+def download_and_extract_pdf_from_url(url: str) -> str:
+    """
+    Tải file PDF từ URL, đọc nội dung, sau đó tự động xóa file tạm
+    Args:
+        url: URL của file PDF cần tải và đọc
+    Returns:
+        str: Nội dung text được trích xuất từ PDF
+    """
+    from tool import download_and_extract_pdf
+    
+    try:
+        print(f"\n📥 Processing PDF from URL: {url}")
+        extracted_text = download_and_extract_pdf(url)
+        print(f"✅ Successfully extracted {len(extracted_text)} characters from PDF")
+        return extracted_text
+    except Exception as e:
+        error_msg = f"❌ Error processing PDF from URL: {str(e)}"
+        print(error_msg)
+        return error_msg
 
 
 # 3️⃣ Chạy server qua STDIO

@@ -82,34 +82,21 @@ nGuyễn Thế
 Trang 1/1
 """
     from tool.database.mongodb import MongoDBClient
-    from tool import extract_text_from_pdf
-    from tool import generate_evaluation_key
+    from tool import download_and_extract_pdf
     
-    
-    
-    # settings = Settings().load_settings()
 
-    # key = generate_evaluation_key(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
+    # Test download and extract PDF from URL
+    pdf_url = "https://qchjxqztegziqllwgnwb.supabase.co/storage/v1/object/public/cv-files/cv/1/1760328622900-Nguyen-Huy-Quoc-TopCV.vn-180925.95937.pdf"
     
-    
-    # print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))
-    # print(f"Generated evaluation key: {key}")
-
-    # mongo_client = MongoDBClient(Settings=settings)
-            
-    # # Check if evaluation already exists
-    # existing_evaluation = mongo_client.read_documents(
-    #     "cv_evaluation",
-    #     filter_query={"id": 4, "key": "63ba246606b8152936eab39ec5abb3b6cf3b35552dc3fe413e1c1159bfd86747"}
-    # )
-            
-    # if existing_evaluation:
-    #     evaluation_data = existing_evaluation[0]
-                
-    #             # Convert ObjectId to string for JSON serialization
-    # if '_id' in evaluation_data:
-    #     evaluation_data['_id'] = str(evaluation_data['_id'])
-
-    print(extract_text_from_pdf("C:\\Users\\myth\\Downloads\\NGUYEN THE THANH - CV.pdf"))  # Return the dict data
+    try:
+        extracted_text = download_and_extract_pdf(pdf_url)
+        print("\n" + "="*80)
+        print("EXTRACTED TEXT FROM PDF:")
+        print("="*80)
+        print(extracted_text)
+        print("="*80)
+        print(f"\nTotal characters extracted: {len(extracted_text)}")
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
     
     

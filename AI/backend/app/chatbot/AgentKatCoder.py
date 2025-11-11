@@ -11,7 +11,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from setting import Settings
 from llms.llm_manager import llm_manager
 from prompt.promt_config import PromptConfig
-from MCP import get_reflection, get_reflection_openai, retrive_infor_company, retrive_infor_job_posting
+from MCP import get_reflection, get_reflection_openai, retrive_infor_company, retrive_infor_job_posting, retrive_information_relative
+from tool import download_and_extract_pdf
 from openai import OpenAI
 
 class AgentKatCoder(BaseAI):
@@ -63,34 +64,34 @@ class AgentKatCoder(BaseAI):
             
             job_description = pg_client.get_job_posting_info_by_id(id)
             
-            mongo_client = MongoDBClient(Settings=self.settings)
+            # mongo_client = MongoDBClient(Settings=self.settings)
             
-            key = generate_evaluation_key(job_description)
+            # key = generate_evaluation_key(job_description)
             
-            result_by_key = mongo_client.read_documents(
-                "recruitment website intergrate ai", 
-                filter_query={"key": key, "id": id}
-            )
+            # result_by_key = mongo_client.read_documents(
+            #     "recruitment website intergrate ai", 
+            #     filter_query={"key": key, "id": id}
+            # )
             
-            # If found existing evaluation, return it
-            if result_by_key:
-                # result_by_key is a list, get the first document
-                evaluation_data = result_by_key[0]
+            # # If found existing evaluation, return it
+            # if result_by_key:
+            #     # result_by_key is a list, get the first document
+            #     evaluation_data = result_by_key[0]
                 
-                # Convert ObjectId to string for JSON serialization
-                if '_id' in evaluation_data:
-                    evaluation_data['_id'] = str(evaluation_data['_id'])
+            #     # Convert ObjectId to string for JSON serialization
+            #     if '_id' in evaluation_data:
+            #         evaluation_data['_id'] = str(evaluation_data['_id'])
                 
-                return evaluation_data  # Return the dict data
+            #     return evaluation_data  # Return the dict data
             
             # If no existing evaluation found, could generate new one here
             prompt = self.prompt_config.get_prompt("evaluate_jd", user_input=job_description)
             evaluation = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
             
-            mongo_client.delete_document(
-                "recruitment website intergrate ai",
-                filter_query={"id": id}
-            )
+            # mongo_client.delete_document(
+            #     "recruitment website intergrate ai",
+            #     filter_query={"id": id}
+            # )
 
             # Clean markdown code blocks
             cleaned_output = re.sub(r"```(?:json)?", "", evaluation).strip()
@@ -114,14 +115,14 @@ class AgentKatCoder(BaseAI):
                 logging.error(f"Attempted JSON: {json_str[:500]}...")
                 raise
             
-            mongo_client.create_document(
-                "recruitment website intergrate ai",
-                {
-                    "key": key,
-                    "id": id,
-                    **data
-                }
-            )
+            # mongo_client.create_document(
+            #     "recruitment website intergrate ai",
+            #     {
+            #         "key": key,
+            #         "id": id,
+            #         **data
+            #     }
+            # )
             return data
             
         except Exception as e:
@@ -136,57 +137,7 @@ class AgentKatCoder(BaseAI):
             print(f"câu trả lời: {answers}")
             prompt = self.prompt_config.get_prompt("AI_interview_result_evaluation", user_input=cv, answers=answers)
             evaluation = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
-#             mock_result = """{
-#   "overrallScore": 86,
-#   "overallFeedback": "Ứng viên thể hiện kiến thức vững vàng về Unity, các mẫu thiết kế lập trình như MVC, State Machine, và Object Pooling. Câu trả lời rõ ràng, có tính thực tế, cho thấy kinh nghiệm làm dự án cá nhân nghiêm túc. Ứng viên có tiềm năng trở thành Game Developer chuyên nghiệp nếu tiếp tục trau dồi kỹ năng nâng cao như tối ưu hiệu suất và lập trình AI phức tạp hơn.",
-#   "strengths": [
-#     "Hiểu rõ và áp dụng tốt các mẫu thiết kế phổ biến trong phát triển game Unity (MVC, State Machine, Object Pooling).",
-#     "Trình bày mạch lạc, tư duy logic rõ ràng, cho thấy nắm vững quy trình phát triển game.",
-#     "Có trải nghiệm thực tế với nhiều công nghệ khác nhau (ML.NET, UI Toolkit, Unity UI).",
-#     "Sử dụng Git/GitHub bài bản, thể hiện kỹ năng làm việc nhóm và quản lý dự án tốt."
-#   ],
-#   "weaknesses": [
-#     "Chưa đề cập sâu đến việc tối ưu code hoặc hiệu năng cho các thiết bị di động.",
-#     "Phần trình bày về ML.NET còn khái quát, chưa nêu rõ cách đánh giá mô hình hoặc xử lý lỗi.",
-#     "Thiếu ví dụ cụ thể về việc giải quyết vấn đề thực tế trong quá trình phát triển game."
-#   ],
-#   "recommendations": [
-#     "Nên học thêm về tối ưu hóa hiệu năng trong Unity, đặc biệt khi phát triển game mobile.",
-#     "Cải thiện kỹ năng AI nâng cao (ví dụ như Behaviour Tree hoặc Utility AI).",
-#     "Tham gia vào các dự án game nhóm hoặc game jam để trau dồi kỹ năng teamwork và production pipeline.",
-#     "Nâng cao khả năng giải thích chi tiết hơn về quy trình kiểm thử và tối ưu mô hình Machine Learning."
-#   ],
-#   "detailedScores": [
-#     {
-#       "category": "Kiến thức chuyên môn Unity",
-#       "score": 90,
-#       "maxScore": 100,
-#       "feedback": "Ứng viên nắm vững Unity, biết áp dụng tốt các kỹ thuật thiết kế và tối ưu hiệu suất cơ bản."
-#     },
-#     {
-#       "category": "Kỹ năng lập trình & Design Pattern",
-#       "score": 88,
-#       "maxScore": 100,
-#       "feedback": "Thể hiện hiểu biết sâu về OOP và Design Pattern, tuy nhiên có thể mở rộng hơn về kiến trúc hệ thống phức tạp."
-#     },
-#     {
-#       "category": "Giao tiếp & Trình bày ý tưởng",
-#       "score": 80,
-#       "maxScore": 100,
-#       "feedback": "Trả lời mạch lạc, dễ hiểu, tuy nhiên nên bổ sung ví dụ cụ thể hơn để tăng tính thuyết phục."
-#     }
-#   ],
-#   "score": [90, 88, 92, 85, 80, 82],
-#   "feedback": [
-#     "Ứng viên trả lời rất tốt, hiểu rõ cách áp dụng MVC trong Unity và có khả năng tách biệt logic - giao diện hợp lý.",
-#     "Giải thích rõ ràng cách triển khai State Machine, thể hiện hiểu biết thực tế và khả năng tổ chức code tốt.",
-#     "Trình bày đúng bản chất của Object Pooling và lợi ích của nó, cho thấy tư duy tối ưu hiệu suất game.",
-#     "Câu trả lời về ML.NET tốt, thể hiện hiểu về pipeline huấn luyện, tuy nhiên nên nói rõ hơn về quy trình đánh giá mô hình.",
-#     "So sánh UI Toolkit và Unity UI chính xác, nắm rõ ưu nhược điểm của từng công cụ và biết khi nào nên dùng.",
-#     "Câu trả lời về Git thể hiện kỹ năng quản lý dự án tốt, có quy trình làm việc chuyên nghiệp và tổ chức hợp lý."
-#   ]
-# }
-# """       
+
             cleaned_text = re.sub(r'```json\s*', '', evaluation)
             cleaned_text = re.sub(r'```\s*', '', cleaned_text)
             cleaned_text = cleaned_text.strip()
@@ -211,40 +162,40 @@ class AgentKatCoder(BaseAI):
             from tool import extract_text_from_pdf
             from tool import generate_evaluation_key    
 
-            text_content = extract_text_from_pdf(filepath)
+            # text_content = extract_text_from_pdf(filepath)
 
-            key = generate_evaluation_key(text_content)
+            # key = generate_evaluation_key(text_content)
 
-            mongo_client = MongoDBClient(Settings=self.settings)
-            print(f"Evaluating CV with key: {key}")
+            # mongo_client = MongoDBClient(Settings=self.settings)
+            # print(f"Evaluating CV with key: {key}")
             
-            # Check if evaluation already exists
-            existing_evaluation = mongo_client.read_documents("cv_evaluation", filter_query={"key": key})
+            # # Check if evaluation already exists
+            # existing_evaluation = mongo_client.read_documents("cv_evaluation", filter_query={"key": key})
         
             
-            print(existing_evaluation)
+            # print(existing_evaluation)
             
-            if existing_evaluation:
-                evaluation_data = existing_evaluation[0]
+            # if existing_evaluation:
+            #     evaluation_data = existing_evaluation[0]
                 
-                # Convert ObjectId to string for JSON serialization
-                if '_id' in evaluation_data:
-                    evaluation_data['_id'] = str(evaluation_data['_id'])
+            #     # Convert ObjectId to string for JSON serialization
+            #     if '_id' in evaluation_data:
+            #         evaluation_data['_id'] = str(evaluation_data['_id'])
                     
-                return {
-                    "intent": "evaluate_cv",
-                    "extracted_features": evaluation_data
-                }  
+            #     return {
+            #         "intent": "evaluate_cv",
+            #         "extracted_features": evaluation_data
+            #     }  
         
             result = extract_cv_to_json_by_openai(filepath)
             
-            mongo_client.create_document(
-                "cv_evaluation",
-                {
-                    "key": key,
-                    **result
-                }
-            )
+            # mongo_client.create_document(
+            #     "cv_evaluation",
+            #     {
+            #         "key": key,
+            #         **result
+            #     }
+            # )
             return {
                 "intent": "evaluate_cv",
                 "extracted_features": result
@@ -253,6 +204,57 @@ class AgentKatCoder(BaseAI):
         except Exception as e:
             logging.error(f"Error evaluating CV: {str(e)}")
             return f"Error evaluating CV: {str(e)}"
+    
+    def handle_ai_evaluation_based_on_features(self,  p_account_id: int,
+                           p_job_posting_id: int,
+                           p_cv_id: int) -> str:
+        """Handle AI evaluation based on extracted features from CV"""
+        from tool.database.postgest import PostgreSQLClient
+
+        try:
+            pg_client = PostgreSQLClient(Settings=self.settings)
+
+            information = pg_client.get_cv_job_detail(p_account_id, p_job_posting_id, p_cv_id)
+
+            job_description = []
+            job_description.append("Vị trí: " + information['position_name'])
+            job_description.append("Mô tả công việc: " + information['job_description'])
+            job_description.append("Yêu cầu: " + information['requirements'])
+            job_description.append("Kinh nghiệm: " + str(information['experience_years']) + " năm")
+            job_description.append("Trình độ học vấn: " + information['education_level'])
+            job_description.append("Kỹ năng: " + information['skills'])
+            
+            cv_url = information['cv_url']
+            if not cv_url:
+                cv_url = information['file_url']
+
+            cv_text = download_and_extract_pdf(cv_url)
+
+            prompt_extracted_features = self.prompt_config.get_prompt("intent_extract_features_from_cv", cv=cv_text)
+        
+            extracted_features = self._strip_think(self.generate_content([{"role": "user", "content": prompt_extracted_features}]))
+
+            extracted_features_json = self.paste_to_json(extracted_features)
+
+            prompt_evaluation = self.prompt_config.get_prompt("intent_evaluate_cv_base_on_jd", jd="\n".join(job_description), cv=extracted_features_json)
+
+            evaluation_result = self._strip_think(self.generate_content([{"role": "user", "content": prompt_evaluation}]))
+            return {
+                "intent": "evaluate_cv",
+                "extracted_features": extracted_features,
+                "evaluation_result": evaluation_result
+            }
+
+        except Exception as e:
+            logging.error(f"Error evaluating based on features: {str(e)}")
+            return f"Error evaluating based on features: {str(e)}"
+    
+    def paste_to_json(self, text: str) -> str:
+        cleaned_text = re.sub(r'```json\s*', '', text)
+        cleaned_text = re.sub(r'```\s*', '', cleaned_text)
+        cleaned_text = cleaned_text.strip()
+        mock_result = json.loads(cleaned_text)
+        return mock_result
 
 
     def chat_with_agent(self, message: str, **kwargs) -> str:
@@ -414,6 +416,34 @@ class AgentKatCoder(BaseAI):
             self.add_assistant_message(assistant_response)
             return assistant_response
             
+        except Exception as e:
+            error_msg = f"Error processing chat request: {str(e)}"
+            logging.error(error_msg)
+            import traceback
+            logging.error(traceback.format_exc())
+            self.add_assistant_message(error_msg)
+            return error_msg
+        
+    def chat_enhance(self, message: str, include_history: bool = True) -> str:
+        print(f"Received message for enhanced chat: {message}")
+        self.add_user_message(message)
+        query = message
+        
+        # Prepare messages for API
+        if include_history:
+            messages = self.conversation_history.copy()
+        else:
+            messages = [{"role": "user", "content": message}]
+        
+        try:
+            data = retrive_information_relative(query)
+            prompt = self.prompt_config.get_prompt("intent_chatbot_recruitment", history=messages, data=data)
+
+            assistant_response = self._strip_think(self.generate_content([{"role": "user", "content": prompt}]))
+            self.add_assistant_message(assistant_response)
+            return assistant_response
+
+             
         except Exception as e:
             error_msg = f"Error processing chat request: {str(e)}"
             logging.error(error_msg)

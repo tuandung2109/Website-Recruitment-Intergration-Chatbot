@@ -4,5 +4,6 @@ from tool.extract_cv_to_json import extract_cv_to_json_by_openai
 from tool.ner_extract_skills import get_similarity_job_by_skills
 from tool.generate_evaluation_key import generate_evaluation_key
 from tool.stimulate_interview_based_on_cv import simulate_interview_based_on_cv
+from tool.download_and_extract_pdf import download_and_extract_pdf, download_pdf_to_file
 
-all = ["extract_text_from_pdf", "extract_cv_to_json_by_openai", "get_similarity_job_by_skills", "generate_evaluation_key", "simulate_interview_based_on_cv"]
+all = ["extract_text_from_pdf", "extract_cv_to_json_by_openai", "get_similarity_job_by_skills", "generate_evaluation_key", "simulate_interview_based_on_cv", "download_and_extract_pdf", "download_pdf_to_file"]

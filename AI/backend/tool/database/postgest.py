@@ -99,6 +99,44 @@ class PostgreSQLClient:
             logger.error(f"❌ Error getting job posting info: {str(e)}")
             return None
         
+    def get_cv_job_detail(self, p_account_id: int,
+                           p_job_posting_id: int,
+                           p_cv_id: int) -> Dict[str, Any]:
+        """
+        Lấy thông tin CV theo ID sử dụng stored function
+        
+        Args:
+            cv_id: ID của CV cần lấy thông tin
+            
+        Returns:
+            Dict chứa thông tin CV hoặc None nếu không tìm thấy
+        """
+        try:
+          
+            
+            # Gọi stored function với tham số
+            response = self.client.rpc(
+                "get_application_detail",
+                {
+                    "p_account_id": p_account_id,
+                    "p_job_posting_id": p_job_posting_id,
+                    "p_cv_id": p_cv_id
+                }
+            ).execute()
+            
+            # Kiểm tra kết quả
+            if response.data and len(response.data) > 0:
+                cv_data = response.data[0]  # Function trả về array, lấy phần tử đầu tiên
+      
+                
+                return cv_data
+            else:
+       
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting CV info: {str(e)}")
+            return None
     
     
     

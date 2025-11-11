@@ -1,7 +1,5 @@
 import { _get, _patch, _post } from "../utils/request";
 
-// const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
-
 const listJobApplication = async (params = {}) => {
   try {
     // 🔍 Tạo query string từ params

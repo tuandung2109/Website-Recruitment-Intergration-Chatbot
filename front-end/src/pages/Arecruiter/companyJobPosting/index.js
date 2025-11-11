@@ -33,6 +33,7 @@ import {
   unlockJobPosting,
   listJobPostingsEmployer,
   offJobPosting,
+  submitJobUpdate,
 } from "../../../services/jobPosting";
 import { listIndustry } from "../../../services/industry";
 import { listSkills } from "../../../services/skill";
@@ -159,6 +160,12 @@ function CompanyJobPosting() {
       deadline: job.deadline ? dayjs(job.deadline) : null,
       working_time: job.workingTime,
       status: job.status,
+      deleted: job.deleted,
+      account_id: job.account_id,
+      company_id: job.company_id,
+      benefits: job.benefits,
+      education_level: job.education_level,
+      experience_years: job.experience_years,
     });
     setIsEditModal(true);
   };
@@ -166,34 +173,39 @@ function CompanyJobPosting() {
   const handleUpdate = async () => {
     try {
       const values = await form.validateFields();
-
-      const updatedJob = {
+      const updateData = {
         position_name: values.position_name,
         job_description: values.job_description,
         requirements: values.requirements,
         salary: values.salary,
-        deadline: values.deadline,
+        deadline: values.deadline?.format("YYYY-MM-DD"),
         working_time: values.working_time,
         status: values.status,
+
+        deleted: values.deleted,
+        account_id: values.account_id,
+        company_id: values.company_id,
+        benefits: values.benefits,
+        education_level: values.education_level,
+        experience_years: values.experience_years,
       };
-
-      const res = await updateJobPosting(
+      const res = await submitJobUpdate(
         selectedJob.id || selectedJob.job_posting_id,
-        updatedJob
+        updateData
       );
-
       if (res.success) {
-        message.success("Cập nhật bài đăng thành công!");
+        message.success(
+          "Yêu cầu chỉnh sửa đã gửi lên Admin. Vui lòng chờ duyệt."
+        );
         setIsEditModal(false);
         form.resetFields();
-        // ✅ Reload lại danh sách job
-        await fetchAll();
+        fetchAll();
       } else {
-        message.error(res.message || "Cập nhật thất bại!");
+        message.error(res.message || "Gửi yêu cầu thất bại!");
       }
     } catch (err) {
       console.error(err);
-      message.error("Lỗi khi cập nhật bài đăng!");
+      message.error("Lỗi khi gửi yêu cầu chỉnh sửa!");
     }
   };
   const handleToggleStatus = async (job) => {
@@ -460,9 +472,10 @@ function CompanyJobPosting() {
                   <Button
                     type="link"
                     style={{ background: "#eeff8d" }}
+                    disabled={record.status === "pending"}
                     onClick={() => handleEdit(record)}
                   >
-                    Sửa bài đăng
+                    Gửi yêu cầu chỉnh sửa
                   </Button>
 
                   <Button
@@ -560,6 +573,9 @@ function CompanyJobPosting() {
             <Form.Item name="working_time" label="Thời gian làm việc">
               <Input />
             </Form.Item>
+            <Form.Item name="benefits" label="Quyền lợi">
+              <Input />
+            </Form.Item>
             <Form.Item name="status" label="Trạng thái">
               <Select
                 options={[
@@ -567,6 +583,22 @@ function CompanyJobPosting() {
                   { label: "Đã khóa", value: "inactive" },
                 ]}
               />
+            </Form.Item>
+            <Form.Item name="deleted" label="deleted">
+              <Input />
+            </Form.Item>
+            <Form.Item name="account_id" label="account_ida">
+              <Input />
+            </Form.Item>
+            <Form.Item name="company_id" label="company_id">
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="education_level" label="education_level">
+              <Input />
+            </Form.Item>
+            <Form.Item name="experience_years" label="experience_years">
+              <Input />
             </Form.Item>
           </Form>
         </Modal>

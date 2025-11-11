@@ -8,6 +8,7 @@ import {
   Tag,
   message,
   Descriptions,
+  Tabs,
   Divider,
 } from "antd";
 import {
@@ -15,6 +16,9 @@ import {
   unlockJobPosting,
   softJobPosting,
   listJobPostingById,
+  listPendingUpdates,
+  approveJobUpdate,
+  rejectJobUpdate,
 } from "../../../services/jobPosting";
 import UseTitle from "../../../hooks/useTitle";
 
@@ -26,9 +30,18 @@ function AdminJobPosting() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [pendingUpdates, setPendingUpdates] = useState([]);
+
+  const fetchPending = async () => {
+    const res = await listPendingUpdates();
+    if (res.success) {
+      setPendingUpdates(res.data);
+    }
+  };
 
   useEffect(() => {
     fetchData();
+    fetchPending();
   }, []);
 
   const fetchData = async () => {
@@ -176,6 +189,22 @@ function AdminJobPosting() {
       ),
     },
   ];
+  const handleApproveUpdate = async (record) => {
+    const res = await approveJobUpdate(record.update_id);
+    if (res.success) {
+      message.success("Đã duyệt bản chỉnh sửa.");
+      fetchPending();
+      fetchData();
+    }
+  };
+
+  const handleRejectUpdate = async (record) => {
+    const res = await rejectJobUpdate(record.update_id);
+    if (res.success) {
+      message.warning("Đã từ chối bản chỉnh sửa.");
+      fetchPending();
+    }
+  };
 
   if (loading) return <Spin tip="Đang tải dữ liệu..." />;
   if (error) return <Alert type="error" message={error} />;

@@ -267,7 +267,8 @@ const CandidateEvaluation = () => {
     };
     return colors[recommendation] || "recommendation-default";
   };
-
+  setEvaluations();
+  setIsLoading(false);
   const getRecommendationIcon = (recommendation) => {
     const icons = {
       "Highly Recommended": <Trophy className="rec-icon" />,

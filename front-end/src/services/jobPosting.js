@@ -422,7 +422,6 @@ const updateJobPosting = async (job_posting_id, jobData) => {
       jobData
     );
     const result = await res.json();
-
     if (res.ok) {
       return {
         success: true,
@@ -459,7 +458,59 @@ const getJobPostingStatistics = async (companyId) => {
   }
 };
 
+// NTD gửi bản chỉnh sửa
+const submitJobUpdate = async (job_posting_id, jobData) => {
+  try {
+    const res = await _post(
+      `/jobPosting/submitUpdate/${job_posting_id}`,
+      jobData
+    );
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
+  }
+};
+// ADMIN duyệt chỉnh sửa
+const approveJobUpdate = async (job_posting_id) => {
+  try {
+    const res = await _patch(`/jobPosting/approveUpdate/${job_posting_id}`);
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
+  }
+};
+// ADMIN từ chối chỉnh sửa
+const rejectJobUpdate = async (job_posting_id) => {
+  try {
+    const res = await _patch(`/jobPosting/rejectUpdate/${job_posting_id}`);
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
+  }
+};
+// Lấy danh sách job đang chờ duyệt chỉnh sửa
+const listPendingUpdates = async (params = {}) => {
+  try {
+    const query = new URLSearchParams(params).toString();
+    const url = query
+      ? `/jobPosting/listPendingUpdates?${query}`
+      : `/jobPosting/listPendingUpdates`;
+
+    const res = await _get(url);
+    const result = await res.json();
+
+    if (!res.ok) throw new Error(result.message || "Lỗi không xác định");
+
+    return { success: true, data: result.data || [] };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
 export {
+  listPendingUpdates,
   softJobPosting,
   unlockJobPosting,
   listJobsPosting,
@@ -471,4 +522,7 @@ export {
   getJobPostingStatistics,
   offJobPosting,
   listJobPostingsEmployer,
+  rejectJobUpdate,
+  approveJobUpdate,
+  submitJobUpdate,
 };

@@ -1,6 +1,9 @@
 // Use REACT_APP_API_URL from environment variables
 // const API = (process.env.REACT_APP_API_URL || "http://localhost:3001") + "/api";
-const API = (process.env.REACT_APP_API_URL || "http://localhost:9000") + "/api";
+const API =
+  (process.env.REACT_APP_API_URL ||
+    "http://localhost:9000" ||
+    `https://website-recruitment-intergration-ch.vercel.app`) + "/api";
 
 export const _get = async (path) => {
   const response = await fetch(API + path, {

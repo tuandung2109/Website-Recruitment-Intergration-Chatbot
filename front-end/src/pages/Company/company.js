@@ -40,7 +40,7 @@ function Company() {
       setSearchText(agentFillters.name || "");
       setSelectedIndustry(agentFillters.industry || "");
       setSelectedAddress(agentFillters.location || "");
-      
+
       setCurrentPage(1);
 
       // Scroll to top để người dùng thấy kết quả filter
@@ -54,32 +54,33 @@ function Company() {
   useEffect(() => {
     const handleAgentNavigation = (event) => {
       if (event.detail?.filters) {
-        console.log("🔄 New agent filters received while on Company page:", event.detail.filters);
+        console.log(
+          "🔄 New agent filters received while on Company page:",
+          event.detail.filters
+        );
         const filters = event.detail.filters;
-        
+
         // Áp dụng filters mới
         setSearchText(filters.name || "");
         setSelectedIndustry(filters.industry || "");
         setSelectedAddress(filters.location || "");
-        
+
         setCurrentPage(1);
-        
+
         // Scroll to top để người dùng thấy kết quả filter
         window.scrollTo({ top: 0, behavior: "smooth" });
-        
+
         console.log("✅ New agent filters applied successfully");
       }
     };
 
     // Lắng nghe custom event từ agentController
-    window.addEventListener('agentNavigation', handleAgentNavigation);
+    window.addEventListener("agentNavigation", handleAgentNavigation);
 
     return () => {
-      window.removeEventListener('agentNavigation', handleAgentNavigation);
+      window.removeEventListener("agentNavigation", handleAgentNavigation);
     };
   }, []); // Chỉ chạy một lần khi mount
-
-      
 
   const { industryOptions, addressOptions } = useMemo(() => {
     const industrySet = new Set();
@@ -110,45 +111,55 @@ function Company() {
     let data = companies;
 
     // 🔎 Lọc theo từ khóa (tên công ty hoặc mô tả)
-    if (searchText && typeof searchText === 'string' && searchText.trim()) {
+    if (searchText && typeof searchText === "string" && searchText.trim()) {
       const s = searchText.toLowerCase();
-      data = data.filter((c) =>
-        (c?.name || "").toLowerCase().includes(s)
-      );
+      data = data.filter((c) => (c?.name || "").toLowerCase().includes(s));
     }
 
     // 🏭 Lọc theo ngành nghề
-    if (selectedIndustry && typeof selectedIndustry === 'string' && selectedIndustry.trim()) {
-      data = data.filter((c) =>
-        Array.isArray(c?.company_industry) &&
-        c.company_industry.some(
-          (ci) =>
+    if (
+      selectedIndustry &&
+      typeof selectedIndustry === "string" &&
+      selectedIndustry.trim()
+    ) {
+      data = data.filter(
+        (c) =>
+          Array.isArray(c?.company_industry) &&
+          c.company_industry.some((ci) =>
             (ci?.industry?.name || "")
               .toLowerCase()
               .includes(selectedIndustry.toLowerCase())
-        )
+          )
       );
     }
 
     // 📍 Lọc theo địa chỉ
-    if (selectedAddress && typeof selectedAddress === 'string' && selectedAddress.trim()) {
-      data = data.filter((c) =>
-        Array.isArray(c?.address) &&
-        c.address.some((a) =>
-          (a?.address_detail || "")
-            .toLowerCase()
-            .includes(selectedAddress.toLowerCase())
-        )
+    if (
+      selectedAddress &&
+      typeof selectedAddress === "string" &&
+      selectedAddress.trim()
+    ) {
+      data = data.filter(
+        (c) =>
+          Array.isArray(c?.address) &&
+          c.address.some((a) =>
+            (a?.address_detail || "")
+              .toLowerCase()
+              .includes(selectedAddress.toLowerCase())
+          )
       );
     }
 
     return data;
-  }, [companies, selectedIndustry, selectedAddress , searchText]);
+  }, [companies, selectedIndustry, selectedAddress, searchText]);
 
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentCompanies = filteredCompanies.slice(indexOfFirstItem, indexOfLastItem);
+  const currentCompanies = filteredCompanies.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -159,7 +170,7 @@ function Company() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedIndustry, selectedAddress , searchText]);
+  }, [selectedIndustry, selectedAddress, searchText]);
 
   if (loading)
     return (
@@ -189,15 +200,20 @@ function Company() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
       {/* <section className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-24 overflow-hidden"> */}
-        {/* <div className="absolute inset-0 bg-black opacity-10"></div> */}
-        <section className="relative bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 text-white py-24 overflow-hidden">
+      {/* <div className="absolute inset-0 bg-black opacity-10"></div> */}
+      <section className="relative bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 text-white py-24 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-5"></div>
-        
-        
+
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-blue-300 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div
+            className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
+          <div
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-blue-300 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse"
+            style={{ animationDelay: "2s" }}
+          ></div>
         </div>
 
         <div className="relative text-center max-w-7xl mx-auto px-4">
@@ -214,62 +230,68 @@ function Company() {
       <div className="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
         <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-6 py-4 border-b border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800">🔍 Bộ lọc tìm kiếm</h3>
-            <p className="text-sm text-gray-600 mt-1">Tìm kiếm công ty phù hợp với bạn</p>
+            <h3 className="text-lg font-bold text-gray-800">
+              🔍 Bộ lọc tìm kiếm
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Tìm kiếm công ty phù hợp với bạn
+            </p>
           </div>
-          
-        <div className="p-6">
-          <div className="grid gap-5 md:grid-cols-4">
-            {/* Ô tìm kiếm */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Tìm kiếm công ty
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Nhập tên công ty hoặc mô tả..."
-                  className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
-                  aria-label="Tìm kiếm công ty"
-                />
-                {/* Icon kính lúp (bên trái) */}
-                {/* <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 text-lg">🔎</span> */}
-                {/* Nút xóa nhanh (bên phải) */}
-                {searchText && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchText("")}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
-                    aria-label="Xóa tìm kiếm"
-                    title="Xóa tìm kiếm"
-                  >
-                    ✕
-                  </button>
-                )}
+
+          <div className="p-6">
+            <div className="grid gap-5 md:grid-cols-4">
+              {/* Ô tìm kiếm */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tìm kiếm công ty
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder="Nhập tên công ty hoặc mô tả..."
+                    className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+                    aria-label="Tìm kiếm công ty"
+                  />
+                  {/* Icon kính lúp (bên trái) */}
+                  {/* <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 text-lg">🔎</span> */}
+                  {/* Nút xóa nhanh (bên phải) */}
+                  {searchText && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchText("")}
+                      className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                      aria-label="Xóa tìm kiếm"
+                      title="Xóa tìm kiếm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Lọc theo ngành */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Lọc theo ngành nghề
-              </label>
-              <select
-                value={selectedIndustry}
-                onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
-              >
-                <option value="">Tất cả ngành</option>
-                {industryOptions.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-            </div>
+              {/* Lọc theo ngành */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Lọc theo ngành nghề
+                </label>
+                <select
+                  value={selectedIndustry}
+                  onChange={(e) => setSelectedIndustry(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+                >
+                  <option value="">Tất cả ngành</option>
+                  {industryOptions.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Lọc theo địa chỉ */}
-            {/* <div>
+              {/* Lọc theo địa chỉ */}
+              {/* <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Lọc theo địa chỉ
               </label>
@@ -284,62 +306,60 @@ function Company() {
                 ))}
               </select>
             </div> */}
-            <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Tìm kiếm theo địa chỉ
-        </label>
-        <div className="relative">
-          <input
-            list="address-list"
-            type="text"
-            value={selectedAddress}
-            onChange={(e) => setSelectedAddress(e.target.value)}
-            placeholder="Nhập địa chỉ công ty..."
-            className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
-          />
-          <datalist id="address-list">
-            {addressOptions.map((addr) => (
-              <option key={addr} value={addr} />
-            ))}
-          </datalist>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tìm kiếm theo địa chỉ
+                </label>
+                <div className="relative">
+                  <input
+                    list="address-list"
+                    type="text"
+                    value={selectedAddress}
+                    onChange={(e) => setSelectedAddress(e.target.value)}
+                    placeholder="Nhập địa chỉ công ty..."
+                    className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-gray-700 font-medium"
+                  />
+                  <datalist id="address-list">
+                    {addressOptions.map((addr) => (
+                      <option key={addr} value={addr} />
+                    ))}
+                  </datalist>
 
-          {/* Nút xóa nhanh bên phải */}
-          {selectedAddress && (
-            <button
-              type="button"
-              onClick={() => setSelectedAddress("")}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
-              aria-label="Xóa địa chỉ"
-              title="Xóa địa chỉ"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
+                  {/* Nút xóa nhanh bên phải */}
+                  {selectedAddress && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAddress("")}
+                      className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                      aria-label="Xóa địa chỉ"
+                      title="Xóa địa chỉ"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
 
-
-            {/* Nút xóa bộ lọc */}
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setSearchText("");
-                  setSelectedIndustry("");
-                  setSelectedAddress("");
-                }}
-                className="w-full px-5 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-md hover:shadow-xl"
-              >
-                Xóa bộ lọc
-              </button>
+              {/* Nút xóa bộ lọc */}
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setSearchText("");
+                    setSelectedIndustry("");
+                    setSelectedAddress("");
+                  }}
+                  className="w-full px-5 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-md hover:shadow-xl"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
             </div>
+
+            {/* Dòng nhỏ hiển thị số kết quả (tuỳ chọn) */}
+            <p className="text-sm text-gray-500 mt-3">
+              Đang hiển thị {filteredCompanies.length} công ty
+            </p>
           </div>
-
-          {/* Dòng nhỏ hiển thị số kết quả (tuỳ chọn) */}
-          <p className="text-sm text-gray-500 mt-3">
-            Đang hiển thị {filteredCompanies.length} công ty
-          </p>
-        </div>
-
         </div>
       </div>
 
@@ -354,9 +374,7 @@ function Company() {
               : [];
 
             const addresses = Array.isArray(company?.address)
-              ? company.address
-                  .map((a) => a?.address_detail)
-                  .filter(Boolean)
+              ? company.address.map((a) => a?.address_detail).filter(Boolean)
               : [];
 
             return (
@@ -386,22 +404,35 @@ function Company() {
 
                 {/* Card Body */}
                 <div className="p-6 -mt-4">
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2" title={company.name}>
+                  <h3
+                    className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2"
+                    title={company.name}
+                  >
                     {company.name}
                   </h3>
 
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-3 mb-4" title={company.description}>
+                  <p
+                    className="text-sm text-gray-600 mt-2 line-clamp-3 mb-4"
+                    title={company.description}
+                  >
                     {company.description || "Không có mô tả chi tiết."}
                   </p>
 
                   <div className="space-y-2.5 text-sm text-gray-700">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-bold text-xs">👥</span>
+                        <span className="text-blue-600 font-bold text-xs">
+                          👥
+                        </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-gray-800">Quy mô:</span>{" "}
-                        <span className="truncate inline-block max-w-full align-bottom" title={company.size}>
+                        <span className="font-semibold text-gray-800">
+                          Quy mô:
+                        </span>{" "}
+                        <span
+                          className="truncate inline-block max-w-full align-bottom"
+                          title={company.size}
+                        >
                           {company.size}
                         </span>
                       </div>
@@ -410,12 +441,19 @@ function Company() {
                     {industries.length > 0 && (
                       <div className="flex items-start gap-2">
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-purple-600 font-bold text-xs">💼</span>
+                          <span className="text-purple-600 font-bold text-xs">
+                            💼
+                          </span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div>
-                            <span className="font-semibold text-gray-800">Ngành:</span>{" "}
-                            <span className="line-clamp-2 inline" title={industries.join(", ")}>
+                            <span className="font-semibold text-gray-800">
+                              Ngành:
+                            </span>{" "}
+                            <span
+                              className="line-clamp-2 inline"
+                              title={industries.join(", ")}
+                            >
                               {industries.join(", ")}
                             </span>
                           </div>
@@ -426,11 +464,18 @@ function Company() {
                     {addresses.length > 0 && (
                       <div className="flex items-start gap-2">
                         <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-green-600 font-bold text-xs">📍</span>
+                          <span className="text-green-600 font-bold text-xs">
+                            📍
+                          </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="line-clamp-2" title={addresses.join(" • ")}>
-                            <span className="font-semibold text-gray-800">Địa chỉ:</span>{" "}
+                          <div
+                            className="line-clamp-2"
+                            title={addresses.join(" • ")}
+                          >
+                            <span className="font-semibold text-gray-800">
+                              Địa chỉ:
+                            </span>{" "}
                             {addresses.join(" • ")}
                           </div>
                         </div>
@@ -440,10 +485,14 @@ function Company() {
                     {company.website && (
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-orange-600 font-bold text-xs">🌐</span>
+                          <span className="text-orange-600 font-bold text-xs">
+                            🌐
+                          </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="font-semibold text-gray-800">Website:</span>{" "}
+                          <span className="font-semibold text-gray-800">
+                            Website:
+                          </span>{" "}
                           <a
                             href={company.website}
                             target="_blank"

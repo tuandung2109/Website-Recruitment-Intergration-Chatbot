@@ -36,7 +36,7 @@ function CompanyListJobPosting() {
   const [error, setError] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // 🔍 Filter states
   const [filterForm] = Form.useForm();
   const [jobPostings, setJobPostings] = useState([]);
@@ -68,7 +68,7 @@ function CompanyListJobPosting() {
       try {
         const user = JSON.parse(localStorage.getItem("account"));
         const companyId = user?.company?.company_id;
-        
+
         const res = await listJobPostingsEmployer();
         if (res.success && Array.isArray(res.jobs)) {
           const filtered = res.jobs.filter(
@@ -277,7 +277,9 @@ function CompanyListJobPosting() {
               file_url.startsWith("http")
                 ? file_url
                 : `${
-                    process.env.REACT_APP_API_BASE || "http://localhost:9000"
+                    process.env.REACT_APP_API_BASE ||
+                    "http://localhost:9000" ||
+                    `https://website-recruitment-intergration-ch.vercel.app`
                   }${file_url}`
             }
             target="_blank"
@@ -291,7 +293,9 @@ function CompanyListJobPosting() {
               record.cv.cv_link.startsWith("http")
                 ? record.cv.cv_link
                 : `${
-                    process.env.REACT_APP_API_BASE || "http://localhost:9000"
+                    process.env.REACT_APP_API_BASE ||
+                    "http://localhost:9000" ||
+                    `https://website-recruitment-intergration-ch.vercel.app`
                   }/files/${record.cv.cv_link}`
             }
             target="_blank"
@@ -385,11 +389,7 @@ function CompanyListJobPosting() {
           style={{ marginBottom: 24 }}
           bodyStyle={{ paddingBottom: 0 }}
         >
-          <Form
-            form={filterForm}
-            layout="vertical"
-            onFinish={handleFilter}
-          >
+          <Form form={filterForm} layout="vertical" onFinish={handleFilter}>
             <Row gutter={16}>
               <Col xs={24} sm={12} md={6}>
                 <Form.Item name="searchText" label="Tìm kiếm">
@@ -543,7 +543,8 @@ function CompanyListJobPosting() {
                       ? selectedApp.file_url
                       : `${
                           process.env.REACT_APP_API_BASE ||
-                          "http://localhost:9000"
+                          "http://localhost:9000" ||
+                          `https://website-recruitment-intergration-ch.vercel.app`
                         }${selectedApp.file_url}`
                   }
                   target="_blank"
@@ -559,7 +560,8 @@ function CompanyListJobPosting() {
                       ? selectedApp.cv.cv_link
                       : `${
                           process.env.REACT_APP_API_BASE ||
-                          "http://localhost:9000"
+                          "http://localhost:9000" ||
+                          `https://website-recruitment-intergration-ch.vercel.app`
                         }/files/${selectedApp.cv.cv_link}`
                   }
                   target="_blank"

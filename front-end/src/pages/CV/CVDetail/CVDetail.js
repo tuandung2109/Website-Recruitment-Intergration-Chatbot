@@ -10,11 +10,10 @@ const CVDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const buildCvUrl = (link) => {
-  if (!link) return "";
-  if (/^https?:\/\//i.test(link)) return link;   // đã là http/https
-  return link.startsWith("/") ? link : `/${link}`; // /uploads/xxx.pdf
-};
-
+    if (!link) return "";
+    if (/^https?:\/\//i.test(link)) return link; // đã là http/https
+    return link.startsWith("/") ? link : `/${link}`; // /uploads/xxx.pdf
+  };
 
   useEffect(() => {
     (async () => {
@@ -39,10 +38,6 @@ const CVDetail = () => {
     })();
   }, [id]);
 
-  // const cvUrl = useMemo(
-  //   () => (cv?.cv_link ? `http://localhost:9000${cv.cv_link}` : ""),
-  //   [cv]
-  // );
   const cvUrl = useMemo(() => buildCvUrl(cv?.cv_link || ""), [cv]);
   const isPdf = (cv?.cv_link || "").toLowerCase().endsWith(".pdf");
 
@@ -67,7 +62,9 @@ const CVDetail = () => {
         >
           ← Quay lại
         </button>
-        <div className="mt-6 p-6 rounded-2xl border bg-white">Không tìm thấy CV.</div>
+        <div className="mt-6 p-6 rounded-2xl border bg-white">
+          Không tìm thấy CV.
+        </div>
       </div>
     );
   }
@@ -103,12 +100,16 @@ const CVDetail = () => {
 
       {/* 1) Thông tin CV (trên) */}
       <section className="rounded-2xl border bg-white shadow-sm p-6 mb-6">
-        <h1 className="text-2xl font-bold text-emerald-700 mb-4">Chi tiết CV</h1>
+        <h1 className="text-2xl font-bold text-emerald-700 mb-4">
+          Chi tiết CV
+        </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-800">
           <div className="space-y-1">
             <p className="text-sm text-gray-500">Tên tệp</p>
-            <p className="font-semibold break-all">{cv.cv_link?.split("/").pop()}</p>
+            <p className="font-semibold break-all">
+              {cv.cv_link?.split("/").pop()}
+            </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-gray-500">Ngày tạo</p>

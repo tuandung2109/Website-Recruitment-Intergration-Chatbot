@@ -40,7 +40,7 @@ const listInvoiceId = async (req, res) => {
   }
 };
 // 🧾 Tạo link thanh toán VNPay
-const vnpays = async (req, res) => {
+const vnpays1 = async (req, res) => {
   try {
     const { account_id, amount } = req.body;
     if (!account_id || !amount) {
@@ -64,7 +64,9 @@ const vnpays = async (req, res) => {
       vnp_IpAddr: req.ip,
       vnp_TxnRef: Date.now().toString(),
       vnp_OrderInfo: `${account_id}|NapTien`,
-      vnp_ReturnUrl: `http://localhost:9000/api/invoice/check-payment-vnpay`,
+      vnp_ReturnUrl:
+        `http://localhost:9000/api/invoice/check-payment-vnpay` ||
+        `https://website-recruitment-intergration-ch.vercel.app/api/invoice/check-payment-vnpay`,
       vnp_Locale: VnpLocale.VN,
       vnp_CreateDate: dateFormat(new Date()),
       vnp_ExpireDate: dateFormat(tomorrow),
@@ -79,6 +81,56 @@ const vnpays = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+const vnpays = async (req, res) => {
+  try {
+    const { account_id, amount } = req.body;
+
+    if (!account_id || !amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu account_id hoặc amount",
+      });
+    }
+
+    const vnpay = new VNPay({
+      tmnCode: "X783MKOS",
+      secureSecret: "YSOOD595SQM9RAFBDTS4K20FUH8ZTV0Z",
+      vnpayHost: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+      testMode: true,
+      hashAlgorithm: "SHA512",
+      loggerFn: ignoreLogger,
+    });
+    // Tính ngày mai
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Chọn base URL theo môi trường
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? "http://localhost:9000"
+        : "https://website-recruitment-intergration-ch.vercel.app";
+
+    const url = vnpay.buildPaymentUrl({
+      vnp_Amount: amount * 100, // VNPay cần nhân 100
+      vnp_IpAddr: req.ip,
+      vnp_TxnRef: Date.now().toString(),
+      vnp_OrderInfo: `${account_id}|NapTien`,
+      vnp_ReturnUrl: `${baseUrl}/api/invoice/check-payment-vnpay`,
+      vnp_Locale: VnpLocale.VN,
+      vnp_CreateDate: dateFormat(new Date()),
+      vnp_ExpireDate: dateFormat(tomorrow),
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Tạo link thanh toán VNPay thành công!",
+      url,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi tạo link VNPAY:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // 🧾 Check kết quả thanh toán (callback từ VNPay)
 const checkVnpays = async (req, res) => {
   try {

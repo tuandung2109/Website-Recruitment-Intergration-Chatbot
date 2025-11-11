@@ -27,4 +27,16 @@ router.get(
   controllerJobsPostings.getJobPostingStatistics
 ); // Thống kê số tin đã đăng
 
+router.get(
+  "/listUpdateJobPosting/:id",
+  controllerJobsPostings.listUpdateJobPosting
+); // Chi tiết công việc
+// Nhà tuyển dụng gửi bản chỉnh sửa
+router.post("/submitUpdate/:id", controllerJobsPostings.submitJobUpdate);
+// Admin duyệt chỉnh sửa
+router.patch("/approveUpdate/:id", controllerJobsPostings.approveJobUpdate);
+// Admin từ chối chỉnh sửa
+router.patch("/rejectUpdate/:id", controllerJobsPostings.rejectJobUpdate);
+// routes/jobPosting.js
+router.get("/listPendingUpdates", controllerJobsPostings.listPendingUpdates);
 module.exports = router;

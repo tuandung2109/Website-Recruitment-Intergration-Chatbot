@@ -155,7 +155,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "AI Recruitment Agent (OpenAI - AgentKatCoder)",
-        "version": "2.0.0",
+        "version": "2.0.0",  
         "timestamp": time.time(),
         "cors_enabled": True,
         "agent_type": "OpenAI"
@@ -168,7 +168,7 @@ def test_endpoint():
     return jsonify({
         "message": "Connection successful! (AgentKatCoder/OpenAI)",
         "method": request.method,
-        "timestamp": time.time(),
+        "timestamp": time.time(),+
         "origin": request.headers.get('Origin', 'unknown')
     })
 

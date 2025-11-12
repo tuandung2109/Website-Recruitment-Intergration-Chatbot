@@ -574,6 +574,62 @@ const sendOtpRegister = async (req, res) => {
       .json({ success: false, message: "Lỗi server khi gửi OTP" });
   }
 };
+const sendOtpForgotPassword = async (req, res) => {
+  try {
+    const email = req.body?.email;
+    if (!email)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email không được để trống!" });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email))
+      return res
+        .status(400)
+        .json({ success: false, message: "Email không hợp lệ!" });
+
+    // ⚙️ Kiểm tra email có trong hệ thống không
+    const { data: existing } = await supabase
+      .from("account")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (!existing)
+      return res.status(404).json({
+        success: false,
+        message: "Email này chưa được đăng ký trên hệ thống!",
+      });
+
+    // 🔢 Tạo OTP ngẫu nhiên
+    const otp = generateOTP.generateRandomNumber(6);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // Hết hạn 5 phút
+
+    // Lưu tạm OTP vào bộ nhớ (hoặc DB nếu cần)
+    otpStore.set(email, { otp, expiresAt });
+
+    // ✉️ Gửi mail
+    const subject = "Mã OTP đặt lại mật khẩu JobVip";
+    const html = `
+      <p>Xin chào ${existing.full_name || ""},</p>
+      <p>Mã OTP xác thực để đặt lại mật khẩu là:</p>
+      <h2 style="color:blue">${otp}</h2>
+      <p>Mã có hiệu lực trong <b>5 phút</b>.</p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
+    `;
+    await sendMailHelper.sendMail(email, subject, html);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã gửi mã OTP đến email của bạn!",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi sendOtpForgotPassword:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi gửi OTP" });
+  }
+};
 
 const verifyOtpRegister = async (req, res) => {
   try {
@@ -724,4 +780,5 @@ module.exports = {
   verifyOtpRegister,
   updateAccount,
   changePassword,
+  sendOtpForgotPassword,
 };

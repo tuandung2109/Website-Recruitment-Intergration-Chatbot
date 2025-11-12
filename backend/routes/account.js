@@ -16,6 +16,7 @@ router.post("/getApiUser", controllerUsers.getApiUser);
 router.patch("/unlinkCompany/:id", controllerUsers.unlinkCompany);
 router.get("/getAccount", controllerUsers.getAccount);
 
+router.post("/sendOtpForgotPassword", controllerUsers.sendOtpForgotPassword);
 router.post("/checkEmailAndSendOtp", controllerUsers.sendOtpRegister);
 router.post("/verifyOtp", controllerUsers.verifyOtpRegister);
 

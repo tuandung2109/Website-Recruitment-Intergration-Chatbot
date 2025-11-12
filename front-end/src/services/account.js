@@ -225,9 +225,16 @@ const changePassword = async (data) => {
     return { success: false, message: error.message };
   }
 };
+const sendOtpForgotPassword = async (email) => {
+  const res = await _post("/account/sendOtpForgotPassword", { email });
+  const data = await res.json();
+  return data;
+};
+
 export {
   postRegister,
   loginAccount,
+  sendOtpForgotPassword,
   listAccount,
   hardDeleteAccount,
   softDeleteAccount,

@@ -493,6 +493,22 @@ function CompanyJobPosting() {
                   >
                     🤖 Đánh giá AI
                   </Button>
+
+                  <Button
+                    type="default"
+                    size="small"
+                    style={{
+                      background: "linear-gradient(135deg, #f093fb, #f5576c)",
+                      border: "none",
+                      fontWeight: "600",
+                      color: "white",
+                    }}
+                    onClick={() => {
+                      navigate(`/companyAdmin/candidates/${record.id}`);
+                    }}
+                  >
+                    👥 Xem ứng viên
+                  </Button>
                 </div>
               ),
             },

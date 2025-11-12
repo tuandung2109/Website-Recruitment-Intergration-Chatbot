@@ -98,71 +98,118 @@ const Chatbot = () => {
     const isJobDetailPage = /^\/job\/\d+$/.test(location.pathname); // Match /job/:id
     const isAIReviewPage = location.pathname.includes('/job/') && location.pathname.includes('/ai-review');
     
-    // Show suggestion on JobDetail page
+    // Function to check if current user is the job owner
+    const checkJobOwnership = async () => {
+      try {
+        // Get current user info
+        const userData = localStorage.getItem("account");
+        if (!userData) return false;
+        
+        const user = JSON.parse(userData);
+        const currentUserId = user.account_id || user.id;
+        
+        if (!currentUserId) return false;
+        
+        // Extract job ID from URL
+        const jobIdMatch = location.pathname.match(/\/job\/(\d+)/);
+        if (!jobIdMatch) return false;
+        
+        const jobId = jobIdMatch[1];
+        
+        // Fetch job details to check owner
+        const API_URL = process.env.REACT_APP_API_URL || "http://localhost:9000";
+        const response = await fetch(`${API_URL}/api/jobPosting/listJobPostingId/${jobId}`);
+        if (!response.ok) return false;
+        
+        const data = await response.json();
+        const jobOwnerId = data.job_posting?.account_id;
+        
+        // Check if current user is the owner
+        return currentUserId === jobOwnerId;
+      } catch (error) {
+        console.error("Error checking job ownership:", error);
+        return false;
+      }
+    };
+    
+    // Show suggestion on JobDetail page ONLY if user is the job owner
     if (isJobDetailPage && !hasShownJDSuggestion) {
-      setHasShownJDSuggestion(true);
-      setIsOpen(true); // Auto-open chatbot
-      
-      // Add suggestion message after a short delay
-      setTimeout(() => {
-        const suggestionMessage = {
-          id: Date.now(),
-          text: "👋 Xin chào! Tôi thấy bạn đang xem chi tiết công việc. Bạn có muốn tôi phân tích và đánh giá Job Description này bằng AI không?",
-          sender: "bot",
-          timestamp: new Date(),
-          isJDSuggestion: true,
-        };
-        setMessages((prev) => [...prev, suggestionMessage]);
-        
-        // Add quick action buttons
-        const actionMessage = {
-          id: Date.now() + 1,
-          text: "Tôi có thể giúp bạn đánh giá chất lượng JD, phát hiện điểm mạnh/yếu và đưa ra gợi ý cải thiện!",
-          sender: "bot",
-          timestamp: new Date(),
-          showJDActions: true,
-        };
-        
-        setTimeout(() => {
-          setMessages((prev) => [...prev, actionMessage]);
-        }, 800);
-      }, 1500);
+      checkJobOwnership().then((isOwner) => {
+        if (isOwner) {
+          setHasShownJDSuggestion(true);
+          setIsOpen(true); // Auto-open chatbot
+          
+          // Add suggestion message after a short delay
+          setTimeout(() => {
+            const suggestionMessage = {
+              id: Date.now(),
+              text: "👋 Xin chào! Tôi thấy bạn đang xem chi tiết công việc của mình. Bạn có muốn tôi phân tích và đánh giá Job Description này bằng AI không?",
+              sender: "bot",
+              timestamp: new Date(),
+              isJDSuggestion: true,
+            };
+            setMessages((prev) => [...prev, suggestionMessage]);
+            
+            // Add quick action buttons
+            const actionMessage = {
+              id: Date.now() + 1,
+              text: "Tôi có thể giúp bạn đánh giá chất lượng JD, phát hiện điểm mạnh/yếu và đưa ra gợi ý cải thiện!",
+              sender: "bot",
+              timestamp: new Date(),
+              showJDActions: true,
+            };
+            
+            setTimeout(() => {
+              setMessages((prev) => [...prev, actionMessage]);
+            }, 800);
+          }, 1500);
+        }
+      });
     }
     
-    // Show suggestion on AI Review page
+    // Show suggestion on AI Review page ONLY if user is the job owner
     if (isAIReviewPage && !hasShownJDSuggestion) {
-      setHasShownJDSuggestion(true);
-      setIsOpen(true); // Auto-open chatbot
-      
-      // Add suggestion message after a short delay
-      setTimeout(() => {
-        const suggestionMessage = {
-          id: Date.now(),
-          text: "🎯 Tôi thấy bạn đang xem trang đánh giá JD. Bạn có muốn tôi phân tích và đưa ra đề xuất cải thiện cho Job Description này không?",
-          sender: "bot",
-          timestamp: new Date(),
-          isJDSuggestion: true,
-        };
-        setMessages((prev) => [...prev, suggestionMessage]);
-        
-        // Add quick action buttons
-        const actionMessage = {
-          id: Date.now() + 1,
-          text: "Nhấn 'Phân tích JD' để bắt đầu đánh giá chi tiết!",
-          sender: "bot",
-          timestamp: new Date(),
-          showJDActions: true,
-        };
-        
-        setTimeout(() => {
-          setMessages((prev) => [...prev, actionMessage]);
-        }, 800);
-      }, 1000);
+      checkJobOwnership().then((isOwner) => {
+        if (isOwner) {
+          setHasShownJDSuggestion(true);
+          setIsOpen(true); // Auto-open chatbot
+          
+          // Add suggestion message after a short delay
+          setTimeout(() => {
+            const suggestionMessage = {
+              id: Date.now(),
+              text: "🎯 Tôi thấy bạn đang xem trang đánh giá JD của mình. Bạn có muốn tôi phân tích và đưa ra đề xuất cải thiện cho Job Description này không?",
+              sender: "bot",
+              timestamp: new Date(),
+              isJDSuggestion: true,
+            };
+            setMessages((prev) => [...prev, suggestionMessage]);
+            
+            // Add quick action buttons
+            const actionMessage = {
+              id: Date.now() + 1,
+              text: "Nhấn 'Phân tích JD' để bắt đầu đánh giá chi tiết!",
+              sender: "bot",
+              timestamp: new Date(),
+              showJDActions: true,
+            };
+            
+            setTimeout(() => {
+              setMessages((prev) => [...prev, actionMessage]);
+            }, 800);
+          }, 1000);
+        }
+      });
     }
     
-    // Reset flag when leaving both pages
+    // Reset flag and remove JD-related messages when leaving both pages
     if (!isJobDetailPage && !isAIReviewPage && hasShownJDSuggestion) {
       setHasShownJDSuggestion(false);
+      
+      // Remove all JD suggestion messages and JD action messages
+      setMessages((prevMessages) => 
+        prevMessages.filter((msg) => !msg.isJDSuggestion && !msg.showJDActions)
+      );
     }
   }, [location.pathname, hasShownJDSuggestion]);
 

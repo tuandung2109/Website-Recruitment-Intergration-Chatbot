@@ -165,6 +165,32 @@ const getApplicationResults = async (companyId) => {
   }
 };
 
+// 👥 Lấy danh sách ứng viên theo job_posting_id (kèm điểm AI)
+const getCandidatesByJobPosting = async (jobPostingId) => {
+  try {
+    const res = await _get(`/jobsApplication/candidates/${jobPostingId}`);
+    const result = await res.json();
+    
+    if (res.ok && result.success) {
+      return {
+        success: true,
+        candidates: result.candidates,
+        total: result.total,
+      };
+    }
+    
+    return {
+      success: false,
+      message: result.message || "Không thể lấy danh sách ứng viên",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối đến máy chủ",
+    };
+  }
+};
+
 export {
   listJobApplication,
   addJobApplication,
@@ -174,4 +200,5 @@ export {
   checkApplied,
   getApplicationStatistics,
   getApplicationResults,
+  getCandidatesByJobPosting,
 };

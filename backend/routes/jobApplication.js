@@ -48,4 +48,10 @@ router.get(
   controllerJobsApplication.getApplicationResults
 );
 
+// 👥 Lấy danh sách ứng viên theo job_posting_id (kèm điểm AI)
+router.get(
+  "/candidates/:job_posting_id",
+  controllerJobsApplication.getCandidatesByJobPosting
+);
+
 module.exports = router;

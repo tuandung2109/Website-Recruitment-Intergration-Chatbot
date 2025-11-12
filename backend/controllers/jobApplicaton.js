@@ -721,6 +721,125 @@ const getApplicationResults = async (req, res) => {
   }
 };
 
+// 📍 Lấy danh sách ứng viên theo job_posting_id (kèm điểm AI nếu có)
+const getCandidatesByJobPosting = async (req, res) => {
+  try {
+    const { job_posting_id } = req.params;
+
+    if (!job_posting_id) {
+      return res.status(400).json({
+        success: false,
+        error: "Thiếu job_posting_id",
+      });
+    }
+
+    // Lấy tất cả application của job posting này
+    const { data: applications, error } = await supabase
+      .from("job_application")
+      .select(`
+        job_application_id,
+        account_id,
+        job_posting_id,
+        cv_id,
+        cover_letter,
+        status,
+        submitted_at,
+        file_upload,
+        file_url,
+        account:account_id (
+          account_id,
+          email,
+          phone_number,
+          gender,
+          date_of_birth
+        ),
+        cv:cv_id (
+          cv_id,
+          cv_link,
+          years_experience,
+          education_level,
+          created_at
+        )
+      `)
+      .eq("job_posting_id", job_posting_id)
+      .order("submitted_at", { ascending: false });
+
+    if (error) {
+      console.error("❌ Lỗi khi lấy danh sách ứng viên:", error);
+      return res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    // ✅ Lấy đánh giá AI từ bảng ai_evaluate_cv cho từng application
+    const candidatesWithAI = await Promise.all(
+      applications.map(async (app) => {
+        // Query AI evaluation
+        const { data: aiEval, error: aiError } = await supabase
+          .from("ai_evaluate_cv")
+          .select("*")
+          .eq("job_application_id", app.job_application_id)
+          .single();
+
+        // Tính điểm tổng từ các thành phần (nếu có AI evaluation)
+        let ai_score = null;
+        let ai_evaluation = null;
+
+        if (aiEval && !aiError) {
+          // Tính điểm trung bình (scale 0-10 -> 0-100)
+          const totalScore =
+            (aiEval.skill || 0) +
+            (aiEval.education || 0) +
+            (aiEval.position || 0) +
+            (aiEval.experiences || 0) +
+            (aiEval.general || 0);
+          ai_score = Math.round((totalScore / 50) * 100); // 50 = max (5 categories * 10)
+
+          ai_evaluation = {
+            ai_evaluate_cv_id: aiEval.ai_evaluate_cv_id,
+            skill: aiEval.skill,
+            education: aiEval.education,
+            position: aiEval.position,
+            experiences: aiEval.experiences,
+            general: aiEval.general,
+            weak: aiEval.weak,
+            strong: aiEval.strong,
+            interview_question: aiEval.interview_question,
+            detail_analysis: aiEval.detail_analysis,
+            created_at: aiEval.created_at,
+          };
+        }
+
+        return {
+          ...app,
+          ai_score,
+          ai_evaluation,
+        };
+      })
+    );
+
+    // Sắp xếp theo điểm AI từ cao xuống thấp (những ứng viên chưa có điểm xuống cuối)
+    candidatesWithAI.sort((a, b) => {
+      if (a.ai_score === null) return 1;
+      if (b.ai_score === null) return -1;
+      return b.ai_score - a.ai_score;
+    });
+
+    return res.status(200).json({
+      success: true,
+      candidates: candidatesWithAI,
+      total: candidatesWithAI.length,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi server",
+    });
+  }
+};
+
 module.exports = {
   listApplication,
   addApplication,
@@ -733,4 +852,5 @@ module.exports = {
   checkApplied,
   getApplicationStatistics,
   getApplicationResults,
+  getCandidatesByJobPosting,
 };

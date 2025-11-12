@@ -138,6 +138,51 @@ class PostgreSQLClient:
             logger.error(f"❌ Error getting CV info: {str(e)}")
             return None
     
+    def insert_ai_evaluate_cv(self, job_application_id: int, cv_id: int, skill: int, education: int, position: int, experiences:int, general:int, weak: str, strong:str, interview_question:str, detail_analysis: str) -> bool:
+        """
+        Chèn đánh giá AI cho CV vào bảng ai_evaluate_cv
+        
+        Args:
+            job_application_id: ID của job application
+            cv_id: ID của CV
+            skill: điểm kỹ năng
+            education: điểm học vấn
+            position: điểm vị trí
+            experiences: điểm kinh nghiệm
+            general: điểm tổng quát
+            weak: điểm yếu
+            strong: điểm mạnh
+            interview_question: câu hỏi phỏng vấn
+            
+        Returns:
+            bool: True nếu chèn thành công, False nếu thất bại
+        """
+        try:
+            response = self.client.table("ai_evaluate_cv").insert({
+                "job_application_id": job_application_id,
+                "cv_id": cv_id,
+                "skill": skill,
+                "education": education,
+                "position": position,
+                "experiences": experiences,
+                "general": general,
+                "weak": weak,
+                "strong": strong,
+                "interview_question": interview_question,
+                "detail_analysis": detail_analysis
+            }).execute()
+            
+            if response.status_code == 201:
+                logger.info(f"✅ Successfully inserted AI evaluation for CV ID: {cv_id}")
+                return True
+            else:
+                logger.error(f"❌ Failed to insert AI evaluation for CV ID: {cv_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Error inserting AI evaluation: {str(e)}")
+            return False
+    
     
     
     def get_multiple_job_postings_info(self, job_posting_ids: List[int]) -> List[Dict[str, Any]]:
@@ -232,14 +277,8 @@ if __name__ == '__main__':
 
     settings = Settings.load_settings()
     pg_client = PostgreSQLClient(Settings=settings)
-    client = AgentKatCoder()
-
-    job_info = pg_client.get_job_posting_info_by_id(11)
-    prompt = PromptConfig().get_prompt("evaluate_jd", user_input=job_info)
-
-    result = client.generate_content([{"role": "user", "content": prompt}])
-
-    print(result)
+    print(pg_client.insert_ai_evaluate_cv(2, None, 8, 9, 7, 8, 8, "Thiếu kinh nghiệm thực tế", "Kỹ năng lập trình tốt", "Hãy mô tả một dự án mà bạn đã làm việc trước đây và vai trò của bạn trong đó."))
+    
 
 
 

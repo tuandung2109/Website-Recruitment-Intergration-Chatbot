@@ -14,5 +14,5 @@ from app.chatbot.AgentKatCoder import AgentKatCoder
 if __name__ == "__main__":
     settings = Settings.load_settings()
     agent = AgentKatCoder(Settings=settings)
-    print(agent.handle_ai_evaluation_based_on_features(2, 12, None))
+    print(agent.handle_ai_evaluation_based_on_features(2, 12, None, 82))
     

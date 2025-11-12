@@ -18,6 +18,8 @@ import CV from "./pages/CV/CV";
 import CVDetail from "./pages/CV/CVDetail/CVDetail";
 import Applications from "./pages/Application/Applications";
 import EvaluateCV from "./pages/EvaluateCV/EvaluateCV";
+import CVJobMatcher from "./pages/EvaluateCV/CVJobMatcher";
+import CVJobMatcherDemo from "./pages/EvaluateCV/CVJobMatcherDemo";
 import AddCompany from "./pages/Company/addCompany";
 import InfoUser from "./pages/Users";
 import Vnpay from "./pages/Invoice";
@@ -75,6 +77,8 @@ function App() {
           <Route path="/cv" element={<CV />} />
           <Route path="/cv/:id" element={<CVDetail />} />
           <Route path="/evaluate_cv" element={<EvaluateCV />} />
+          <Route path="/cv-job-matcher" element={<CVJobMatcher />} />
+          <Route path="/cv-matcher-demo" element={<CVJobMatcherDemo />} />
           <Route path="/job-suggestions" element={<JobSuggestions />} />
           <Route path="/ai-interview" element={<AIInterviewPage />} />
           <Route path="/ai-interview/result" element={<AIInterviewResult />} />

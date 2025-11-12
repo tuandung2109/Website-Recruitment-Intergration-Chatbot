@@ -617,7 +617,8 @@ Nhiệm vụ:
   "evaluation": {{
   "strengths": ["strength1", "strength2", ...],
   "weaknesses": ["weakness1", "weakness2", ...],
-  "recommendations": ["recommendation1", "recommendation2", ...]
+  "interview_questions": ["question1", "question2", ...],
+  "detail_analysis": ["analysis1", "analysis2", ...]
   }}
 }}
 trong đó:

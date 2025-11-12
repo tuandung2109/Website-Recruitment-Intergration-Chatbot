@@ -205,9 +205,11 @@ class AgentKatCoder(BaseAI):
             logging.error(f"Error evaluating CV: {str(e)}")
             return f"Error evaluating CV: {str(e)}"
     
-    def handle_ai_evaluation_based_on_features(self,  p_account_id: int,
+    def handle_ai_evaluation_based_on_features(self,  
+                           p_account_id: int,
                            p_job_posting_id: int,
-                           p_cv_id: int) -> str:
+                           p_cv_id: int,
+                           job_application_id: int) -> bool:
         """Handle AI evaluation based on extracted features from CV"""
         from tool.database.postgest import PostgreSQLClient
 
@@ -236,13 +238,31 @@ class AgentKatCoder(BaseAI):
 
             extracted_features_json = self.paste_to_json(extracted_features)
 
-            prompt_evaluation = self.prompt_config.get_prompt("intent_evaluate_cv_base_on_jd", jd="\n".join(job_description), cv=extracted_features_json)
+            prompt_evaluation = self.prompt_config.get_prompt("intent_evaluate_cv_base_on_jd", jd="\n".join(job_description), cv=extracted_features_json.get('general', ""))
 
             evaluation_result = self._strip_think(self.generate_content([{"role": "user", "content": prompt_evaluation}]))
+
+            evaluation_result_json = self.paste_to_json(evaluation_result)
+
+            evaluation_data = extracted_features_json.get("evaluation", {})
+            
+            pg_client.insert_ai_evaluate_cv(job_application_id, 
+                                            p_cv_id,
+                                            evaluation_result_json.get("skills", 0),
+                                            evaluation_result_json.get("education", 0),
+                                            evaluation_result_json.get("positions", 0),
+                                            evaluation_result_json.get("experience", 0),
+                                            8,
+                                            ", ".join(evaluation_data.get("weaknesses", [])),
+                                            ", ".join(evaluation_data.get("strengths", [])),
+                                            ", ".join(evaluation_data.get("interview_questions", [])),
+                                            ", ".join(evaluation_data.get("detail_analysis", []))
+                                            )
+
             return {
                 "intent": "evaluate_cv",
-                "extracted_features": extracted_features,
-                "evaluation_result": evaluation_result
+                "extracted_features": extracted_features_json,
+                "evaluation_result": evaluation_result_json
             }
 
         except Exception as e:

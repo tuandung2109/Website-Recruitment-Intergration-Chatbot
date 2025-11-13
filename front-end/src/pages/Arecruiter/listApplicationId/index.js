@@ -37,7 +37,13 @@ function CompanyListJobPosting() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 🔍 Filter states
+  // � Contact modal states
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactForm] = Form.useForm();
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  // �🔍 Filter states
   const [filterForm] = Form.useForm();
   const [jobPostings, setJobPostings] = useState([]);
   const [filters, setFilters] = useState({});
@@ -154,6 +160,52 @@ function CompanyListJobPosting() {
   const handleCancel = () => {
     setIsModalOpen(false);
     setSelectedApp(null);
+  };
+
+  // 📧 Xử lý mở form liên hệ
+  const handleOpenContactModal = (record) => {
+    setSelectedApplicant(record);
+    contactForm.setFieldsValue({
+      to: record.account?.email,
+      subject: `Thông báo từ ${record.job_posting?.company?.name} - Vị trí ${record.job_posting?.position_name}`,
+      message: `Xin chào ${record.account?.email},\n\nChúng tôi là ${record.job_posting?.company?.name}. Chúng tôi muốn liên hệ với bạn về đơn ứng tuyển vị trí ${record.job_posting?.position_name}.\n\n`,
+    });
+    setIsContactModalOpen(true);
+  };
+
+  // 📧 Xử lý gửi email liên hệ
+  const handleSendContactEmail = async (values) => {
+    try {
+      setSendingEmail(true);
+      const emailData = {
+        to: values.to,
+        subject: values.subject,
+        html: `<p>${values.message.replace(/\n/g, '<br/>')}</p>`,
+      };
+
+      const emailRes = await sendEmail(emailData);
+      
+      if (emailRes?.success) {
+        message.success("✅ Email đã được gửi thành công!");
+        setIsContactModalOpen(false);
+        contactForm.resetFields();
+        setSelectedApplicant(null);
+      } else {
+        message.error("❌ Gửi email thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Error sending contact email:", error);
+      message.error("❌ Có lỗi xảy ra khi gửi email.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  // 📧 Đóng modal liên hệ
+  const handleCancelContact = () => {
+    setIsContactModalOpen(false);
+    contactForm.resetFields();
+    setSelectedApplicant(null);
   };
 
   // ✅ Hàm cập nhật trạng thái đơn ứng tuyển
@@ -332,6 +384,7 @@ function CompanyListJobPosting() {
       key: "action",
       render: (_, record) => {
         const status = record.status;
+        console.log("Debug status:", status, "Record:", record); // 👈 Debug
 
         return (
           <div className="flex gap-2">
@@ -373,6 +426,17 @@ function CompanyListJobPosting() {
                   Từ chối
                 </Button>
               </>
+            )}
+
+            {/* 📧 Nút Liên hệ khi trạng thái là accept/accepted/ACCEPT */}
+            {(status === "accept" || status === "accepted" || status === "ACCEPT" || status?.toLowerCase() === "accept") && (
+              <Button
+                type="default"
+                style={{ backgroundColor: "#1890ff", color: "white" }}
+                onClick={() => handleOpenContactModal(record)}
+              >
+                📧 Liên hệ
+              </Button>
             )}
           </div>
         );
@@ -593,6 +657,63 @@ function CompanyListJobPosting() {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+
+      {/* 📧 Modal liên hệ ứng viên */}
+      <Modal
+        title="📧 Liên hệ với ứng viên"
+        open={isContactModalOpen}
+        onCancel={handleCancelContact}
+        footer={null}
+        width={700}
+      >
+        <Form
+          form={contactForm}
+          layout="vertical"
+          onFinish={handleSendContactEmail}
+        >
+          <Form.Item
+            name="to"
+            label="Email ứng viên"
+            rules={[{ required: true, message: "Email không được để trống" }]}
+          >
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item
+            name="subject"
+            label="Tiêu đề email"
+            rules={[{ required: true, message: "Tiêu đề không được để trống" }]}
+          >
+            <Input placeholder="Nhập tiêu đề email" />
+          </Form.Item>
+
+          <Form.Item
+            name="message"
+            label="Nội dung email"
+            rules={[{ required: true, message: "Nội dung không được để trống" }]}
+          >
+            <Input.TextArea
+              rows={8}
+              placeholder="Nhập nội dung email..."
+            />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={sendingEmail}
+              >
+                📧 Gửi email
+              </Button>
+              <Button onClick={handleCancelContact}>
+                Hủy
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

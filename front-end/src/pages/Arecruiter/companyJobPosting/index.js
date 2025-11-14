@@ -34,6 +34,7 @@ import {
   listJobPostingsEmployer,
   offJobPosting,
   submitJobUpdate,
+  deleteJobPosting,
 } from "../../../services/jobPosting";
 import { listIndustry } from "../../../services/industry";
 import { listSkills } from "../../../services/skill";
@@ -54,6 +55,7 @@ function CompanyJobPosting() {
   const [isViewModal, setIsViewModal] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isLockModal, setIsLockModal] = useState(false);
+  const [isDeleteModal, setIsDeleteModal] = useState(false);
 
   const [form] = Form.useForm();
   const [filterForm] = Form.useForm();
@@ -247,6 +249,33 @@ function CompanyJobPosting() {
     } catch (err) {
       console.error(err);
       message.error("Lỗi thao tác trạng thái!");
+    }
+  };
+
+  // Xử lý xóa job posting
+  const handleDelete = (job) => {
+    setSelectedJob(job);
+    setIsDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (!selectedJob) return;
+
+      const res = await deleteJobPosting(
+        selectedJob.id || selectedJob.job_posting_id
+      );
+      if (res.success) {
+        message.success("Xóa job posting thành công!");
+        setIsDeleteModal(false);
+        setSelectedJob(null);
+        await fetchAll();
+      } else {
+        message.error(res.message || "Xóa job posting thất bại!");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Lỗi khi xóa job posting!");
     }
   };
 
@@ -509,6 +538,18 @@ function CompanyJobPosting() {
                   >
                     👥 Xem ứng viên
                   </Button>
+
+                  <Button
+                    type="primary"
+                    danger
+                    size="small"
+                    style={{
+                      fontWeight: "600",
+                    }}
+                    onClick={() => handleDelete(record)}
+                  >
+                    🗑️ Xóa
+                  </Button>
                 </div>
               ),
             },
@@ -635,6 +676,33 @@ function CompanyJobPosting() {
           cancelText="Hủy"
         >
           <p>Bạn có chắc muốn khóa bài đăng này không?</p>
+        </Modal>
+
+        {/* Modal Xác nhận xóa */}
+        <Modal
+          title={`🗑️ Xóa bài đăng - ${selectedJob?.title || ""}`}
+          open={isDeleteModal}
+          onCancel={() => {
+            setIsDeleteModal(false);
+            setSelectedJob(null);
+          }}
+          onOk={handleConfirmDelete}
+          okText="Xóa"
+          cancelText="Hủy"
+          okButtonProps={{ danger: true }}
+        >
+          <p style={{ fontSize: "16px", marginBottom: "10px" }}>
+            ⚠️ Bạn có chắc chắn muốn xóa bài đăng này không?
+          </p>
+          <p style={{ color: "#ff4d4f", fontWeight: "bold" }}>
+            Hành động này không thể hoàn tác! Bài đăng sẽ bị xóa vĩnh viễn khỏi hệ thống.
+          </p>
+          {selectedJob && (
+            <div style={{ marginTop: "15px", padding: "10px", background: "#f5f5f5", borderRadius: "4px" }}>
+              <p><strong>Vị trí:</strong> {selectedJob.title}</p>
+              <p><strong>ID:</strong> {selectedJob.id || selectedJob.job_posting_id}</p>
+            </div>
+          )}
         </Modal>
       </Card>
     </div>

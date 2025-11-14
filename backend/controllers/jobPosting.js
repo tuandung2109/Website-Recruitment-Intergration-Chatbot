@@ -1096,6 +1096,106 @@ const listPendingJobUpdates = async (req, res) => {
   }
 };
 
+// Xóa cứng job posting (hard delete)
+const deleteJobPosting = async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "ID không được để trống!" 
+      });
+    }
+
+    // Xóa các bảng liên quan trước (nếu có foreign key constraint)
+    // Xóa work_type
+    const { error: errorWorkType } = await supabase
+      .from("work_type")
+      .delete()
+      .eq("job_posting_id", id);
+
+    if (errorWorkType) {
+      console.error("❌ Lỗi khi xóa work_type:", errorWorkType);
+    }
+
+    // Xóa job_posting_skill
+    const { error: errorSkill } = await supabase
+      .from("job_posting_skill")
+      .delete()
+      .eq("job_posting_id", id);
+
+    if (errorSkill) {
+      console.error("❌ Lỗi khi xóa job_posting_skill:", errorSkill);
+    }
+
+    // Xóa job_posting_industry
+    const { error: errorIndustry } = await supabase
+      .from("job_posting_industry")
+      .delete()
+      .eq("job_posting_id", id);
+
+    if (errorIndustry) {
+      console.error("❌ Lỗi khi xóa job_posting_industry:", errorIndustry);
+    }
+
+    // Xóa ai_evaluate_cv liên quan đến job_application của job posting này
+    // Lấy danh sách job_application_id trước
+    const { data: applications } = await supabase
+      .from("job_application")
+      .select("job_application_id")
+      .eq("job_posting_id", id);
+
+    if (applications && applications.length > 0) {
+      const applicationIds = applications.map((app) => app.job_application_id);
+      
+      // Xóa ai_evaluate_cv
+      const { error: errorAiEvaluate } = await supabase
+        .from("ai_evaluate_cv")
+        .delete()
+        .in("job_application_id", applicationIds);
+
+      if (errorAiEvaluate) {
+        console.error("❌ Lỗi khi xóa ai_evaluate_cv:", errorAiEvaluate);
+      }
+
+      // Xóa job_application
+      const { error: errorApplication } = await supabase
+        .from("job_application")
+        .delete()
+        .eq("job_posting_id", id);
+
+      if (errorApplication) {
+        console.error("❌ Lỗi khi xóa job_application:", errorApplication);
+      }
+    }
+
+    // Xóa job_posting chính
+    const { data, error } = await supabase
+      .from("job_posting")
+      .delete()
+      .eq("job_posting_id", id);
+
+    if (error) {
+      console.error("❌ Lỗi khi xóa cứng job posting:", error);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Xóa job posting thất bại!" 
+      });
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Xóa job posting thành công!" 
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Lỗi server" 
+    });
+  }
+};
+
 module.exports = {
   listJobPostings,
   listPendingJobUpdates,
@@ -1115,4 +1215,5 @@ module.exports = {
   listJobPostingsEmployer,
   rejectJobUpdate,
   listUpdateJobPosting,
+  deleteJobPosting,
 };

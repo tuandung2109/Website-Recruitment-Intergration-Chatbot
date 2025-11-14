@@ -39,4 +39,6 @@ router.patch("/approveUpdate/:id", controllerJobsPostings.approveJobUpdate);
 router.patch("/rejectUpdate/:id", controllerJobsPostings.rejectJobUpdate);
 // routes/jobPosting.js
 router.get("/listPendingUpdates", controllerJobsPostings.listPendingJobUpdates);
+// Xóa cứng job posting (hard delete)
+router.delete("/deleteJobPosting/:id", controllerJobsPostings.deleteJobPosting);
 module.exports = router;

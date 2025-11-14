@@ -21,7 +21,9 @@ const Applications = () => {
       const res = await listJobApplication();
       if (res.success && user) {
         const filtered = res.jobApplications.filter(
-          (a) => a.account_id === user.account_id || a.account_id === user.id
+          (a) => 
+            (a.account_id === user.account_id || a.account_id === user.id) &&
+            a.job_posting !== null // Lọc bỏ các application có job_posting bị xóa
         );
         setApplications(filtered);
       }
@@ -74,7 +76,7 @@ const Applications = () => {
                     className="py-2 px-4 text-blue-600 hover:underline"
                     onClick={() => navigate(`/job/${app.job_posting_id}`)}
                   >
-                    {app.job_posting.position_name}
+                    {app.job_posting?.position_name || "Công việc đã bị xóa"}
                   </td>
 
                   <td className="py-2 px-4 text-blue-500">

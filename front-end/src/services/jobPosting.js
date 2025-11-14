@@ -1,5 +1,5 @@
 // import { message } from "antd";
-import { _get, _patch, _post } from "../utils/request";
+import { _get, _patch, _post, _delete } from "../utils/request";
 
 const listJobsPosting = async (params = {}) => {
   try {
@@ -509,6 +509,30 @@ const listPendingUpdates = async (params = {}) => {
     return { success: false, message: error.message };
   }
 };
+// Xóa cứng job posting (hard delete)
+const deleteJobPosting = async (job_posting_id) => {
+  try {
+    const res = await _delete(`/jobPosting/deleteJobPosting/${job_posting_id}`);
+    const result = await res.json();
+    if (res.ok) {
+      return {
+        success: true,
+        message: result.message || "Xóa job posting thành công",
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Xóa job posting thất bại",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Lỗi kết nối máy chủ",
+    };
+  }
+};
+
 export {
   listPendingUpdates,
   softJobPosting,
@@ -525,4 +549,5 @@ export {
   rejectJobUpdate,
   approveJobUpdate,
   submitJobUpdate,
+  deleteJobPosting,
 };

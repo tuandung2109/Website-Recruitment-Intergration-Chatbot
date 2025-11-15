@@ -762,6 +762,58 @@ const changePassword = async (req, res) => {
   }
 };
 
+const updateAccountMoney = async (req, res) => {
+  try {
+    const { account_id, deductAmount } = req.body;
+    if (!account_id || deductAmount === undefined) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Thiếu account_id hoặc deductAmount",
+        });
+    }
+
+    // Lấy thông tin account hiện tại
+    const { data: accountData, error: getError } = await supabase
+      .from("account")
+      .select("*")
+      .eq("account_id", account_id)
+      .single();
+
+    if (getError || !accountData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy tài khoản" });
+    }
+
+    if (accountData.amount < deductAmount) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Số dư không đủ" });
+    }
+
+    // Trừ tiền
+    const newAmount = accountData.amount - deductAmount;
+    const { data, error } = await supabase
+      .from("account")
+      .update({ amount: newAmount, updated_at: new Date() })
+      .eq("account_id", account_id)
+      .select("*");
+
+    if (error) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Lỗi khi cập nhật số dư" });
+    }
+
+    return res.status(200).json({ success: true, account: data[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 module.exports = {
   listAccount,
   getApiUser,
@@ -781,4 +833,5 @@ module.exports = {
   updateAccount,
   changePassword,
   sendOtpForgotPassword,
+  updateAccountMoney,
 };

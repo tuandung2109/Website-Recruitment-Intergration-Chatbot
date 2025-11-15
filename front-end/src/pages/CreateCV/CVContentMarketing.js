@@ -76,7 +76,7 @@ function CVContentMarketing() {
       setLoading(true);
       const cv = cvRef.current;
 
-      const originalElements = cv.querySelectorAll('*');
+      const originalElements = cv.querySelectorAll("*");
       const clonesData = [];
 
       clonesData.push({ element: cv, styles: window.getComputedStyle(cv) });
@@ -85,17 +85,23 @@ function CVContentMarketing() {
       });
 
       const cloneCV = cv.cloneNode(true);
-      const cloneElements = [cloneCV, ...cloneCV.querySelectorAll('*')];
+      const cloneElements = [cloneCV, ...cloneCV.querySelectorAll("*")];
 
       cloneElements.forEach((el, index) => {
         const data = clonesData[index];
         if (!data) return;
         const styles = data.styles;
-        el.className = '';
+        el.className = "";
 
-        el.style.backgroundColor = normalizeColor(styles.backgroundColor, 'backgroundColor');
-        el.style.color = normalizeColor(styles.color, 'color');
-        el.style.borderColor = normalizeColor(styles.borderColor, 'borderColor');
+        el.style.backgroundColor = normalizeColor(
+          styles.backgroundColor,
+          "backgroundColor"
+        );
+        el.style.color = normalizeColor(styles.color, "color");
+        el.style.borderColor = normalizeColor(
+          styles.borderColor,
+          "borderColor"
+        );
         el.style.fontSize = styles.fontSize;
         el.style.fontWeight = styles.fontWeight;
         el.style.fontFamily = styles.fontFamily;
@@ -105,7 +111,8 @@ function CVContentMarketing() {
         el.style.display = styles.display;
         el.style.width = styles.width;
         el.style.height = styles.height;
-        el.style.position = styles.position === 'static' ? 'relative' : styles.position;
+        el.style.position =
+          styles.position === "static" ? "relative" : styles.position;
         el.style.top = styles.top;
         el.style.left = styles.left;
         el.style.right = styles.right;
@@ -126,40 +133,51 @@ function CVContentMarketing() {
         el.style.whiteSpace = styles.whiteSpace;
       });
 
-      const draggableDivs = cloneCV.querySelectorAll('div');
+      const draggableDivs = cloneCV.querySelectorAll("div");
       draggableDivs.forEach((el) => {
         if (el.style.transform) {
-          el.style.transform = 'none';
+          el.style.transform = "none";
         }
-        if (el.style.position === 'absolute' && !el.hasAttribute('contenteditable')) {
-          el.style.position = 'relative';
+        if (
+          el.style.position === "absolute" &&
+          !el.hasAttribute("contenteditable")
+        ) {
+          el.style.position = "relative";
         }
       });
 
-      cloneCV.style.position = 'absolute';
-      cloneCV.style.left = '-9999px';
-      cloneCV.style.top = '0';
+      cloneCV.style.position = "absolute";
+      cloneCV.style.left = "-9999px";
+      cloneCV.style.top = "0";
       document.body.appendChild(cloneCV);
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const htmlEl = document.documentElement;
       const bodyEl = document.body;
-      const prevHtmlBg = { color: htmlEl.style.backgroundColor, image: htmlEl.style.backgroundImage, background: htmlEl.style.background };
-      const prevBodyBg = { color: bodyEl.style.backgroundColor, image: bodyEl.style.backgroundImage, background: bodyEl.style.background };
-      htmlEl.style.backgroundColor = '#ffffff';
-      htmlEl.style.backgroundImage = 'none';
-      htmlEl.style.background = '#ffffff';
-      bodyEl.style.backgroundColor = '#ffffff';
-      bodyEl.style.backgroundImage = 'none';
-      bodyEl.style.background = '#ffffff';
+      const prevHtmlBg = {
+        color: htmlEl.style.backgroundColor,
+        image: htmlEl.style.backgroundImage,
+        background: htmlEl.style.background,
+      };
+      const prevBodyBg = {
+        color: bodyEl.style.backgroundColor,
+        image: bodyEl.style.backgroundImage,
+        background: bodyEl.style.background,
+      };
+      htmlEl.style.backgroundColor = "#ffffff";
+      htmlEl.style.backgroundImage = "none";
+      htmlEl.style.background = "#ffffff";
+      bodyEl.style.backgroundColor = "#ffffff";
+      bodyEl.style.backgroundImage = "none";
+      bodyEl.style.background = "#ffffff";
 
       const canvas = await html2canvas(cloneCV, {
         scale: 2,
         useCORS: true,
         logging: false,
         allowTaint: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
       });
 
       document.body.removeChild(cloneCV);
@@ -354,9 +372,10 @@ function CVContentMarketing() {
                   className="text-3xl font-bold text-teal-400 cursor-move"
                   style={{ fontFamily: "Arial, sans-serif" }}
                 >
-                  Hoàng Tường Vy
+                  Đinh Tuấn Dũng
                 </h1>
               </Draggable>
+
               <Draggable>
                 <p
                   contentEditable
@@ -374,7 +393,7 @@ function CVContentMarketing() {
               <div
                 className="font-bold text-lg mb-3 pb-2"
                 style={{
-                  backgroundColor: "#2d2d2d",
+                  backgroundColor: "#4f4f4fff",
                   padding: "8px",
                   textAlign: "center",
                 }}
@@ -568,7 +587,11 @@ function CVContentMarketing() {
                 SỞ THÍCH
               </div>
               <Draggable>
-                <p contentEditable suppressContentEditableWarning className="text-sm">
+                <p
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-sm"
+                >
                   Nấu ăn - Đọc sách - Nghe nhạc - Chơi thể thao
                 </p>
               </Draggable>
@@ -601,12 +624,12 @@ function CVContentMarketing() {
                   className="text-sm leading-relaxed"
                   style={{ color: "#333" }}
                 >
-                  Với hơn 5 năm kinh nghiệm trong lĩnh vực Content Marketing, tôi
-                  đã trao dồi cho mình kiến thức chuyên môn ở đa dạng lĩnh vực,
-                  đặc biệt là Giáo dục - Đào tạo. Mục tiêu của tôi trong 2 năm tới
-                  là trở thành Leader Content Marketing. Học hỏi và triển khai
-                  nhiều dự án content mới với vai trò dùng đột phá, đồng góp vào
-                  sự phát triển bền vững của doanh nghiệp.
+                  Với hơn 5 năm kinh nghiệm trong lĩnh vực Content Marketing,
+                  tôi đã trao dồi cho mình kiến thức chuyên môn ở đa dạng lĩnh
+                  vực, đặc biệt là Giáo dục - Đào tạo. Mục tiêu của tôi trong 2
+                  năm tới là trở thành Leader Content Marketing. Học hỏi và
+                  triển khai nhiều dự án content mới với vai trò dùng đột phá,
+                  đồng góp vào sự phát triển bền vững của doanh nghiệp.
                 </p>
               </Draggable>
             </div>
@@ -669,14 +692,14 @@ function CVContentMarketing() {
                 >
                   <Draggable>
                     <li contentEditable suppressContentEditableWarning>
-                      Lên kế hoạch, trực tiếp triển khai và xây dựng nội dung cho
-                      các kênh Marketing như: Website, Zalo, TikTok.
+                      Lên kế hoạch, trực tiếp triển khai và xây dựng nội dung
+                      cho các kênh Marketing như: Website, Zalo, TikTok.
                     </li>
                   </Draggable>
                   <Draggable>
                     <li contentEditable suppressContentEditableWarning>
-                      Sản xuất nội dung chạy quảng cáo quảng bá sản phẩm ứng dụng
-                      học tập của trung tâm LittleMe trên Facebook.
+                      Sản xuất nội dung chạy quảng cáo quảng bá sản phẩm ứng
+                      dụng học tập của trung tâm LittleMe trên Facebook.
                     </li>
                   </Draggable>
                   <Draggable>
@@ -688,8 +711,8 @@ function CVContentMarketing() {
                   </Draggable>
                   <Draggable>
                     <li contentEditable suppressContentEditableWarning>
-                      Các bài viết tương tác mang lại trung bình 520 leads/tháng,
-                      tỷ lệ chuyển đổi lả 15.5%.
+                      Các bài viết tương tác mang lại trung bình 520
+                      leads/tháng, tỷ lệ chuyển đổi lả 15.5%.
                     </li>
                   </Draggable>
                   <Draggable>
@@ -766,8 +789,8 @@ function CVContentMarketing() {
                 >
                   <Draggable>
                     <li contentEditable suppressContentEditableWarning>
-                      Quản lý trang Fanpage và xây dựng nội dung cho các bài đăng
-                      giúp Fanpage tăng 2.000 lượt theo dõi sau 1 năm.
+                      Quản lý trang Fanpage và xây dựng nội dung cho các bài
+                      đăng giúp Fanpage tăng 2.000 lượt theo dõi sau 1 năm.
                     </li>
                   </Draggable>
                   <Draggable>
@@ -831,7 +854,8 @@ function CVContentMarketing() {
                     </Draggable>
                     <Draggable>
                       <p contentEditable suppressContentEditableWarning>
-                        Google Digital Garage - Fundamentals of Digital Marketing
+                        Google Digital Garage - Fundamentals of Digital
+                        Marketing
                       </p>
                     </Draggable>
                   </div>

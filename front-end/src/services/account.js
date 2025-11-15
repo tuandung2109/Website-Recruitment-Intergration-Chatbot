@@ -231,6 +231,19 @@ const sendOtpForgotPassword = async (email) => {
   return data;
 };
 
+const updateAccountMoney = async ({ account_id, deductAmount }) => {
+  try {
+    const res = await _patch("/account/updateAccountMoney", {
+      account_id,
+      deductAmount,
+    });
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
 export {
   postRegister,
   loginAccount,
@@ -248,4 +261,5 @@ export {
   verifyOtpRegister,
   updateAccount,
   changePassword,
+  updateAccountMoney,
 };

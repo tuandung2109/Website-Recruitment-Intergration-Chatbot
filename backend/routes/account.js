@@ -23,4 +23,6 @@ router.post("/verifyOtp", controllerUsers.verifyOtpRegister);
 router.patch("/updateAccount", controllerUsers.updateAccount);
 router.patch("/changePassword", controllerUsers.changePassword);
 
+router.patch("/updateAccountMoney", controllerUsers.updateAccountMoney);
+
 module.exports = router;

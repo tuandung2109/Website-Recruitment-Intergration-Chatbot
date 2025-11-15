@@ -439,7 +439,7 @@ const postJobPosting = async (req, res) => {
           education_level: education_level || "",
           benefits: benefits || "",
           working_time: working_time || "",
-          status: status || "inactive",
+          status: status || "pending",
           deleted: deleted || false,
           create_at: new Date(),
         },

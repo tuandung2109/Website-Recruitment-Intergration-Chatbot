@@ -810,6 +810,89 @@ def evaluate_job_description():
             "timestamp": time.time()
         }), 500
 
+
+@app.route('/api/evaluate/cv-features', methods=['POST'])
+def evaluate_cv_based_on_features():
+    """Evaluate CV based on extracted features and job description using AgentKatCoder"""
+    try:
+        data = request.get_json()
+        
+        # Validate required parameters (cv_id is now optional)
+        required_fields = ['account_id', 'job_posting_id', 'job_application_id']
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return jsonify({
+                "error": f"Missing required fields: {', '.join(missing_fields)}",
+                "status": "error"
+            }), 400
+        
+        # Extract and validate parameters
+        try:
+            account_id = int(data['account_id'])
+            job_posting_id = int(data['job_posting_id'])
+            job_application_id = int(data['job_application_id'])
+            
+            # cv_id is optional - can be None or omitted
+            cv_id = None
+            if 'cv_id' in data and data['cv_id'] is not None:
+                cv_id = int(data['cv_id'])
+                
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                "error": "Parameters must be valid integers",
+                "status": "error",
+                "details": str(e)
+            }), 400
+        
+        logger.info(f"🔍 Evaluating CV based on features - Account: {account_id}, Job: {job_posting_id}, CV: {cv_id}, Application: {job_application_id}")
+        
+        # Import AgentKatCoder
+        from app.chatbot.AgentKatCoder import AgentKatCoder
+        
+        # Create AgentKatCoder instance
+        settings = Settings.load_settings()
+        agent = AgentKatCoder(model_name=settings.MODE_KAT_CODER)
+        
+        # Call handle_ai_evaluation_based_on_features method
+        evaluation_result = agent.handle_ai_evaluation_based_on_features(
+            p_account_id=account_id,
+            p_job_posting_id=job_posting_id,
+            p_cv_id=cv_id,
+            job_application_id=job_application_id
+        )
+        
+        # Check if evaluation was successful
+        if evaluation_result and not (isinstance(evaluation_result, str) and evaluation_result.startswith("Error")):
+            response_data = {
+                "status": "success",
+                "account_id": account_id,
+                "job_posting_id": job_posting_id,
+                "job_application_id": job_application_id,
+                "evaluation": evaluation_result,
+                "timestamp": time.time()
+            }
+            
+            # Only include cv_id in response if it was provided
+            if cv_id is not None:
+                response_data["cv_id"] = cv_id
+                
+            return jsonify(response_data)
+        else:
+            return jsonify({
+                "status": "error",
+                "error": evaluation_result or "Failed to evaluate CV based on features",
+                "timestamp": time.time()
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"❌ CV evaluation based on features error: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error",
+            "timestamp": time.time()
+        }), 500
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))  # Use different port (5001) to avoid conflict
     debug = os.getenv('DEBUG', 'False').lower() == 'true'

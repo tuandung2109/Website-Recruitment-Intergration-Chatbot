@@ -1,0 +1,366 @@
+.video-profile-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.video-profile-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.video-profile-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.video-profile-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.video-profile-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+
+/* Recording Card */
+.recording-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.recording-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.recording-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+/* Video Container */
+.video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.camera-view,
+.preview-view {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  color: white;
+}
+
+.camera-placeholder .anticon {
+  margin-bottom: 16px;
+}
+
+.recording-indicator {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Recording Controls */
+.recording-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.recording-controls button {
+  min-width: 140px;
+}
+
+/* Recording Stats */
+.recording-stats {
+  margin-bottom: 24px;
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.time-display {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.time-max {
+  font-size: 1.2rem;
+  color: #999;
+}
+
+/* Recording Tips */
+.recording-tips {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.recording-tips h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.recording-tips ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recording-tips li {
+  padding: 8px 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Gallery Card */
+.gallery-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.gallery-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.empty-gallery {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-gallery .anticon {
+  margin-bottom: 16px;
+}
+
+.empty-gallery p {
+  margin: 8px 0;
+  font-size: 1rem;
+}
+
+.empty-hint {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Video Gallery */
+.video-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.video-card {
+  display: flex;
+  gap: 16px;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.video-card:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.video-thumbnail {
+  position: relative;
+  width: 160px;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.thumbnail-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-card:hover .video-overlay {
+  opacity: 1;
+}
+
+.video-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.video-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.video-duration,
+.video-date {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 4px 0;
+}
+
+.video-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Modal Video */
+.modal-video-container {
+  width: 100%;
+}
+
+.modal-video {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.modal-video-info {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.modal-video-info p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.modal-video-info strong {
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .video-profile-content {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-card {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .video-profile-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .recording-controls {
+    flex-direction: column;
+  }
+
+  .recording-controls button {
+    width: 100%;
+  }
+
+  .video-card {
+    flex-direction: column;
+  }
+
+  .video-thumbnail {
+    width: 100%;
+    height: 180px;
+  }
+}

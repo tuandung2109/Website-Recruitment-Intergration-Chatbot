@@ -26,6 +26,12 @@ import Vnpay from "./pages/Invoice";
 import JobSuggestions from "./pages/JobSuggestions/JobSuggestions";
 import AIInterviewPage from "./pages/AIInterview/AIInterviewPage";
 import AIInterviewResult from "./pages/AIInterview/AIInterviewResult";
+import SalaryCalculator from "./pages/SalaryCalculator";
+import VideoProfile from "./pages/VideoProfile";
+import JobSwipe from "./pages/JobSwipe";
+import NewFeatures from "./pages/NewFeatures";
+import CareerQuiz from "./pages/CareerQuiz";
+import CareerRoadmap from "./pages/CareerRoadmap";
 
 import AdminCompany from "./pages/Admin/Company/company";
 import AdminAccount from "./pages/Admin/account";
@@ -81,6 +87,12 @@ function App() {
           <Route path="/cv-job-matcher" element={<CVJobMatcher />} />
           <Route path="/cv-matcher-demo" element={<CVJobMatcherDemo />} />
           <Route path="/job-suggestions" element={<JobSuggestions />} />
+          <Route path="/salary-calculator" element={<SalaryCalculator />} />
+          <Route path="/video-profile" element={<VideoProfile />} />
+          <Route path="/job-swipe" element={<JobSwipe />} />
+          <Route path="/career-quiz" element={<CareerQuiz />} />
+          <Route path="/career-roadmap" element={<CareerRoadmap />} />
+          <Route path="/new-features" element={<NewFeatures />} />
           <Route path="/ai-interview" element={<AIInterviewPage />} />
           <Route path="/ai-interview/result" element={<AIInterviewResult />} />
           <Route path="/applications" element={<Applications />} />

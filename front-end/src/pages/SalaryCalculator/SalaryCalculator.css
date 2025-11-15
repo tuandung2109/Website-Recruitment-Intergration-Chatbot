@@ -1,0 +1,417 @@
+.salary-calculator-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.salary-calculator-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.salary-calculator-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.salary-calculator-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.salary-tabs {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.salary-tabs .ant-tabs-nav {
+  margin-bottom: 32px;
+}
+
+.salary-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+}
+
+/* Calculator Section */
+.calculator-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.calculator-card,
+.result-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.calculator-card h2,
+.result-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.input-group .ant-input,
+.input-group .ant-select {
+  border-radius: 8px;
+}
+
+.input-group .ant-slider {
+  margin-top: 16px;
+}
+
+/* Result Card */
+.result-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.result-card h2,
+.result-card h3 {
+  color: white;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.result-item.highlight {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: none;
+}
+
+.result-label {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.result-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.net-salary {
+  font-size: 2rem !important;
+  color: #ffd700;
+}
+
+.breakdown {
+  margin-top: 24px;
+}
+
+.breakdown h3 {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+
+.result-item.deduction .result-value {
+  color: #ff6b6b;
+}
+
+.result-item.info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  border: none;
+  margin-top: 12px;
+}
+
+/* Comparison Section */
+.comparison-section {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+}
+
+.comparison-card,
+.comparison-result-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.comparison-card h2,
+.comparison-result-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+/* Salary Range Visual */
+.salary-range-visual {
+  margin: 32px 0;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.range-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.range-bar {
+  position: relative;
+  height: 40px;
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.range-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.range-segment.low {
+  background: linear-gradient(90deg, #ff6b6b, #ffa500);
+}
+
+.range-segment.mid {
+  background: linear-gradient(90deg, #ffa500, #4ecdc4);
+}
+
+.range-segment.high {
+  background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+}
+
+.your-position {
+  position: absolute;
+  top: -10px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.position-marker {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: bounce 2s infinite;
+}
+
+.position-label {
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.range-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Comparison Stats */
+.comparison-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.stat-item {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stat-value.your-salary {
+  color: #667eea;
+}
+
+.stat-value.market-salary {
+  color: #4ecdc4;
+}
+
+.stat-value.difference.positive {
+  color: #51cf66;
+}
+
+.stat-value.difference.negative {
+  color: #ff6b6b;
+}
+
+/* Recommendation Alerts */
+.recommendation {
+  margin-top: 24px;
+}
+
+.alert {
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  border-left: 4px solid;
+}
+
+.alert-warning {
+  background: #fff3cd;
+  border-color: #ffc107;
+  color: #856404;
+}
+
+.alert-info {
+  background: #d1ecf1;
+  border-color: #17a2b8;
+  color: #0c5460;
+}
+
+.alert-success {
+  background: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.alert-excellent {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  border-color: #ffd700;
+  color: white;
+  font-weight: 600;
+}
+
+/* Tips Card */
+.tips-card {
+  margin-top: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.tips-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.tip-item {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tip-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tip-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.tip-item h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.tip-item p {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .calculator-section,
+  .comparison-section {
+    grid-template-columns: 1fr;
+  }
+
+  .tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .salary-calculator-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .comparison-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tips-grid {
+    grid-template-columns: 1fr;
+  }
+}

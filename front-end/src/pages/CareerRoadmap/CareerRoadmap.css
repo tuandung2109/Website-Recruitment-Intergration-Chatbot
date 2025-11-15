@@ -1,0 +1,279 @@
+.career-roadmap-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+}
+
+.roadmap-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.roadmap-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.header-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.roadmap-header p {
+  font-size: 1.1rem;
+  opacity: 0.95;
+}
+
+/* Controls */
+.roadmap-controls {
+  max-width: 1000px;
+  margin: 0 auto 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.controls-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.control-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.progress-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+.progress-count {
+  color: #667eea;
+}
+
+/* Timeline */
+.roadmap-timeline {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.marker-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.timeline-item.current .marker-circle {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.marker-line {
+  width: 4px;
+  flex: 1;
+  min-height: 100px;
+  margin-top: 8px;
+  border-radius: 2px;
+}
+
+/* Timeline Card */
+.timeline-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-width: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.timeline-item.current .timeline-card {
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  transform: scale(1.02);
+}
+
+.timeline-item.passed .timeline-card {
+  opacity: 0.8;
+}
+
+.timeline-item.future .timeline-card {
+  opacity: 0.6;
+}
+
+.current-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.level-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.level-meta {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-weight: 600;
+}
+
+.meta-item svg {
+  color: #667eea;
+}
+
+/* Level Sections */
+.level-section {
+  margin-bottom: 24px;
+}
+
+.level-section h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skills-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.skill-item {
+  padding: 4px 0;
+}
+
+.skill-checked {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.resources-list,
+.projects-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resources-list li,
+.projects-list li {
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.resources-list li:hover,
+.projects-list li:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.resources-list li::before {
+  content: "📚 ";
+  margin-right: 8px;
+}
+
+.projects-list li::before {
+  content: "💼 ";
+  margin-right: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .roadmap-header h1 {
+    font-size: 2rem;
+  }
+
+  .controls-row {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-item {
+    grid-template-columns: 60px 1fr;
+    gap: 16px;
+  }
+
+  .marker-circle {
+    width: 50px;
+    height: 50px;
+  }
+
+  .level-title {
+    font-size: 1.2rem;
+  }
+
+  .skills-list {
+    grid-template-columns: 1fr;
+  }
+}

@@ -364,6 +364,18 @@ const Header = () => {
                         Đăng ký công ty
                       </a>
                       <a
+                        href="/new-features"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 group"
+                      >
+                        <span className="h-4 w-4 mr-3 text-lg">🚀</span>
+                        <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          Tính năng mới
+                        </span>
+                        <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          HOT
+                        </span>
+                      </a>
+                      <a
                         href="/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >

@@ -1,5 +1,6 @@
 const multer = require("multer");
 const supabase = require("../config/supabase");
+const axios = require("axios");
 const upload = multer({ storage: multer.memoryStorage() }).single("file");
 
 // Lấy danh sách account
@@ -208,9 +209,17 @@ const addApplication = async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
+
+    // ✅ Gọi AI service để đánh giá CV tự động (không chặn response)
+    const job_application_id = data[0].job_application_id;
+    triggerAIEvaluation(account_id, job_posting_id, cv_id, job_application_id);
+
     return res
       .status(201)
-      .json({ message: "Nộp đơn ứng tuyển thành công", data });
+      .json({ 
+        message: "Nộp đơn ứng tuyển thành công. AI đang đánh giá CV của bạn...", 
+        data 
+      });
   } catch (err) {
     console.error("❌ Lỗi server:", err);
     return res.status(500).json({ error: "Lỗi server" });
@@ -399,9 +408,17 @@ const addApplicationFile = async (req, res) => {
         .select();
 
       if (error) return res.status(400).json({ error: error.message });
+
+      // ✅ Gọi AI service để đánh giá CV tự động (cv_id = null)
+      const job_application_id = data[0].job_application_id;
+      triggerAIEvaluation(Number(account_id), Number(job_posting_id), null, job_application_id);
+
       return res
         .status(201)
-        .json({ message: "Nộp đơn (file rời) thành công", data });
+        .json({ 
+          message: "Nộp đơn (file rời) thành công. AI đang đánh giá CV của bạn...", 
+          data 
+        });
     } catch (e) {
       console.error("❌ addApplicationFile error:", e);
       return res.status(500).json({ error: "Lỗi server" });
@@ -722,6 +739,37 @@ const getApplicationResults = async (req, res) => {
 };
 
 // 📍 Lấy danh sách ứng viên theo job_posting_id (kèm điểm AI nếu có)
+// ✅ Hàm helper: Gọi AI service để đánh giá CV (chạy background, không chặn response)
+const triggerAIEvaluation = async (account_id, job_posting_id, cv_id, job_application_id) => {
+  try {
+    const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+    
+    console.log(`🤖 Triggering AI evaluation for job_application_id: ${job_application_id}`);
+    
+    // Gọi AI service (không await để không chặn response)
+    axios.post(`${AI_SERVICE_URL}/api/evaluate/cv-features`, {
+      account_id,
+      job_posting_id,
+      cv_id,
+      job_application_id
+    }, {
+      timeout: 60000 // 60 seconds timeout
+    })
+    .then(response => {
+      console.log(`✅ AI evaluation completed for job_application_id: ${job_application_id}`);
+      console.log(`   Score breakdown:`, response.data.evaluation);
+    })
+    .catch(error => {
+      console.error(`❌ AI evaluation failed for job_application_id: ${job_application_id}`);
+      console.error(`   Error:`, error.message);
+      // Không throw error để không ảnh hưởng đến flow chính
+    });
+  } catch (err) {
+    console.error("❌ Error triggering AI evaluation:", err.message);
+    // Không throw error để không ảnh hưởng đến flow chính
+  }
+};
+
 const getCandidatesByJobPosting = async (req, res) => {
   try {
     const { job_posting_id } = req.params;

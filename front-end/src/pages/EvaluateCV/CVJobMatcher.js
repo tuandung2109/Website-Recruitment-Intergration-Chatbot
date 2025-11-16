@@ -113,7 +113,7 @@ const CVJobMatcher = () => {
                 data={evaluationData}
                 onNewScan={handleNewScan}
                 cvFileName={cvFile?.name}
-                jobTitle={evaluationData.jobInfo.title}
+                jobTitle={evaluationData.job_title || evaluationData.jobInfo?.title || 'Kết quả đánh giá AI'}
             />
         );
     }

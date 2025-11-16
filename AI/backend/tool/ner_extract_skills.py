@@ -137,41 +137,7 @@ def get_similarity_job_by_skills(filePath: str, use_kat_coder: bool = False):
         )
     )
     
-    # Check if we have skills data
-    if not skills_list:
-        print("[WARN] No skills found")
-        return {
-            "intent": "job-suggestions",
-            "extracted_features": {
-                "success": False,
-                "skills": [],
-                "jobs": [],
-                "total_jobs": 0,
-                "total_skills": 0,
-                "error": "No skills extracted from CV"
-            }
-        }
-
-    print(f"[INFO] Using {len(skills_list)} skills: {skills_list[:5]}...")
-
-    # Use QDrant to find similar jobs
-    settings = Settings().load_settings()
-    qdrant = QDrant(Settings=settings)
-
-    similar_jobs = qdrant.search_vectors_with_filter(
-        settings,
-        " ".join(skills_list),
-        "entities",
-        top_k=5,
-        filter=Filter(
-            must=[
-                FieldCondition(
-                    key="entity_type",
-                    match=MatchValue(value="skill")
-                ),
-            ]
-        )
-    )
+    
     
     # Format job postings for frontend
     job_postings = []

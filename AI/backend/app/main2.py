@@ -71,6 +71,7 @@ def sync_embeddings_on_startup():
         # Sync unified entities collection (companies + job postings)
         logger.info("Starting unified entities embedding sync...")
         summary = sync_entities_embeddings(settings=settings, collection_name="entities")
+      
         logger.info(
             "Entities embedding sync completed: status=%s collection=%s companies=%s job_postings=%s upserted=%s",
             summary.get("status"),

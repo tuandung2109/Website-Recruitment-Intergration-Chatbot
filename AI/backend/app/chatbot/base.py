@@ -38,14 +38,5 @@ class BaseAI(ABC):
         return self.conversation_history
     
     @abstractmethod
-    def chat(self, message: str, include_history: bool = True) -> str:
-        """
-        Chat with the bot
-        
-        Args:
-            message: user message
-            include_history: whether to include conversation history in the prompt
-        Returns:
-            response from the bot
-        """
+    def chat_enhance(self, message: str, include_history: bool = True) -> str:
         pass

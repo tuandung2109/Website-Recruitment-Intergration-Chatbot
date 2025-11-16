@@ -142,23 +142,27 @@ const CVJobMatcherResult = ({ data, onNewScan, cvFileName, jobTitle }) => {
                         <p className="hero-meta">{resumeName}</p>
                     </div>
                     <div className="hero-score">
-                        <svg viewBox="0 0 200 200" className="score-ring">
-                            <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" strokeWidth="14" />
-                            <circle
-                                cx="100"
-                                cy="100"
-                                r="90"
-                                fill="none"
-                                stroke={getScoreColor(generalPercent)}
-                                strokeWidth="14"
-                                strokeDasharray={`${565 * generalPercent / 100} 565`}
-                                strokeLinecap="round"
-                                transform="rotate(-90 100 100)"
-                            />
-                        </svg>
+                        <div className="score-ring-wrapper">
+                            <svg viewBox="0 0 200 200" className="score-ring">
+                                <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" strokeWidth="14" />
+                                <circle
+                                    cx="100"
+                                    cy="100"
+                                    r="90"
+                                    fill="none"
+                                    stroke={getScoreColor(generalPercent)}
+                                    strokeWidth="14"
+                                    strokeDasharray={`${565 * generalPercent / 100} 565`}
+                                    strokeLinecap="round"
+                                    transform="rotate(-90 100 100)"
+                                />
+                            </svg>
+                            <div className="score-ring-inner">
+                                <span className="score-ring-value">{evaluation.general ?? 0}</span>
+                                <span className="score-ring-caption">/10 Tổng quan</span>
+                            </div>
+                        </div>
                         <div className="score-meta">
-                            <span className="score-value">{evaluation.general ?? 0}</span>
-                            <span className="score-caption">/10 Tổng quan</span>
                             <span className="score-chip" style={{ color: getScoreColor(generalPercent) }}>
                                 {getScoreLabel(generalPercent)}
                             </span>
@@ -269,9 +273,7 @@ const CVJobMatcherResult = ({ data, onNewScan, cvFileName, jobTitle }) => {
                                                 <div className="skill-match-panel-header">
                                                     <div>
                                                         <p className="skill-name">{match.name}</p>
-                                                        {match.matchScore !== undefined && (
-                                                            <span className="skill-score">{match.matchScore}%</span>
-                                                        )}
+                            
                                                     </div>
                                                     <span className={`skill-status ${info.className}`}>
                                                         {statusIcon[match.status] || statusIcon.partial}

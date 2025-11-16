@@ -647,6 +647,117 @@ JD: {jd}
 CV: {cv}
         """
 ),
+"intent_extract_features_for_evaluation": (
+    """
+Bạn là chuyên gia phân trích xuất đặc trưng.
+Nhiệm vụ:
+Đọc CV dưới đây là của cv {cv} và jd {jd} và trả về **JSON hợp lệ** với format:
+{{
+cv: {{
+  "skills": ["skill1", "skill2", ...],
+  "education": ["degree1", "degree2", ...],
+  "positions": ["position1", "position2", ...],
+  "experience": ["experience1", "experience2", ...]   
+}},
+jd: {{
+  "skills": ["skill1", "skill2", ...],
+  "education": ["degree1", "degree2", ...],
+  "positions": ["position1", "position2", ...],
+  "experience": ["experience1", "experience2", ...]
+}}
+trong đó:
+- skills: Liệt kê tất cả kỹ năng lập trình, công nghệ, framework.
+- education: Chỉ ra trình độ học vấn.
+- positions: Vị trí công việc ứng tuyển.
+- experience: Kinh nghiệm làm việc.
+"""),
+"intent_job_matcher": (
+    """
+You are an AI system that evaluates candidate CVs against a job description and returns a structured JSON analysis.
+
+### INPUT FORMAT
+You will be given two text blocks:
+1. CV_TEXT: Candidate's CV (raw text, unstructured)
+2. JD_TEXT: Job Description (raw text, unstructured)
+
+### TASKS
+Analyze the CV and JD carefully, then produce an evaluation with these components:
+
+1. **weak**  
+    - A brief paragraph highlighting the weakness compared to the job description
+
+2. **strong**  
+    - A brief paragraph highlighting the strength compared to the job description
+ 
+
+3. **interview_question**  
+   - Generate a list of highly relevant interview questions based on the CV.
+   - Use the candidate’s projects and gaps to craft deep, technical questions.
+   - Format as a single comma-separated string.
+
+4. **detail_analysis**  
+   - A detailed paragraph-level evaluation of the candidate.
+   - Include academic ability, project depth, technical range, career focus, timeline consistency, and alignment with JD.
+   - Very important: analysis must sound like a professional HR/AI hiring system.
+
+5. **skill_matches**  
+   Return an array of skill match evaluations.  
+   For each required skill or competency derived from the JD, output:
+   Important: only include skills explicitly mentioned in the JD.
+
+   - name: skill or competency name
+   - status: "match", "partial", or "gap"
+   - jobRequirement: what the JD expects
+   - evidence: what evidence appears in the CV
+   - recommendation: what the candidate should improve
+
+6. **created_at**
+   - Use current timestamp in ISO 8601 format.
+
+### OUTPUT FORMAT
+Return *only* valid JSON with the exact structure below:
+
+{{
+  "weak": "...",
+  "strong": "...",
+  "interview_question": "...",
+  "detail_analysis": "...",
+  "created_at": "...",
+  "skill_matches": {{
+    {{
+      "name": "",
+      "status": "",
+      "jobRequirement": "",
+      "evidence": "",
+      "recommendation": ""
+    }}
+  }}
+}}
+
+### IMPORTANT RULES
+- Do NOT include commentary outside JSON.
+- The JSON must be valid, no trailing commas.
+- The analysis must use only information found in the CV.
+- If the CV contains multiple domains (AI, blockchain, Unity…), detect cross-domain ambiguity.
+- Be specific and data-driven.
+- translate into Vietnamese if the CV is in Vietnamese; otherwise, respond in English.
+
+### NOW WAIT
+Do not produce output yet.  
+I will provide the CV_TEXT and JD_TEXT next.
+
+cv: 
+cv begin
+{cv}
+cv end
+jd:
+jd begin
+ {jd}
+jd end
+
+    """
+),
+
         }
 
     def get_prompt(self, prompt_name: str, **kwargs) -> str:

@@ -4,6 +4,11 @@ const controllerJobsPostings = require("../controllers/jobPosting");
 
 router.get("/listJobPosting", controllerJobsPostings.listJobPostings); //Lấy danh sách bài đăng
 router.get(
+  "/listJobPostingsCompany",
+  controllerJobsPostings.listJobPostingsCompany
+); //Lấy danh sách bài đăng
+
+router.get(
   "/listJobPostingsEmployer",
   controllerJobsPostings.listJobPostingsEmployer
 ); //Lấy danh sách bài đăng
@@ -41,4 +46,5 @@ router.patch("/rejectUpdate/:id", controllerJobsPostings.rejectJobUpdate);
 router.get("/listPendingUpdates", controllerJobsPostings.listPendingJobUpdates);
 // Xóa cứng job posting (hard delete)
 router.delete("/deleteJobPosting/:id", controllerJobsPostings.deleteJobPosting);
+
 module.exports = router;

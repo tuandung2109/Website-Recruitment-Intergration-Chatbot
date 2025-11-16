@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Users,
@@ -252,11 +253,17 @@ const CandidateEvaluation = () => {
   const { jobPostingId } = useParams();
   const navigate = useNavigate();
 
-  const [evaluations, setEvaluations] = useState(mockEvaluations);
   const [jobInfo] = useState(mockJobInfo);
-  const [isLoading, setIsLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("score");
+  // const [evaluations, setEvaluations] = useState(mockEvaluations || []);
+  const [evaluations, setEvaluations] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setEvaluations(mockEvaluations);
+    setIsLoading(false);
+  }, []);
 
   const getRecommendationColor = (recommendation) => {
     const colors = {
@@ -267,8 +274,9 @@ const CandidateEvaluation = () => {
     };
     return colors[recommendation] || "recommendation-default";
   };
-  setEvaluations();
+  setEvaluations(mockEvaluations); // ✅ luôn có giá trị hợp lệ
   setIsLoading(false);
+
   const getRecommendationIcon = (recommendation) => {
     const icons = {
       "Highly Recommended": <Trophy className="rec-icon" />,

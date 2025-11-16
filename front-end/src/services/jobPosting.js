@@ -104,7 +104,109 @@ const listJobsPosting = async (params = {}) => {
     return { success: false, message: error.message || "Lỗi không xác định" };
   }
 };
+const listJobPostingsCompany = async (params = {}) => {
+  try {
+    // 🧩 Tạo query string linh hoạt
+    const query = new URLSearchParams(params).toString();
+    const url = query
+      ? `/jobPosting/listJobPostingsCompany?${query}`
+      : `/jobPosting/listJobPostingsCompany`;
 
+    const res = await _get(url);
+    const result = await res.json();
+
+    console.log("📦 Dữ liệu gốc từ backend:", result);
+
+    if (!res.ok) {
+      throw new Error(result.error || "Không thể lấy danh sách công việc");
+    }
+
+    // 🧠 Linh hoạt với nhiều kiểu response khác nhau
+    let rawJobs = [];
+    if (Array.isArray(result.job_postings)) rawJobs = result.job_postings;
+    else if (Array.isArray(result.data)) rawJobs = result.data;
+    else if (result.job_posting) rawJobs = [result.job_posting];
+
+    if (rawJobs.length === 0) {
+      console.warn("⚠️ Không tìm thấy dữ liệu job trong response:", result);
+      return { success: false, message: "Không có dữ liệu job hợp lệ" };
+    }
+
+    // 🎯 Chuẩn hóa dữ liệu
+    const jobs = rawJobs.map((j) => {
+      // Log để kiểm tra các key quan trọng
+      // console.log("🧩 Kiểm tra job:", {
+      //   id: j.job_posting_id,
+      //   work_type: j.work_type,
+      //   job_posting_skill: j.job_posting_skill,
+      // });
+
+      return {
+        id: j.job_posting_id,
+        title: j.position_name || "Chưa có tiêu đề",
+        description: j.job_description || "",
+        requirements: j.requirements || "",
+        salary: Number(j.salary) || 0,
+        deadline: j.deadline || "",
+        experienceYears: j.experience_years || 0,
+        educationLevel: j.education_level || "",
+        benefits: j.benefits || "",
+        workingTime: j.working_time || "",
+        status: j.status || "inactive",
+        account: j.account || {},
+        create_at: j.create_at || "",
+
+        // 🏢 Công ty
+        company: {
+          id: j.company?.company_id || null,
+          company_id: j.company?.company_id || null,
+          name: j.company?.name || "",
+          logo: j.company?.logo_url || "",
+          website: j.company?.website || "",
+          size: j.company?.size || "",
+          description: j.company?.description || "",
+          address:
+            Array.isArray(j.company?.address) &&
+            j.company.address.length > 0 &&
+            j.company.address[0].address_detail
+              ? j.company.address[0].address_detail
+              : "",
+        },
+
+        // 🧱 Kiểu làm việc
+        workTypes:
+          Array.isArray(j.work_type) && j.work_type.length > 0
+            ? j.work_type.map((w) => w.work_type_name)
+            : Array.isArray(j.workTypes) && j.workTypes.length > 0
+            ? j.workTypes
+            : [],
+
+        // 🧠 Kỹ năng
+        skills:
+          Array.isArray(j.job_posting_skill) && j.job_posting_skill.length > 0
+            ? j.job_posting_skill
+                .map((s) => s.skill?.skill_name)
+                .filter(Boolean)
+            : [],
+
+        // 🏭 Ngành nghề
+        industries:
+          Array.isArray(j.job_posting_industry) &&
+          j.job_posting_industry.length > 0
+            ? j.job_posting_industry
+                .map((i) => i.industry?.name)
+                .filter(Boolean)
+            : [],
+      };
+    });
+
+    console.log("✅ Dữ liệu sau khi map:", jobs);
+    return { success: true, jobs };
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy danh sách job:", error);
+    return { success: false, message: error.message || "Lỗi không xác định" };
+  }
+};
 const listJobPostingsEmployer = async (params = {}) => {
   try {
     // 🧩 Tạo query string linh hoạt
@@ -550,4 +652,5 @@ export {
   approveJobUpdate,
   submitJobUpdate,
   deleteJobPosting,
+  listJobPostingsCompany,
 };

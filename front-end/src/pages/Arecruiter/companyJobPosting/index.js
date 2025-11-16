@@ -28,13 +28,13 @@ import dayjs from "dayjs";
 import UseTitle from "../../../hooks/useTitle";
 import { getCompanyById } from "../../../services/company";
 import {
-  listJobsPosting,
   updateJobPosting,
   unlockJobPosting,
   listJobPostingsEmployer,
   offJobPosting,
   submitJobUpdate,
   deleteJobPosting,
+  listJobPostingsCompany,
 } from "../../../services/jobPosting";
 import { listIndustry } from "../../../services/industry";
 import { listSkills } from "../../../services/skill";
@@ -85,7 +85,7 @@ function CompanyJobPosting() {
       setCompany(resCompany.company);
 
       // ✅ Gọi API với filter params
-      const resJobs = await listJobsPosting(params);
+      const resJobs = await listJobPostingsCompany(params);
       if (resJobs.success && Array.isArray(resJobs.jobs)) {
         const filtered = resJobs.jobs.filter(
           (job) => Number(job.company.id) === Number(userData.company_id)
@@ -695,12 +695,25 @@ function CompanyJobPosting() {
             ⚠️ Bạn có chắc chắn muốn xóa bài đăng này không?
           </p>
           <p style={{ color: "#ff4d4f", fontWeight: "bold" }}>
-            Hành động này không thể hoàn tác! Bài đăng sẽ bị xóa vĩnh viễn khỏi hệ thống.
+            Hành động này không thể hoàn tác! Bài đăng sẽ bị xóa vĩnh viễn khỏi
+            hệ thống.
           </p>
           {selectedJob && (
-            <div style={{ marginTop: "15px", padding: "10px", background: "#f5f5f5", borderRadius: "4px" }}>
-              <p><strong>Vị trí:</strong> {selectedJob.title}</p>
-              <p><strong>ID:</strong> {selectedJob.id || selectedJob.job_posting_id}</p>
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "10px",
+                background: "#f5f5f5",
+                borderRadius: "4px",
+              }}
+            >
+              <p>
+                <strong>Vị trí:</strong> {selectedJob.title}
+              </p>
+              <p>
+                <strong>ID:</strong>{" "}
+                {selectedJob.id || selectedJob.job_posting_id}
+              </p>
             </div>
           )}
         </Modal>

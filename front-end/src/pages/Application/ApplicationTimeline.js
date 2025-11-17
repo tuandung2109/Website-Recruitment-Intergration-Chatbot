@@ -87,13 +87,13 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
 
   // Chế độ full (cho modal hoặc detail page)
   return (
-    <div className="w-full py-6">
+    <div className="w-full py-4">
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-7 top-0 bottom-0 w-0.5 bg-gray-200" />
 
         {/* Steps */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {steps.map((step, index) => {
             const isActive = index <= currentStep;
             const isCurrent = index === currentStep;
@@ -104,7 +104,7 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
               <div key={step.key} className="relative flex items-start gap-4">
                 {/* Icon circle */}
                 <div
-                  className={`relative z-10 flex items-center justify-center w-16 h-16 rounded-full text-2xl font-bold transition-all duration-300 ${
+                  className={`relative z-10 flex items-center justify-center h-14 w-14 rounded-full text-xl font-bold transition-all duration-300 ${
                     isActive
                       ? isRejected
                         ? "bg-red-500 text-white shadow-lg shadow-red-200"
@@ -112,7 +112,7 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
                       : "bg-gray-200 text-gray-400"
                   } ${
                     isCurrent
-                      ? "ring-4 ring-blue-300 ring-offset-2 scale-110"
+                      ? "ring-3 ring-blue-300 ring-offset-2 scale-105"
                       : ""
                   }`}
                 >
@@ -120,8 +120,8 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 pt-2">
-                  <div className="flex items-center gap-3 mb-1">
+                <div className="flex-1 pt-1">
+                  <div className="mb-1 flex items-center gap-3">
                     <h3
                       className={`text-lg font-semibold ${
                         isActive
@@ -134,7 +134,7 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
                       {step.label}
                     </h3>
                     {isCurrent && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full animate-pulse">
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 animate-pulse">
                         Hiện tại
                       </span>
                     )}
@@ -166,7 +166,7 @@ const ApplicationTimeline = ({ status, submittedAt, compact = false }) => {
 
       {/* Status message */}
       <div
-        className={`mt-6 p-4 rounded-lg border-l-4 ${
+        className={`mt-4 rounded-lg border-l-4 p-3 ${
           status === "accept"
             ? "bg-green-50 border-green-500"
             : status === "reject"

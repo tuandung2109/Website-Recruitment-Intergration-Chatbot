@@ -74,7 +74,7 @@ const CVJobMatcher = () => {
     };
 
     // Start scanning process
-    const handleStartScanning = () => {
+    const handleStartScanning = async () => {
         if (!cvFile || !jobDescription.trim()) {
             alert('Please upload your CV and add a job description');
             return;
@@ -82,12 +82,33 @@ const CVJobMatcher = () => {
 
         setIsScanning(true);
         
-        // Simulate API call with mock data
-        setTimeout(() => {
-            setEvaluationData(mockEvaluationData);
+        try {
+            // Create FormData to send file and job description
+            const formData = new FormData();
+            formData.append('cv_file', cvFile);
+            formData.append('job_description', jobDescription);
+            formData.append('job_title', 'Job Position'); // Optional: can be extracted from JD
+            
+            // Call the API endpoint
+            const response = await fetch('http://localhost:5000/api/evaluate/cv-jd-match', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                setEvaluationData(result);
+                setStep(2);
+            } else {
+                alert(`Error: ${result.error || 'Failed to evaluate CV'}`);
+            }
+        } catch (error) {
+            console.error('Error calling API:', error);
+            alert(`Failed to connect to the server: ${error.message}`);
+        } finally {
             setIsScanning(false);
-            setStep(2);
-        }, 2500);
+        }
     };
 
     // Reset and start new scan

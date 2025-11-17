@@ -715,7 +715,7 @@ Analyze the CV and JD carefully, then produce an evaluation with these component
    - Use current timestamp in ISO 8601 format.
 
 ### OUTPUT FORMAT
-Return *only* valid JSON with the exact structure below:
+Return *only* valid JSON with the exact structure below and translated to Vietnamese:
 
 {{
   "weak": "...",
@@ -740,7 +740,7 @@ Return *only* valid JSON with the exact structure below:
 - The analysis must use only information found in the CV.
 - If the CV contains multiple domains (AI, blockchain, Unity…), detect cross-domain ambiguity.
 - Be specific and data-driven.
-- translate into Vietnamese if the CV is in Vietnamese; otherwise, respond in English.
+
 
 ### NOW WAIT
 Do not produce output yet.  

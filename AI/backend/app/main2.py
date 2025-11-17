@@ -894,6 +894,122 @@ def evaluate_cv_based_on_features():
             "timestamp": time.time()
         }), 500
 
+
+@app.route('/api/evaluate/cv-jd-match', methods=['POST'])
+def evaluate_cv_jd_match():
+    """Evaluate CV against Job Description with similarity scores and detailed analysis"""
+    try:
+        # Check if file is present
+        if 'cv_file' not in request.files:
+            return jsonify({
+                "error": "No CV file provided",
+                "status": "error"
+            }), 400
+        
+        cv_file = request.files['cv_file']
+        job_description = request.form.get('job_description', '')
+        job_title = request.form.get('job_title', '')
+        
+        if not cv_file.filename:
+            return jsonify({
+                "error": "No file selected",
+                "status": "error"
+            }), 400
+        
+        if not job_description:
+            return jsonify({
+                "error": "Job description is required",
+                "status": "error"
+            }), 400
+        
+        # Validate file type
+        allowed_extensions = {'pdf'}
+        if not cv_file.filename.lower().endswith('.pdf'):
+            return jsonify({
+                "error": "Only PDF files are allowed",
+                "status": "error"
+            }), 400
+        
+        # Save uploaded file temporarily
+        upload_folder = os.path.join(backend_path, 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Generate unique filename
+        file_id = str(uuid.uuid4())
+        file_extension = cv_file.filename.rsplit('.', 1)[1].lower()
+        temp_filename = f"{file_id}.{file_extension}"
+        temp_filepath = os.path.join(upload_folder, temp_filename)
+        
+        cv_file.save(temp_filepath)
+        logger.info(f"📄 CV file saved temporarily: {temp_filepath}")
+        
+        try:
+            # Import AgentKatCoder
+            from app.chatbot.AgentKatCoder import AgentKatCoder
+            
+            # Create AgentKatCoder instance
+            settings = Settings.load_settings()
+            agent = AgentKatCoder(model_name=settings.MODE_KAT_CODER)
+            
+            # Call extract_features_cv_and_jd method
+            logger.info(f"🔍 Analyzing CV against job description...")
+            result = agent.extract_features_cv_and_jd(temp_filepath, job_description)
+            
+            # Check if result is an error string
+            if isinstance(result, str) and result.startswith("Error"):
+                return jsonify({
+                    "status": "error",
+                    "error": result,
+                    "timestamp": time.time()
+                }), 500
+            
+            # Transform the result to match the frontend expected format
+            similarity_scores = result.get('similarity_scores', {})
+            evaluation = result.get('evaluation', {})
+            
+            # Convert similarity scores (0-1 range) to 0-10 scale for frontend
+            frontend_response = {
+                "status": "success",
+                "job_title": job_title or evaluation.get('job_title', 'Job Position'),
+                "skill": round(similarity_scores.get('skills', 0) * 10, 1),
+                "education": round(similarity_scores.get('education', 0) * 10, 1),
+                "position": round(similarity_scores.get('positions', 0) * 10, 1),
+                "experiences": round(similarity_scores.get('experience', 0) * 10, 1),
+                "general": round(similarity_scores.get('general', 0) * 10, 1),
+                "weak": evaluation.get('weak', ''),
+                "strong": evaluation.get('strong', ''),
+                "interview_question": evaluation.get('interview_question', ''),
+                "detail_analysis": evaluation.get('detail_analysis', ''),
+                "created_at": evaluation.get('created_at', datetime.utcnow().isoformat() + 'Z'),
+                "skill_matches": evaluation.get('skill_matches', []),
+                "raw_similarity_scores": similarity_scores,  # Keep original scores for reference
+                "extracted_features": result.get('extracted_features', {}),
+                "timestamp": time.time()
+            }
+            
+            logger.info(f"✅ CV evaluation completed successfully")
+            return jsonify(frontend_response)
+            
+        finally:
+            # Clean up temporary file
+            try:
+                if os.path.exists(temp_filepath):
+                    os.remove(temp_filepath)
+                    logger.info(f"🗑️  Temporary file removed: {temp_filepath}")
+            except Exception as cleanup_error:
+                logger.warning(f"⚠️  Failed to remove temporary file: {cleanup_error}")
+        
+    except Exception as e:
+        logger.error(f"❌ CV-JD match evaluation error: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({
+            "error": str(e),
+            "status": "error",
+            "timestamp": time.time()
+        }), 500
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))  # Use different port (5001) to avoid conflict
     debug = os.getenv('DEBUG', 'False').lower() == 'true'

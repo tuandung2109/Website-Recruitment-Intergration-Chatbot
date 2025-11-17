@@ -217,103 +217,97 @@ class AgentKatCoder(BaseAI):
             
 
             cv = extract_text_from_pdf(filepath)
-            prompt_extracted_features_cv = self.prompt_config.get_prompt("intent_job_matcher", cv=cv, jd=jd)
+
+            # Get evaluation/matching score
+            prompt_evaluate_score = self.prompt_config.get_prompt("intent_job_matcher", cv=cv, jd=jd)
+            evaluate_score = self._strip_think(self.generate_content([{"role": "user", "content": prompt_evaluate_score}]))
+            
+            # Get extracted features (skills, education, experience, positions)
+            prompt_extracted_features_cv = self.prompt_config.get_prompt("intent_extract_features_for_evaluation", cv=cv, jd=jd)
             extracted_features = self._strip_think(self.generate_content([{"role": "user", "content": prompt_extracted_features_cv}]))
-            # # The prompt template expects a placeholder named {cv}, pass it explicitly.
-            # prompt_extracted_features_cv = self.prompt_config.get_prompt("intent_extract_features_for_evaluation", cv=cv, jd=jd)
 
-            # extracted_features = self._strip_think(self.generate_content([{"role": "user", "content": prompt_extracted_features_cv}]))
-
-            # result = self.paste_to_json(extracted_features)
-
-            # skills_cv = result["cv"]["skills"]
-            # skillsString_cv = ", ".join(skills_cv)
-
-            # education_cv = result["cv"]["education"]
-            # educationString_cv = ", ".join(education_cv)
-
-            # experience_cv = result["cv"]["experience"]
-            # experienceString_cv = ", ".join(experience_cv)
-
-            # positions_cv = result["cv"]["positions"]
-            # positionsString_cv = ", ".join(positions_cv)
-
-            # experience_cv = result["cv"]["experience"]
-            # experienceString_cv = ", ".join(experience_cv)
-
-
-            # skills_jd = result["jd"]["skills"]
-            # skillsString_jd = ", ".join(skills_jd)
-
-            # education_jd = result["jd"]["education"]
-            # educationString_jd = ", ".join(education_jd)
-
-            # experience_jd = result["jd"]["experience"]
-            # experienceString_jd = ", ".join(experience_jd)
-
-
-            # positions_jd = result["jd"]["positions"]
-            # positionsString_jd = ", ".join(positions_jd)
-
-            # experience_jd = result["jd"]["experience"]
-            # experienceString_jd = ", ".join(experience_jd)
-
-
-
-            # embedding_model = llm_manager.get_embedding_model(self.settings.EMBEDDING_MODE)
-
-            # encode_skills_cv = embedding_model.encode(skillsString_cv)
-            # encode_skills_jd = embedding_model.encode(skillsString_jd)
-
-            # encode_education_cv = embedding_model.encode(educationString_cv)
-            # encode_education_jd = embedding_model.encode(educationString_jd)
-
-            # encode_experience_cv = embedding_model.encode(experienceString_cv)
-            # encode_experience_jd = embedding_model.encode(experienceString_jd)
-
-            # encode_positions_cv = embedding_model.encode(positionsString_cv)
-            # encode_positions_jd = embedding_model.encode(positionsString_jd)
-
-
-            # encode_general_cv = embedding_model.encode(cv)
-            # encode_general_jd = embedding_model.encode(jd)
-
-            # score_skills = self.cosine_similarity(encode_skills_cv, encode_skills_jd)
-            # score_education = self.cosine_similarity(encode_education_cv, encode_education_jd)
-            # score_experience = self.cosine_similarity(encode_experience_cv, encode_experience_jd)
-            # score_positions = self.cosine_similarity(encode_positions_cv, encode_positions_jd)
-            # score_general = self.cosine_similarity(encode_general_cv, encode_general_jd)
-
-
+            # Parse the extracted features (not the evaluation score)
+            result = self.paste_to_json(extracted_features)
             
+            # Debug: Print the result to see its structure
+            logging.info(f"Parsed feature extraction result: {result}")
             
+            # Check if the expected keys exist
+            if "cv" not in result:
+                raise KeyError(f"'cv' key not found in result. Available keys: {list(result.keys())}")
+            if "jd" not in result:
+                raise KeyError(f"'jd' key not found in result. Available keys: {list(result.keys())}")
+
+            skills_cv = result["cv"]["skills"]
+            skillsString_cv = ", ".join(skills_cv)
+
+            education_cv = result["cv"]["education"]
+            educationString_cv = ", ".join(education_cv)
+
+            experience_cv = result["cv"]["experience"]
+            experienceString_cv = ", ".join(experience_cv)
+
+            positions_cv = result["cv"]["positions"]
+            positionsString_cv = ", ".join(positions_cv)
+
+            experience_cv = result["cv"]["experience"]
+            experienceString_cv = ", ".join(experience_cv)
 
 
+            skills_jd = result["jd"]["skills"]
+            skillsString_jd = ", ".join(skills_jd)
+
+            education_jd = result["jd"]["education"]
+            educationString_jd = ", ".join(education_jd)
+
+            experience_jd = result["jd"]["experience"]
+            experienceString_jd = ", ".join(experience_jd)
+
+
+            positions_jd = result["jd"]["positions"]
+            positionsString_jd = ", ".join(positions_jd)
+
+            experience_jd = result["jd"]["experience"]
+            experienceString_jd = ", ".join(experience_jd)
+
+
+
+            embedding_model = llm_manager.get_embedding_model(self.settings.EMBEDDING_MODE)
+
+            encode_skills_cv = embedding_model.encode(skillsString_cv)
+            encode_skills_jd = embedding_model.encode(skillsString_jd)
+
+            encode_education_cv = embedding_model.encode(educationString_cv)
+            encode_education_jd = embedding_model.encode(educationString_jd)
+
+            encode_experience_cv = embedding_model.encode(experienceString_cv)
+            encode_experience_jd = embedding_model.encode(experienceString_jd)
+
+            encode_positions_cv = embedding_model.encode(positionsString_cv)
+            encode_positions_jd = embedding_model.encode(positionsString_jd)
+
+
+            encode_general_cv = embedding_model.encode(cv)
+            encode_general_jd = embedding_model.encode(jd)
+
+            score_skills = self.cosine_similarity(encode_skills_cv, encode_skills_jd)
+            score_education = self.cosine_similarity(encode_education_cv, encode_education_jd)
+            score_experience = self.cosine_similarity(encode_experience_cv, encode_experience_jd)
+            score_positions = self.cosine_similarity(encode_positions_cv, encode_positions_jd)
+            score_general = self.cosine_similarity(encode_general_cv, encode_general_jd)
+
+
+        
             return {
-                # "skills": {
-                #     "cv": skills_cv,
-                #     "jd": skills_jd,
-                #     "score": score_skills
-                # },
-                # "education": {
-                #     "cv": education_cv,
-                #     "jd": education_jd,
-                #     "score": score_education
-                # },
-                # "experience": {
-                #     "cv": experience_cv,
-                #     "jd": experience_jd,
-                #     "score": score_experience
-                # },
-                # "positions": {
-                #     "cv": positions_cv,
-                #     "jd": positions_jd,
-                #     "score": score_positions
-                # },
-                # "general": {
-                #     "score": score_general
-                # }
-                "extracted_features": extracted_features
+                "similarity_scores": {
+                    "skills": float(score_skills),
+                    "education": float(score_education),
+                    "experience": float(score_experience),
+                    "positions": float(score_positions),
+                    "general": float(score_general)
+                },
+                "evaluation": self.paste_to_json(evaluate_score),
+                "extracted_features": result
                 
             }
 

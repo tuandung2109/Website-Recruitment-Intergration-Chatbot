@@ -134,7 +134,7 @@ const listJobPostingsEmployer = async (req, res) => {
       deadlineFrom,
       deadlineTo,
       industryIds,
-      skillIds,
+      skill_id,
     } = req.query;
 
     let query = supabase
@@ -220,8 +220,8 @@ const listJobPostingsEmployer = async (req, res) => {
       );
     }
     // 💼 Lọc theo kỹ năng
-    if (skillIds) {
-      const skillArray = skillIds.split(",").map((id) => Number(id));
+    if (skill_id) {
+      const skillArray = skill_id.split(",").map((id) => Number(id));
       filteredJobs = filteredJobs.filter((job) =>
         job.job_posting_skill?.some((jps) =>
           skillArray.includes(jps.skill?.skill_id)
@@ -800,7 +800,7 @@ const listJobsByCompany = async (req, res) => {
   }
 };
 
-const updateJobPosting1 = async (req, res) => {
+const updateJobPosting = async (req, res) => {
   try {
     const id = req.params.id;
     // ✅ Kiểm tra ID có hợp lệ không
@@ -854,6 +854,7 @@ const updateJobPosting1 = async (req, res) => {
         benefits: jobData.benefits,
         working_time: jobData.working_time,
         status: jobData.status,
+        update_at: new Date(),
       })
       .eq("job_posting_id", parseInt(id))
       .select()
@@ -877,7 +878,7 @@ const updateJobPosting1 = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-const updateJobPosting = async (req, res) => {
+const updateJobPosting1 = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const jobData = req.body;
@@ -1021,7 +1022,8 @@ const submitJobUpdate1 = async (req, res) => {
 // POST /api/jobPosting/submitUpdate/:jobPostingId
 const submitJobUpdate = async (req, res) => {
   try {
-    const jobPostingId = req.params.jobPostingId;
+    // support both route param names: :id (routes) and :jobPostingId (other callers)
+    const jobPostingId = req.params.jobPostingId || req.params.id;
     const {
       position_name,
       job_description,
@@ -1032,6 +1034,7 @@ const submitJobUpdate = async (req, res) => {
       education_level,
       benefits,
       working_time,
+      update_at,
     } = req.body;
 
     if (!jobPostingId)

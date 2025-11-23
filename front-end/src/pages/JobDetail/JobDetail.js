@@ -16,7 +16,9 @@ const JobDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openApply, setOpenApply] = useState(false);
-  
+  const [showCustomShare, setShowCustomShare] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+
   // 🆕 State kiểm tra đã ứng tuyển
   const [hasApplied, setHasApplied] = useState(false);
   const [checkingApplied, setCheckingApplied] = useState(false);
@@ -68,7 +70,7 @@ const JobDetail = () => {
           // ✅ Kỹ năng
           // skills: Array.isArray(job.skills) ? job.skills : [],
 
-            // ✅ Kỹ năng: lấy từ job_posting_skill → skill.skill_name (JOIN từ BE)
+          // ✅ Kỹ năng: lấy từ job_posting_skill → skill.skill_name (JOIN từ BE)
           skills: Array.isArray(job.job_posting_skill)
             ? job.job_posting_skill
                 .map((s) => s?.skill?.skill_name)
@@ -145,7 +147,7 @@ const JobDetail = () => {
     if (!date) return "";
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return "";
-    
+
     const now = new Date();
     const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
 
@@ -161,11 +163,11 @@ const JobDetail = () => {
     if (!date) return "";
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return "";
-    
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
     const year = dateObj.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   };
 
@@ -179,36 +181,51 @@ const JobDetail = () => {
     const shareText = `${jobTitle} - ${jobCompany}`;
 
     switch (platform) {
-      case "facebook":
+      case "facebook1":
         window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(jobUrl)}`,
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            jobUrl
+          )}`,
           "_blank",
           "width=600,height=400"
         );
         break;
+      case "facebook":
+        setShowSharePopup(true);
+        break;
+
       case "twitter":
         window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(jobUrl)}`,
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            shareText
+          )}&url=${encodeURIComponent(jobUrl)}`,
           "_blank",
           "width=600,height=400"
         );
         break;
       case "linkedin":
         window.open(
-          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobUrl)}`,
+          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+            jobUrl
+          )}`,
           "_blank",
           "width=600,height=400"
         );
         break;
       case "copy":
-        navigator.clipboard.writeText(jobUrl).then(() => {
-          alert("Đã sao chép link công việc!");
-        }).catch(() => {
-          alert("Không thể sao chép link!");
-        });
+        navigator.clipboard
+          .writeText(jobUrl)
+          .then(() => {
+            alert("Đã sao chép link công việc!");
+          })
+          .catch(() => {
+            alert("Không thể sao chép link!");
+          });
         break;
       case "email":
-        window.location.href = `mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(`Xem công việc này: ${jobUrl}`)}`;
+        window.location.href = `mailto:?subject=${encodeURIComponent(
+          shareText
+        )}&body=${encodeURIComponent(`Xem công việc này: ${jobUrl}`)}`;
         break;
       default:
         break;
@@ -343,42 +360,42 @@ const JobDetail = () => {
                     {job.salaryRange}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                  {job.workTypes && job.workTypes.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {job.workTypes.map((wt, i) => (
-                        <span
-                          key={`wt-${i}`}
-                          className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
-                        >
-                          {wt}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {job.industries && job.industries.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {job.industries.map((ind, i) => (
-                        <span
-                          key={`ind-${i}`}
-                          className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-medium"
-                        >
-                          {ind}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {job.skills && job.skills.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {job.skills.map((skill, i) => (
-                        <span
-                          key={`skill-${i}`}
-                          className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                    {job.workTypes && job.workTypes.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {job.workTypes.map((wt, i) => (
+                          <span
+                            key={`wt-${i}`}
+                            className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                          >
+                            {wt}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {job.industries && job.industries.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {job.industries.map((ind, i) => (
+                          <span
+                            key={`ind-${i}`}
+                            className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-medium"
+                          >
+                            {ind}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {job.skills && job.skills.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {job.skills.map((skill, i) => (
+                          <span
+                            key={`skill-${i}`}
+                            className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -525,7 +542,7 @@ const JobDetail = () => {
                       Vị trí công ty
                     </h3>
                     <p className="text-gray-700 mb-3">{job.location}</p>
-                    
+
                     {/* 📍 Google Maps Embed - KHÔNG CẦN API KEY */}
                     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50">
                       <iframe
@@ -534,17 +551,21 @@ const JobDetail = () => {
                         height="350"
                         frameBorder="0"
                         style={{ border: 0 }}
-                        src={`https://maps.google.com/maps?q=${encodeURIComponent(job.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                          job.location
+                        )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                         allowFullScreen
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                       ></iframe>
                     </div>
-                    
+
                     {/* Nút mở Google Maps */}
                     <div className="flex gap-3 mt-3">
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.location)}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          job.location
+                        )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-all shadow-sm hover:shadow-md"
@@ -565,7 +586,9 @@ const JobDetail = () => {
                         Mở Google Maps
                       </a>
                       <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.location)}`}
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                          job.location
+                        )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-all shadow-sm hover:shadow-md"
@@ -612,7 +635,7 @@ const JobDetail = () => {
                     ? "Đã ứng tuyển"
                     : "Ứng tuyển ngay"}
                 </button>
-                
+
                 {/* Nút Chia sẻ */}
                 <div className="relative">
                   <button
@@ -644,7 +667,11 @@ const JobDetail = () => {
                         onClick={() => handleShare("facebook")}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center transition-colors"
                       >
-                        <svg className="w-5 h-5 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-5 h-5 mr-3 text-blue-600"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                         </svg>
                         <span className="font-medium">Facebook</span>
@@ -653,7 +680,11 @@ const JobDetail = () => {
                         onClick={() => handleShare("linkedin")}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center transition-colors"
                       >
-                        <svg className="w-5 h-5 mr-3 text-blue-700" fill="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-5 h-5 mr-3 text-blue-700"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                         </svg>
                         <span className="font-medium">LinkedIn</span>
@@ -662,7 +693,11 @@ const JobDetail = () => {
                         onClick={() => handleShare("twitter")}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center transition-colors"
                       >
-                        <svg className="w-5 h-5 mr-3 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+                        <svg
+                          className="w-5 h-5 mr-3 text-sky-500"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
                           <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                         </svg>
                         <span className="font-medium">Twitter</span>
@@ -671,8 +706,18 @@ const JobDetail = () => {
                         onClick={() => handleShare("email")}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center transition-colors"
                       >
-                        <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg
+                          className="w-5 h-5 mr-3 text-gray-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                         <span className="font-medium">Email</span>
                       </button>
@@ -680,8 +725,18 @@ const JobDetail = () => {
                         onClick={() => handleShare("copy")}
                         className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center transition-colors border-t"
                       >
-                        <svg className="w-5 h-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <svg
+                          className="w-5 h-5 mr-3 text-gray-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
                         </svg>
                         <span className="font-medium">Sao chép link</span>
                       </button>
@@ -720,7 +775,75 @@ const JobDetail = () => {
             </div>
           </div>
         </div>
+
+        {showSharePopup && job && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-5 rounded-xl shadow-lg w-[420px]">
+              <h2 className="text-xl font-semibold mb-3">Nội dung chia sẻ</h2>
+
+              <textarea
+                className="w-full h-40 p-3 border rounded-lg"
+                readOnly
+                value={`📌Tên công việc: *${job.title}*\n🏢 Công ty: ${
+                  job.companyInfo?.name || job.company
+                }\n💰 Mức lương: ${job.salaryRange || ""}\n🏷️ Ngành nghề: ${
+                  job.industries && job.industries.length > 0
+                    ? job.industries.join(", ")
+                    : ""
+                }\n📍 Địa chỉ: ${
+                  job.location || job.companyInfo?.company_address || ""
+                }\n🔗 Đường link: ${window.location.href}`}
+              />
+
+              <div className="flex justify-between mt-4">
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded-lg"
+                  onClick={() => setShowSharePopup(false)}
+                >
+                  Đóng
+                </button>
+
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `📌 Tên công việc: ${job.title}\n💰 Lương: ${
+                        job.salaryRange || ""
+                      }\n🏷️ Ngành nghề: ${
+                        job.industries && job.industries.length > 0
+                          ? job.industries.join(", ")
+                          : ""
+                      }\n🏢 Công ty: ${
+                        job.companyInfo?.name || job.company || ""
+                      }\n📍 ${
+                        job.location || job.companyInfo?.company_address || ""
+                      }\n🔗 ${window.location.href}`
+                    );
+                    alert("Đã sao chép nội dung!");
+                  }}
+                >
+                  Sao chép
+                </button>
+
+                <button
+                  className="px-4 py-2 bg-blue-700 text-white rounded-lg"
+                  onClick={() => {
+                    window.open(
+                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                        window.location.href
+                      )}`,
+                      "_blank"
+                    );
+                  }}
+                >
+                  Mở Facebook
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
       {/* Modal Ứng tuyển — để trong return, nằm cuối cùng */}
       <JobApplicationModal
         open={openApply}

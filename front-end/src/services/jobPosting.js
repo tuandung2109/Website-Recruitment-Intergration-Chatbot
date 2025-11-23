@@ -517,6 +517,7 @@ const postJobPosting = async (jobs) => {
     };
   }
 };
+
 const updateJobPosting = async (job_posting_id, jobData) => {
   try {
     const res = await _patch(

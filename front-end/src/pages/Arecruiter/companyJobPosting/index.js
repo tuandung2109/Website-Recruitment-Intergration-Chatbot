@@ -169,6 +169,12 @@ function CompanyJobPosting() {
       benefits: job.benefits,
       education_level: job.educationLevel,
       experience_years: job.experienceYears,
+      // populate existing skills (use skill_name when available, fallback to id)
+      skillIds: job.skills
+        ? job.skills.map((s) => s.skill_name ?? s.skill_id ?? String(s))
+        : job.skill_names
+        ? job.skill_names
+        : [],
     });
     setIsEditModal(true);
   };
@@ -191,6 +197,12 @@ function CompanyJobPosting() {
         benefits: values.benefits,
         education_level: values.education_level,
         experience_years: values.experience_years,
+        // include skills (send as comma-separated string, backend expects this format in filters/endpoints)
+        skillIds: values.skillIds
+          ? Array.isArray(values.skillIds)
+            ? values.skillIds.join(",")
+            : values.skillIds
+          : undefined,
       };
       const res = await submitJobUpdate(
         selectedJob.id || selectedJob.job_posting_id,
@@ -628,6 +640,18 @@ function CompanyJobPosting() {
             <Form.Item name="requirements" label="Yêu cầu">
               <Input.TextArea rows={3} />
             </Form.Item>
+            {/* Skills: show existing and allow adding new skills */}
+            <Form.Item name="skillIds" label="Kỹ năng yêu cầu">
+              <Select
+                mode="multiple"
+                placeholder="Chọn kỹ năng"
+                options={skills.map((s) => ({
+                  value: s.skill_id,
+                  label: s.skill_name,
+                }))}
+              />
+            </Form.Item>
+
             <Form.Item name="salary" label="Mức lương (VNĐ)">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
@@ -648,15 +672,7 @@ function CompanyJobPosting() {
                 ]}
               />
             </Form.Item>
-            <Form.Item name="account_id" label="account_id">
-              <Input />
-            </Form.Item>
-            <Form.Item name="company_id" label="company_id">
-              <Input />
-            </Form.Item>
-            <Form.Item name="deleted" label="deleted">
-              <Input />
-            </Form.Item>
+
             <Form.Item name="education_level" label="education_level">
               <Input />
             </Form.Item>

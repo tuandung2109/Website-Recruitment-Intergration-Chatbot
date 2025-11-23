@@ -146,7 +146,7 @@ const JobListings = () => {
       if (!account_id || jobs.length === 0) return;
 
       const appliedStatus = {};
-      
+
       // Kiểm tra từng job (có thể tối ưu bằng cách gọi API hàng loạt nếu backend hỗ trợ)
       await Promise.all(
         jobs.map(async (job) => {
@@ -472,7 +472,7 @@ const JobListings = () => {
     if (!date) return "";
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return "";
-    
+
     const now = new Date();
     // const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     const diff = Math.floor((now - dateObj) / (1000 * 60 * 60 * 24));
@@ -911,12 +911,13 @@ const JobListings = () => {
                                 {/* {job.description} */}
                               </p>
                               <div className="flex flex-wrap gap-2 mb-4">
+                                Skill:
                                 {job.skills.map((skill, skillIndex) => (
                                   <span
                                     key={`skill-${skillIndex}`}
-                                    className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full font-medium"
+                                    // className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full font-medium"
                                   >
-                                    Skill: {skill}
+                                    {skill}
                                   </span>
                                 ))}
                                 {job.industries &&
@@ -1004,7 +1005,9 @@ const JobListings = () => {
                                 : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:scale-105"
                             }`}
                           >
-                            {appliedJobs[job.id] ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
+                            {appliedJobs[job.id]
+                              ? "Đã ứng tuyển"
+                              : "Ứng tuyển ngay"}
                           </button>
                           {/* <button className="text-gray-500 hover:text-blue-600 transition-colors">
                             <svg

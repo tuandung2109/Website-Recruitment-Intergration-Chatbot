@@ -56,11 +56,11 @@ const Login = () => {
       try {
         // Gọi API login
         const response = await authAPI.login(formData.email, formData.password);
+
         if (response.success) {
-          const { token, account } = response.data;
-          localStorage.setItem("token", token);
+          const { account } = response; // KHÔNG phải response.data
           localStorage.setItem("account", JSON.stringify(account));
-          localStorage.setItem("account_id", String(account.account_id));
+          localStorage.setItem("account_id", String(account.id));
           navigate("/");
         }
       } catch (error) {

@@ -109,6 +109,7 @@ const postRegister = async (req, res) => {
           email,
           phone_number,
           password, // có thể hash sau
+
           status: "active",
           gender: gender || null,
           date_of_birth: date_of_birth || null,
@@ -145,6 +146,91 @@ const postRegister = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
+// Đăng ký account mới
+const postRegister2 = async (req, res) => {
+  try {
+    const { email, phone_number, password, gender, date_of_birth, company_id } =
+      req.body;
+
+    if (!email)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email không được để trống!" });
+    if (!password)
+      return res
+        .status(400)
+        .json({ success: false, message: "Password không được để trống!" });
+    if (!phone_number)
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone không được để trống!" });
+
+    // Check email & phone trùng
+    const { data: exitEmail } = await supabase
+      .from("account")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+    if (exitEmail)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email đã tồn tại!" });
+
+    const { data: exitPhone } = await supabase
+      .from("account")
+      .select("*")
+      .eq("phone_number", phone_number)
+      .maybeSingle();
+    if (exitPhone)
+      return res
+        .status(400)
+        .json({ success: false, message: "Phone đã tồn tại!" });
+
+    // 🔐 HASH PASSWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Tạo tài khoản
+    const { data: newAccount, error: insertError } = await supabase
+      .from("account")
+      .insert([
+        {
+          email,
+          phone_number,
+          password: hashedPassword, // ⬅ Lưu password hash
+          status: "active",
+          gender: gender || null,
+          date_of_birth: date_of_birth || null,
+          company_id: company_id || null,
+        },
+      ])
+      .select("account_id")
+      .maybeSingle();
+
+    if (insertError)
+      return res.status(400).json({
+        success: false,
+        message: "Lỗi khi thêm account: " + insertError.message,
+      });
+
+    // Gán loại tài khoản
+    const SEEKER_ID = 3;
+    await supabase
+      .from("account_account_type")
+      .insert([
+        { account_id: newAccount.account_id, account_type_id: SEEKER_ID },
+      ]);
+
+    return res.status(201).json({
+      success: true,
+      message: "Đăng ký thành công!",
+      account_id: newAccount.account_id,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 // Đăng nhập
 const postLogin = async (req, res) => {
   try {
@@ -185,6 +271,54 @@ const postLogin = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
+// Đăng nhập
+const postLogin2 = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email và password là bắt buộc!" });
+
+    // Lấy account theo email
+    const { data: account, error } = await supabase
+      .from("account")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (!account)
+      return res
+        .status(401)
+        .json({ success: false, message: "Email hoặc password sai!" });
+
+    // 🔐 SO SÁNH PASSWORD HASH
+    const passwordMatch = await bcrypt.compare(password, account.password);
+    if (!passwordMatch)
+      return res
+        .status(401)
+        .json({ success: false, message: "Email hoặc password sai!" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công!",
+      account: {
+        id: account.account_id,
+        email: account.email,
+        phone_number: account.phone_number,
+        status: account.status,
+        gender: account.gender,
+        date_of_birth: account.date_of_birth,
+        company_id: account.company_id,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Lỗi server:", err);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 // Xóa cứng account
 const hardDeleteAccount = async (req, res) => {
   try {
@@ -435,6 +569,54 @@ const userResetPassword = async (req, res) => {
     });
   }
 };
+// Reset password
+const userResetPassword2 = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu dữ liệu đầu vào (email hoặc password)!",
+      });
+    }
+
+    // Lấy mật khẩu cũ
+    const { data: oldData } = await supabase
+      .from("account")
+      .select("password")
+      .eq("email", email)
+      .single();
+
+    // So sánh nếu trùng mật khẩu cũ
+    const same = await bcrypt.compare(password, oldData.password);
+    if (same)
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu mới không được trùng mật khẩu cũ!",
+      });
+
+    // 🔐 Hash mật khẩu mới
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update
+    await supabase
+      .from("account")
+      .update({ password: hashedPassword })
+      .eq("email", email);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đổi mật khẩu thành công!",
+    });
+  } catch (error) {
+    console.error("Error in userResetPassword:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi máy chủ, vui lòng thử lại sau!",
+    });
+  }
+};
 
 // ⚙️ Lấy thông tin user (ví dụ đơn giản, không có JWT)
 const getApiUser = async (req, res) => {
@@ -665,39 +847,6 @@ const verifyOtpRegister = async (req, res) => {
   }
 };
 
-const updateAccount1 = async (req, res) => {
-  try {
-    const { account_id, gender, phone_number, date_of_birth, status, amount } =
-      req.body;
-    if (!account_id) {
-      return res.status(400).json({ error: "Thiếu account_id" });
-    }
-    // ⚙️ Cập nhật thông tin trong bảng account
-    const { data, error } = await supabase
-      .from("account")
-      .update({
-        gender,
-        phone_number,
-        date_of_birth,
-        status,
-        amount,
-        updated_at: new Date(),
-      })
-      .eq("account_id", account_id)
-      .select("*");
-    if (error) {
-      console.error("❌ Lỗi Supabase:", error);
-      return res.status(400).json({ error: error.message });
-    }
-    return res.status(200).json({
-      message: "Cập nhật thông tin thành công",
-      account: data[0],
-    });
-  } catch (err) {
-    console.error("❌ Lỗi server:", err);
-    return res.status(500).json({ error: "Lỗi server" });
-  }
-};
 const updateAccount = async (req, res) => {
   try {
     const { account_id, ...fields } = req.body;
@@ -761,17 +910,53 @@ const changePassword = async (req, res) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
+const changePassword2 = async (req, res) => {
+  try {
+    const { account_id, old_password, new_password } = req.body;
+
+    if (!account_id || !old_password || !new_password)
+      return res.status(400).json({ error: "Thiếu thông tin cần thiết" });
+
+    // Lấy password cũ
+    const { data, error: getError } = await supabase
+      .from("account")
+      .select("password")
+      .eq("account_id", account_id)
+      .single();
+
+    if (getError) return res.status(400).json({ error: getError.message });
+
+    // 🔐 So sánh mật khẩu cũ
+    const match = await bcrypt.compare(old_password, data.password);
+    if (!match)
+      return res.status(400).json({ error: "Mật khẩu cũ không đúng" });
+
+    // 🔐 Hash mật khẩu mới
+    const hashedNewPassword = await bcrypt.hash(new_password, 10);
+
+    const { error: updateError } = await supabase
+      .from("account")
+      .update({ password: hashedNewPassword, updated_at: new Date() })
+      .eq("account_id", account_id);
+
+    if (updateError)
+      return res.status(400).json({ error: updateError.message });
+
+    res.status(200).json({ message: "Đổi mật khẩu thành công" });
+  } catch (err) {
+    console.error("❌ Lỗi changePassword:", err);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+};
 
 const updateAccountMoney = async (req, res) => {
   try {
     const { account_id, deductAmount } = req.body;
     if (!account_id || deductAmount === undefined) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thiếu account_id hoặc deductAmount",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu account_id hoặc deductAmount",
+      });
     }
 
     // Lấy thông tin account hiện tại

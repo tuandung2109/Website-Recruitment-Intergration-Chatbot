@@ -17,11 +17,13 @@ import {
   Col,
   Space,
   Collapse,
+  Dropdown,
 } from "antd";
 import {
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -480,90 +482,65 @@ function CompanyJobPosting() {
             },
             {
               title: "Thao tác",
-              width: 200,
-              render: (_, record) => (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <Button
-                    type="link"
-                    style={{ background: "#8dff91" }}
-                    onClick={() => {
+              width: 120,
+              align: "center",
+              render: (_, record) => {
+                const menuItems = [
+                  {
+                    key: "view",
+                    label: "📝 Xem chi tiết",
+                    onClick: () => {
                       setSelectedJob(record);
                       setIsViewModal(true);
-                    }}
-                  >
-                    Xem chi tiết
-                  </Button>
-                  <Button
-                    type={record.status === "active" ? "default" : "primary"}
-                    danger={record.status === "active"}
-                    onClick={() => handleToggleStatus(record)}
-                    disabled={
+                    },
+                  },
+                  {
+                    key: "toggle",
+                    label:
+                      record.status === "active"
+                        ? "🔴 Tắt tin"
+                        : "🟢 Mở tin",
+                    onClick: () => handleToggleStatus(record),
+                    disabled:
                       record.status === "pending" ||
-                      record.status === "inactive"
-                    }
-                  >
-                    {record.status === "active" ? "Tắt tin" : "Mở tin"}
-                  </Button>
-
-                  <Button
-                    type="link"
-                    style={{ background: "#eeff8d" }}
-                    disabled={record.status === "pending"}
-                    onClick={() => handleEdit(record)}
-                  >
-                    Gửi yêu cầu chỉnh sửa
-                  </Button>
-
-                  <Button
-                    type="primary"
-                    size="small"
-                    style={{
-                      background: "linear-gradient(135deg, #667eea, #764ba2)",
-                      border: "none",
-                      fontWeight: "600",
-                    }}
-                    onClick={() => {
-                      navigate(`/companyAdmin/evaluateCandidates/${record.id}`);
-                    }}
-                  >
-                    🤖 Đánh giá AI
-                  </Button>
-
-                  <Button
-                    type="default"
-                    size="small"
-                    style={{
-                      background: "linear-gradient(135deg, #f093fb, #f5576c)",
-                      border: "none",
-                      fontWeight: "600",
-                      color: "white",
-                    }}
-                    onClick={() => {
+                      record.status === "inactive",
+                  },
+                  {
+                    key: "edit",
+                    label: "✏️ Gửi yêu cầu chỉnh sửa",
+                    onClick: () => handleEdit(record),
+                    disabled: record.status === "pending",
+                  },
+                  {
+                    key: "candidates",
+                    label: "👥 Xem ứng viên",
+                    onClick: () => {
                       navigate(`/companyAdmin/candidates/${record.id}`);
-                    }}
-                  >
-                    👥 Xem ứng viên
-                  </Button>
+                    },
+                  },
+                  {
+                    type: "divider",
+                  },
+                  {
+                    key: "delete",
+                    label: "🗑️ Xóa bài đăng",
+                    onClick: () => handleDelete(record),
+                    danger: true,
+                  },
+                ];
 
-                  <Button
-                    type="primary"
-                    danger
-                    size="small"
-                    style={{
-                      fontWeight: "600",
-                    }}
-                    onClick={() => handleDelete(record)}
+                return (
+                  <Dropdown
+                    menu={{ items: menuItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
                   >
-                    🗑️ Xóa
-                  </Button>
-                </div>
-              ),
+                    <Button type="primary" icon={<MoreOutlined />}>
+                      Thao tác
+                    </Button>
+                  </Dropdown>
+                );
+              },
             },
           ]}
         />

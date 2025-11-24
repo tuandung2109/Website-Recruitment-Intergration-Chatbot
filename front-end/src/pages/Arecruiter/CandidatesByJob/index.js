@@ -7,8 +7,6 @@ import {
   Button,
   Spin,
   Alert,
-  Modal,
-  Descriptions,
   message,
   Progress,
   Space,
@@ -35,8 +33,6 @@ function CandidatesByJob() {
   const [loading, setLoading] = useState(true);
   const [candidates, setCandidates] = useState([]);
   const [error, setError] = useState(null);
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
 
   useEffect(() => {
@@ -66,8 +62,7 @@ function CandidatesByJob() {
   };
 
   const handleViewDetail = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsModalOpen(true);
+    navigate(`/companyAdmin/job-postings/${jobPostingId}/candidates/${candidate.job_application_id}`);
   };
 
   const handleUpdateStatus = async (candidateId, newStatus) => {
@@ -83,7 +78,7 @@ function CandidatesByJob() {
               : item
           )
         );
-        setIsModalOpen(false);
+
       } else {
         message.error(res.message);
       }
@@ -172,26 +167,6 @@ function CandidatesByJob() {
             📞 {account?.phone_number || "N/A"}
           </div>
         </div>
-      ),
-    },
-    {
-      title: "Kinh nghiệm",
-      dataIndex: "cv",
-      key: "experience",
-      width: 120,
-      render: (cv) => (
-        <Tag color="blue">
-          {cv?.years_experience ? `${cv.years_experience} năm` : "Chưa rõ"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Trình độ",
-      dataIndex: "cv",
-      key: "education",
-      width: 150,
-      render: (cv) => (
-        <Tag color="purple">{cv?.education_level || "Chưa rõ"}</Tag>
       ),
     },
     {
@@ -359,296 +334,7 @@ function CandidatesByJob() {
         )}
       </Card>
 
-      {/* Modal chi tiết */}
-      <Modal
-        title={
-          <span>
-            <FileTextOutlined /> Chi tiết ứng viên
-          </span>
-        }
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        width={800}
-        style={{ top: 20 }}
-        bodyStyle={{ 
-          maxHeight: "calc(100vh - 200px)", 
-          overflowY: "auto",
-          paddingRight: 12
-        }}
-        footer={[
-          <Button key="close" onClick={() => setIsModalOpen(false)}>
-            Đóng
-          </Button>,
-        ]}
-      >
-        {selectedCandidate && (
-          <div>
-            {/* Hiển thị đánh giá AI nếu có */}
-            {selectedCandidate.ai_score !== null && selectedCandidate.ai_evaluation ? (
-              <>
-                {/* Điểm AI tổng hợp */}
-                <Card
-                  style={{
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    marginBottom: 20,
-                    textAlign: "center",
-                  }}
-                >
-                  <Title level={4} style={{ color: "white", margin: 0 }}>
-                    🏆 Điểm đánh giá AI tổng hợp
-                  </Title>
-                  <div style={{ marginTop: 12 }}>
-                    <Progress
-                      type="circle"
-                      percent={selectedCandidate.ai_score}
-                      width={120}
-                      strokeWidth={10}
-                      strokeColor="#fff"
-                      trailColor="rgba(255,255,255,0.3)"
-                      format={(percent) => (
-                        <span style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>
-                          {percent}
-                        </span>
-                      )}
-                    />
-                  </div>
-                  <Text style={{ color: "white", fontSize: 16, display: "block", marginTop: 8 }}>
-                    {getScoreLevel(selectedCandidate.ai_score)}
-                  </Text>
-                </Card>
 
-                {/* Chi tiết điểm từng phần */}
-                <Card
-                  title="📊 Điểm chi tiết từng tiêu chí"
-                  style={{ marginBottom: 20 }}
-                  bordered={false}
-                >
-                  <Space direction="vertical" style={{ width: "100%" }} size="middle">
-                    <div>
-                      <Text strong>🎯 Kỹ năng (Skill):</Text>
-                      <Progress
-                        percent={(selectedCandidate.ai_evaluation.skill / 10) * 100}
-                        format={() => `${selectedCandidate.ai_evaluation.skill}/10`}
-                        strokeColor="#52c41a"
-                      />
-                    </div>
-                    <div>
-                      <Text strong>🎓 Học vấn (Education):</Text>
-                      <Progress
-                        percent={(selectedCandidate.ai_evaluation.education / 10) * 100}
-                        format={() => `${selectedCandidate.ai_evaluation.education}/10`}
-                        strokeColor="#1890ff"
-                      />
-                    </div>
-                    <div>
-                      <Text strong>💼 Phù hợp vị trí (Position):</Text>
-                      <Progress
-                        percent={(selectedCandidate.ai_evaluation.position / 10) * 100}
-                        format={() => `${selectedCandidate.ai_evaluation.position}/10`}
-                        strokeColor="#722ed1"
-                      />
-                    </div>
-                    <div>
-                      <Text strong>⏱️ Kinh nghiệm (Experiences):</Text>
-                      <Progress
-                        percent={(selectedCandidate.ai_evaluation.experiences / 10) * 100}
-                        format={() => `${selectedCandidate.ai_evaluation.experiences}/10`}
-                        strokeColor="#faad14"
-                      />
-                    </div>
-                    <div>
-                      <Text strong>⭐ Tổng quan (General):</Text>
-                      <Progress
-                        percent={(selectedCandidate.ai_evaluation.general / 10) * 100}
-                        format={() => `${selectedCandidate.ai_evaluation.general}/10`}
-                        strokeColor="#eb2f96"
-                      />
-                    </div>
-                  </Space>
-                </Card>
-
-                {/* Điểm mạnh - Điểm yếu */}
-                <Card
-                  title="💡 Phân tích điểm mạnh & điểm yếu"
-                  style={{ marginBottom: 20 }}
-                  bordered={false}
-                >
-                  <div style={{ marginBottom: 16 }}>
-                    <Tag color="green" style={{ fontSize: 14, padding: "4px 12px" }}>
-                      ✅ Điểm mạnh
-                    </Tag>
-                    <div style={{ marginTop: 8, padding: 12, background: "#f6ffed", borderRadius: 6, border: "1px solid #b7eb8f" }}>
-                      <Text style={{ whiteSpace: "pre-wrap" }}>
-                        {selectedCandidate.ai_evaluation.strong || "Chưa có đánh giá"}
-                      </Text>
-                    </div>
-                  </div>
-                  <div>
-                    <Tag color="orange" style={{ fontSize: 14, padding: "4px 12px" }}>
-                      ⚠️ Điểm yếu
-                    </Tag>
-                    <div style={{ marginTop: 8, padding: 12, background: "#fff7e6", borderRadius: 6, border: "1px solid #ffd591" }}>
-                      <Text style={{ whiteSpace: "pre-wrap" }}>
-                        {selectedCandidate.ai_evaluation.weak || "Chưa có đánh giá"}
-                      </Text>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Phân tích chi tiết */}
-                {selectedCandidate.ai_evaluation.detail_analysis && (
-                  <Card
-                    title="🔍 Phân tích chi tiết từ AI"
-                    style={{ marginBottom: 20 }}
-                    bordered={false}
-                  >
-                    <div style={{ padding: 12, background: "#f0f5ff", borderRadius: 6, border: "1px solid #adc6ff" }}>
-                      <Text style={{ whiteSpace: "pre-wrap" }}>
-                        {selectedCandidate.ai_evaluation.detail_analysis}
-                      </Text>
-                    </div>
-                  </Card>
-                )}
-
-                {/* Câu hỏi phỏng vấn gợi ý */}
-                {selectedCandidate.ai_evaluation.interview_question && (
-                  <Card
-                    title="❓ Câu hỏi phỏng vấn gợi ý"
-                    style={{ marginBottom: 20 }}
-                    bordered={false}
-                  >
-                    <div style={{ padding: 12, background: "#fff1f0", borderRadius: 6, border: "1px solid #ffccc7" }}>
-                      <Text style={{ whiteSpace: "pre-wrap" }}>
-                        {selectedCandidate.ai_evaluation.interview_question}
-                      </Text>
-                    </div>
-                  </Card>
-                )}
-              </>
-            ) : (
-              <Alert
-                message="Chưa có đánh giá AI"
-                description="Ứng viên này chưa được AI đánh giá. Vui lòng sử dụng tính năng đánh giá AI để có kết quả chi tiết."
-                type="warning"
-                showIcon
-                style={{ marginBottom: 20 }}
-              />
-            )}
-
-            {/* Thông tin cơ bản ứng viên */}
-            <Card
-              title="👤 Thông tin ứng viên"
-              style={{ marginBottom: 20 }}
-              bordered={false}
-            >
-            <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Email">
-                {selectedCandidate.account?.email}
-              </Descriptions.Item>
-              
-              <Descriptions.Item label="Số điện thoại">
-                {selectedCandidate.account?.phone_number || "N/A"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Kinh nghiệm">
-                {selectedCandidate.cv?.years_experience
-                  ? `${selectedCandidate.cv.years_experience} năm`
-                  : "Chưa rõ"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Trình độ học vấn">
-                {selectedCandidate.cv?.education_level || "Chưa rõ"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Thư xin việc">
-                {selectedCandidate.cover_letter || <i>Không có</i>}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="CV / File đính kèm">
-                {selectedCandidate.file_url ? (
-                  <a
-                    href={
-                      selectedCandidate.file_url.startsWith("http")
-                        ? selectedCandidate.file_url
-                        : `${process.env.REACT_APP_API_BASE || "http://localhost:9000"}${selectedCandidate.file_url}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "blue" }}
-                  >
-                    📄 Xem file đính kèm
-                  </a>
-                ) : selectedCandidate.cv?.cv_link ? (
-                  <a
-                    href={
-                      selectedCandidate.cv.cv_link.startsWith("http")
-                        ? selectedCandidate.cv.cv_link
-                        : `${process.env.REACT_APP_API_BASE || "http://localhost:9000"}/files/${selectedCandidate.cv.cv_link}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    📄 Xem CV
-                  </a>
-                ) : (
-                  <span className="text-gray-400">Không có file</span>
-                )}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Trạng thái">
-                <Tag
-                  color={
-                    selectedCandidate.status === "pending"
-                      ? "orange"
-                      : selectedCandidate.status === "accept"
-                      ? "green"
-                      : "red"
-                  }
-                >
-                  {selectedCandidate.status?.toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Ngày nộp đơn">
-                {new Date(selectedCandidate.submitted_at).toLocaleString("vi-VN")}
-              </Descriptions.Item>
-            </Descriptions>
-            </Card>
-
-            {/* Nút hành động */}
-            {selectedCandidate.status === "pending" && (
-              <div style={{ marginTop: 20, textAlign: "center" }}>
-                <Space>
-                  <Button
-                    type="primary"
-                    size="large"
-                    onClick={() =>
-                      handleUpdateStatus(
-                        selectedCandidate.job_application_id,
-                        "accepted"
-                      )
-                    }
-                  >
-                    ✅ Chấp nhận ứng viên
-                  </Button>
-                  <Button
-                    danger
-                    size="large"
-                    onClick={() =>
-                      handleUpdateStatus(
-                        selectedCandidate.job_application_id,
-                        "rejected"
-                      )
-                    }
-                  >
-                    ❌ Từ chối ứng viên
-                  </Button>
-                </Space>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

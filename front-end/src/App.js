@@ -50,6 +50,7 @@ import AddJobPosting from "./pages/Arecruiter/companyJobPosting/addJobPosting";
 import CompanyListJobPosting from "./pages/Arecruiter/listApplicationId";
 import CandidateEvaluation from "./pages/Recruiter/CandidateEvaluation";
 import CandidatesByJob from "./pages/Arecruiter/CandidatesByJob";
+import CandidateDetail from "./pages/Arecruiter/CandidatesByJob/CandidateDetail";
 import PostedJobsStatistics from "./pages/Arecruiter/Statistics/PostedJobsStatistics";
 import ApplicationProfilesStatistics from "./pages/Arecruiter/Statistics/ApplicationProfilesStatistics";
 import ApplicationResultsStatistics from "./pages/Arecruiter/Statistics/ApplicationResultsStatistics";
@@ -154,7 +155,7 @@ function App() {
               element={<CandidateEvaluation />}
             />
             <Route
-              path="candidates/:jobPostingId"
+              path="job-postings/:jobPostingId/candidates"
               element={<CandidatesByJob />}
             />
             <Route
@@ -170,6 +171,11 @@ function App() {
               element={<ApplicationResultsStatistics />}
             />
           </Route>
+          {/* Trang chi tiết ứng viên - Hiển thị độc lập không có layout */}
+          <Route
+            path="/companyAdmin/job-postings/:jobPostingId/candidates/:candidateId"
+            element={<CandidateDetail />}
+          />
         </Route>
       </Routes>
     </Router>

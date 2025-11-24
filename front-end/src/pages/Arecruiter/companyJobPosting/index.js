@@ -515,7 +515,7 @@ function CompanyJobPosting() {
                     key: "candidates",
                     label: "👥 Xem ứng viên",
                     onClick: () => {
-                      navigate(`/companyAdmin/candidates/${record.id}`);
+                      navigate(`/companyAdmin/job-postings/${record.id}/candidates`);
                     },
                   },
                   {

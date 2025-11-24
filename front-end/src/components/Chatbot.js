@@ -46,6 +46,10 @@ const Chatbot = () => {
   // Context length tracking (128K tokens max)
   const MAX_CONTEXT_TOKENS = 12800;
   const [contextTokens, setContextTokens] = useState(0);
+  
+  // Voice input states
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
 
   // Khóa scroll nền khi fullscreen
   useEffect(() => {
@@ -86,6 +90,49 @@ const Chatbot = () => {
       filters: { title: "backend" }, // Filter theo backend
     },
   ];
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'vi-VN'; // Vietnamese language
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        
+        if (event.error === 'no-speech') {
+          const errorMsg = {
+            id: Date.now(),
+            text: "⚠️ Không nghe thấy giọng nói. Vui lòng thử lại!",
+            sender: "bot",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, errorMsg]);
+        }
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  }, []);
 
   // Check AI service health on component mount
   useEffect(() => {
@@ -653,6 +700,43 @@ const Chatbot = () => {
 
   const handleFileUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  // Handle voice input
+  const handleVoiceInput = () => {
+    if (!recognition) {
+      const errorMsg = {
+        id: Date.now(),
+        text: "⚠️ Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng sử dụng Chrome hoặc Edge!",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      // Don't allow voice input if file is uploaded
+      if (uploadedFile) {
+        const errorMsg = {
+          id: Date.now(),
+          text: "⚠️ Không thể sử dụng giọng nói khi đã đính kèm file. Vui lòng xóa file trước!",
+          sender: "bot",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+        return;
+      }
+      
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+      }
+    }
   };
 
   return (
@@ -1341,6 +1425,44 @@ const Chatbot = () => {
                 </div>
               </div>
 
+              {/* Voice Input Button */}
+              <button
+                onClick={handleVoiceInput}
+                disabled={uploadedFile !== null || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
+                title={isListening ? "Đang nghe... (nhấn để dừng)" : "Nói vào microphone"}
+                className={`p-2 rounded-full transition-all duration-300 transform hover:scale-105 ${
+                  isListening
+                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                    : uploadedFile || contextTokens / MAX_CONTEXT_TOKENS > 0.95
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-800"
+                }`}
+              >
+                {isListening ? (
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M6 6h12v12H6z" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                    />
+                  </svg>
+                )}
+              </button>
+
               {/* File Upload Button - Only in agent mode */}
               {chatMode === "agent" && (
                 <>
@@ -1459,6 +1581,17 @@ const Chatbot = () => {
         }
         .animate-slide-up {
           animation: slide-up 0.3s ease-out;
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
         }
       `}</style>
     </div>

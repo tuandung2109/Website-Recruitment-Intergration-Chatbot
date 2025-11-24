@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Upload,
     FileText,
@@ -12,6 +12,7 @@ import {
 import CVJobMatcherResult from './CVJobMatcherResult';
 import { mockEvaluationData } from './mockData';
 import './CVJobMatcher.css';
+import { updateAccountMoney } from '../../services/account';
 
 const CVJobMatcher = () => {
     const [step, setStep] = useState(1); // 1: Upload, 2: Result
@@ -21,6 +22,91 @@ const CVJobMatcher = () => {
     const [isScanning, setIsScanning] = useState(false);
     const [evaluationData, setEvaluationData] = useState(null);
     const [dragActive, setDragActive] = useState(false);
+    const [showCostNotice, setShowCostNotice] = useState(true);
+    const [isCostModalOpen, setIsCostModalOpen] = useState(false);
+    const [pendingScan, setPendingScan] = useState(false);
+    const [deductLoading, setDeductLoading] = useState(false);
+
+    useEffect(() => {
+        if (showCostNotice) {
+            const previousOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = previousOverflow;
+            };
+        }
+    }, [showCostNotice]);
+
+    useEffect(() => {
+        if (isCostModalOpen) {
+            const previousOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = previousOverflow;
+            };
+        }
+    }, [isCostModalOpen]);
+
+    const handleDismissCostNotice = () => {
+        setShowCostNotice(false);
+        document.body.style.overflow = '';
+    };
+
+    const handleCancelCostNotice = () => {
+        document.body.style.overflow = '';
+        setShowCostNotice(false);
+        window.history.length > 1 ? window.history.back() : window.location.assign('/');
+    };
+
+    const handleCostModalCancel = () => {
+        setIsCostModalOpen(false);
+        setPendingScan(false);
+    };
+
+    const handleCostConfirm = async () => {
+        if (!pendingScan) {
+            setIsCostModalOpen(false);
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem('account'));
+        if (!user || !user.account_id) {
+            alert('Vui lòng đăng nhập trước khi sử dụng tính năng này.');
+            setIsCostModalOpen(false);
+            setPendingScan(false);
+            return;
+        }
+
+        if (deductLoading) return;
+
+        try {
+            setDeductLoading(true);
+            const result = await updateAccountMoney({
+                account_id: user.account_id,
+                deductAmount: 1000,
+            });
+
+            if (!result?.success) {
+                alert(result?.message || 'Không thể trừ số dư. Vui lòng thử lại.');
+                return;
+            }
+
+            const updatedAccount = {
+                ...user,
+                amount: result.account?.amount ?? (user.amount || 0) - 1000,
+            };
+            localStorage.setItem('account', JSON.stringify(updatedAccount));
+
+            setIsCostModalOpen(false);
+            setPendingScan(false);
+            await executeScan();
+        } catch (error) {
+            console.error('Error deducting balance:', error);
+            alert(error.message || 'Không thể trừ số dư.');
+        } finally {
+            setDeductLoading(false);
+        }
+    };
 
     // Handle CV file upload
     const handleFileUpload = (event) => {
@@ -73,30 +159,27 @@ const CVJobMatcher = () => {
         setCvFile(null);
     };
 
-    // Start scanning process
-    const handleStartScanning = async () => {
+    const executeScan = async () => {
         if (!cvFile || !jobDescription.trim()) {
             alert('Please upload your CV and add a job description');
             return;
         }
 
         setIsScanning(true);
-        
+
         try {
-            // Create FormData to send file and job description
             const formData = new FormData();
             formData.append('cv_file', cvFile);
             formData.append('job_description', jobDescription);
-            formData.append('job_title', 'Job Position'); // Optional: can be extracted from JD
-            
-            // Call the API endpoint
+            formData.append('job_title', 'Job Position');
+
             const response = await fetch('http://localhost:5000/api/evaluate/cv-jd-match', {
                 method: 'POST',
                 body: formData,
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok && result.status === 'success') {
                 setEvaluationData(result);
                 setStep(2);
@@ -109,6 +192,21 @@ const CVJobMatcher = () => {
         } finally {
             setIsScanning(false);
         }
+    };
+
+    // Start scanning process
+    const handleStartScanning = () => {
+        if (!cvFile || !jobDescription.trim()) {
+            alert('Please upload your CV and add a job description');
+            return;
+        }
+
+        if (isScanning || deductLoading) {
+            return;
+        }
+
+        setPendingScan(true);
+        setIsCostModalOpen(true);
     };
 
     // Reset and start new scan
@@ -141,6 +239,50 @@ const CVJobMatcher = () => {
 
     return (
         <div className="cv-job-matcher">
+            {showCostNotice && (
+                <div className="cost-warning-backdrop" role="dialog" aria-modal="true">
+                    <div className="cost-warning-modal">
+                        <div className="cost-warning-icon">
+                            <AlertCircle size={32} />
+                        </div>
+                        <h3>Trừ phí sử dụng CV Matcher</h3>
+                        <p>
+                            Mỗi lượt phân tích CV sẽ trừ <strong>1.000đ</strong> trực tiếp từ số dư tài khoản của bạn.
+                            Vui lòng xác nhận trước khi tiếp tục sử dụng tính năng này.
+                        </p>
+                        <div className="cost-warning-actions">
+                            <button type="button" className="outline" onClick={handleCancelCostNotice}>
+                                Quay lại
+                            </button>
+                            <button type="button" className="primary" onClick={handleDismissCostNotice}>
+                                Tôi đồng ý
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isCostModalOpen && (
+                <div className="cost-warning-backdrop" role="dialog" aria-modal="true">
+                    <div className="cost-warning-modal">
+                        <div className="cost-warning-icon">
+                            <AlertCircle size={32} />
+                        </div>
+                        <h3>Xác nhận trừ phí trước khi quét CV</h3>
+                        <p>
+                            Mỗi lượt phân tích CV sẽ trừ <strong>1.000đ</strong> trực tiếp từ số dư tài khoản của bạn.
+                            Vui lòng xác nhận để tiếp tục.
+                        </p>
+                        <div className="cost-warning-actions">
+                            <button type="button" className="outline" onClick={handleCostModalCancel} disabled={deductLoading}>
+                                Hủy
+                            </button>
+                            <button type="button" className="primary" onClick={handleCostConfirm} disabled={deductLoading}>
+                                {deductLoading ? 'Đang xử lý...' : 'Tôi đồng ý'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="matcher-header">
                 <div className="header-content">
                     <div className="header-icon">
@@ -256,11 +398,11 @@ const CVJobMatcher = () => {
 
                 <div className="action-section">
                     <button 
-                        className={`scan-button ${(!cvFile || !jobDescription.trim()) ? 'disabled' : ''} ${isScanning ? 'scanning' : ''}`}
+                        className={`scan-button ${(!cvFile || !jobDescription.trim()) ? 'disabled' : ''} ${(isScanning || deductLoading) ? 'scanning' : ''}`}
                         onClick={handleStartScanning}
-                        disabled={!cvFile || !jobDescription.trim() || isScanning}
+                        disabled={!cvFile || !jobDescription.trim() || isScanning || deductLoading}
                     >
-                        {isScanning ? (
+                        {(isScanning || deductLoading) ? (
                             <>
                                 <span className="spinner"></span>
                                 Analyzing...

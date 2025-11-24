@@ -8,6 +8,89 @@
     padding: 2rem 1rem;
 }
 
+.cost-warning-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.cost-warning-modal {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(30, 64, 175, 0.25);
+    text-align: left;
+}
+
+.cost-warning-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    margin-bottom: 1.5rem;
+}
+
+.cost-warning-modal h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.75rem;
+}
+
+.cost-warning-modal p {
+    font-size: 0.95rem;
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.cost-warning-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+}
+
+.cost-warning-actions button {
+    border-radius: 999px;
+    padding: 0.65rem 1.6rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cost-warning-actions button.outline {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.cost-warning-actions button.outline:hover {
+    background: #e5e7eb;
+}
+
+.cost-warning-actions button.primary {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(67, 56, 202, 0.25);
+}
+
+.cost-warning-actions button.primary:hover {
+    transform: translateY(-2px);
+}
+
 .matcher-header {
     max-width: 1200px;
     margin: 0 auto 3rem;

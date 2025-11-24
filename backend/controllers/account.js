@@ -102,13 +102,15 @@ const postRegister = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Phone đã tồn tại!" });
     // ===== 3. Thêm tài khoản mới =====
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const { data: newAccount, error: insertError } = await supabase
       .from("account")
       .insert([
         {
           email,
           phone_number,
-          password, // có thể hash sau
+          password: hashedPassword,
 
           status: "active",
           gender: gender || null,
@@ -239,20 +241,41 @@ const postLogin = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Email và password là bắt buộc!" });
-    console.log("DEBUG: email =", email);
-    console.log("DEBUG: password =", password);
-    // Lấy account theo email
+
     const { data: account, error } = await supabase
       .from("account")
       .select("*")
       .eq("email", email)
       .maybeSingle();
-    console.log("DEBUG: account từ Supabase =", account); // ✅ in ra account
-    if (error) console.log("DEBUG: lỗi khi lấy account =", error);
+
+    if (error) console.error("❌ Lỗi Supabase:", error);
     if (!account)
       return res
         .status(401)
         .json({ success: false, message: "Email hoặc password sai!" });
+
+    const storedPassword = account.password || "";
+    let passwordMatch = false;
+
+    if (storedPassword.startsWith("$2")) {
+      passwordMatch = await bcrypt.compare(password, storedPassword);
+    } else if (storedPassword) {
+      passwordMatch = storedPassword === password;
+      if (passwordMatch) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { error: upgradeError } = await supabase
+          .from("account")
+          .update({ password: hashedPassword, updated_at: new Date() })
+          .eq("account_id", account.account_id);
+        if (!upgradeError) account.password = hashedPassword;
+      }
+    }
+
+    if (!passwordMatch)
+      return res
+        .status(401)
+        .json({ success: false, message: "Email hoặc password sai!" });
+
     return res.status(200).json({
       success: true,
       message: "Đăng nhập thành công!",
@@ -513,15 +536,14 @@ const userResetPassword = async (req, res) => {
       });
     }
 
-    // Kiểm tra xem OTP đã được xác minh chưa
-    if (!verifiedOtpStore.get(email)) {
+    const otpRecord = otpStore.get(email);
+    if (!otpRecord || !otpRecord.verified) {
       return res.status(400).json({
         success: false,
         message: "Chưa xác minh OTP hoặc OTP đã hết hạn",
       });
     }
 
-    // 🔹 Lấy mật khẩu cũ từ DB để so sánh
     const { data: oldData, error: getError } = await supabase
       .from("account")
       .select("password")
@@ -535,27 +557,30 @@ const userResetPassword = async (req, res) => {
       });
     }
 
-    // 🔹 Kiểm tra mật khẩu mới có trùng mật khẩu cũ không
-    if (password === oldData.password) {
+    const storedPassword = oldData.password || "";
+    const isSamePassword = storedPassword.startsWith("$2")
+      ? await bcrypt.compare(password, storedPassword)
+      : storedPassword === password;
+
+    if (isSamePassword) {
       return res.status(400).json({
         success: false,
         message: "Mật khẩu mới không được trùng với mật khẩu cũ!",
       });
     }
 
-    // 🔹 Cập nhật mật khẩu mới
-    const { data, error } = await supabase
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const { error: updateError } = await supabase
       .from("account")
-      .update({ password: password })
+      .update({ password: hashedPassword, updated_at: new Date() })
       .eq("email", email);
 
-    if (error) {
-      console.error("❌ Lỗi khi cập nhật password:", error);
+    if (updateError) {
+      console.error("❌ Lỗi khi cập nhật password:", updateError);
       return res.status(500).json({ success: false, message: "Lỗi server" });
     }
 
-    // 🔹 Xóa OTP đã xác minh
-    verifiedOtpStore.delete(email);
+    otpStore.delete(email);
 
     return res.status(200).json({
       success: true,
@@ -892,13 +917,31 @@ const changePassword = async (req, res) => {
       .single();
 
     if (getError) return res.status(400).json({ error: getError.message });
-    if (!data || data.password !== old_password)
+    if (!data)
+      return res.status(400).json({ error: "Không tìm thấy tài khoản" });
+
+    const storedPassword = data.password || "";
+    const isOldPasswordMatch = storedPassword.startsWith("$2")
+      ? await bcrypt.compare(old_password, storedPassword)
+      : storedPassword === old_password;
+
+    if (!isOldPasswordMatch)
       return res.status(400).json({ error: "Mật khẩu cũ không đúng" });
 
-    // ✅ Cập nhật mật khẩu mới
+    const isSameAsOld = storedPassword.startsWith("$2")
+      ? await bcrypt.compare(new_password, storedPassword)
+      : storedPassword === new_password;
+
+    if (isSameAsOld)
+      return res
+        .status(400)
+        .json({ error: "Mật khẩu mới không được trùng mật khẩu cũ" });
+
+    const hashedNewPassword = await bcrypt.hash(new_password, 10);
+
     const { error: updateError } = await supabase
       .from("account")
-      .update({ password: new_password, updated_at: new Date() })
+      .update({ password: hashedNewPassword, updated_at: new Date() })
       .eq("account_id", account_id);
 
     if (updateError)

@@ -57,11 +57,23 @@ const Login = () => {
         // Gọi API login
         const response = await authAPI.login(formData.email, formData.password);
 
-        if (response.success) {
-          const { account } = response; // KHÔNG phải response.data
-          localStorage.setItem("account", JSON.stringify(account));
-          localStorage.setItem("account_id", String(account.id));
+        if (response.success && response.data) {
+          const { token, account } = response.data;
+
+          if (token) {
+            localStorage.setItem("token", token);
+          }
+
+          if (account) {
+            localStorage.setItem("account", JSON.stringify(account));
+            if (account.account_id) {
+              localStorage.setItem("account_id", String(account.account_id));
+            }
+          }
+
           navigate("/");
+        } else {
+          setErrors({ general: "Đăng nhập không thành công" });
         }
       } catch (error) {
         console.error("Login error:", error);
@@ -109,7 +121,7 @@ const Login = () => {
             <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
               Chào mừng
               <br />
-              trở lại!123
+              trở lại!
             </h1>
             <p className="text-blue-100 text-lg leading-relaxed max-w-md">
               Khám phá hàng ngàn cơ hội việc làm từ các công ty hàng đầu. Bắt
@@ -277,7 +289,7 @@ const Login = () => {
             </button>
 
             {/* Divider */}
-            <div className="relative my-6">
+            {/* <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -286,11 +298,11 @@ const Login = () => {
                   Hoặc đăng nhập với
                 </span>
               </div>
-            </div>
+            </div> */}
 
             {/* Social Login */}
             <div className="grid grid-cols-2 gap-3">
-              <button
+              {/* <button
                 type="button"
                 disabled={loading}
                 className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -316,8 +328,8 @@ const Login = () => {
                 <span className="text-sm font-medium text-gray-700">
                   Google
                 </span>
-              </button>
-              <button
+              </button> */}
+              {/* <button
                 type="button"
                 disabled={loading}
                 className="flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -332,7 +344,7 @@ const Login = () => {
                 <span className="text-sm font-medium text-gray-700">
                   Facebook
                 </span>
-              </button>
+              </button> */}
             </div>
 
             {/* Register Link */}

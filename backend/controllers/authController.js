@@ -51,9 +51,22 @@ const authController = {
         });
       }
 
-      // So sánh password
-      //   const isPasswordValid = await bcrypt.compare(password, account.password);
-      const isPasswordValid = password === account.password; // Tạm thời không mã hóa mật khẩu
+      const storedPassword = account.password || "";
+      let isPasswordValid = false;
+
+      if (storedPassword.startsWith("$2")) {
+        isPasswordValid = await bcrypt.compare(password, storedPassword);
+      } else if (storedPassword) {
+        isPasswordValid = storedPassword === password;
+        if (isPasswordValid) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await supabase
+            .from("account")
+            .update({ password: hashedPassword, updated_at: new Date() })
+            .eq("account_id", account.account_id);
+          account.password = hashedPassword;
+        }
+      }
 
       if (!isPasswordValid) {
         return res.status(401).json({

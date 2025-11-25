@@ -43,6 +43,7 @@ import AdminSkill from "./pages/Admin/skill";
 import StatisticsOverview from "./pages/Admin/Statistics/Overview";
 import StatisticsAccounts from "./pages/Admin/Statistics/Accounts";
 import StatisticsRecruitment from "./pages/Admin/Statistics/Recruitment";
+import StatisticsRevenue from "./pages/Admin/Statistics/Revenue";
 
 import CompanyInformation from "./pages/Arecruiter/companyInformation";
 import CompanyJobPosting from "./pages/Arecruiter/companyJobPosting";
@@ -136,6 +137,10 @@ function App() {
             <Route
               path="statistics/recruitment"
               element={<StatisticsRecruitment />}
+            />
+            <Route
+              path="statistics/revenue"
+              element={<StatisticsRevenue />}
             />
           </Route>
         </Route>

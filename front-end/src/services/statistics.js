@@ -105,9 +105,25 @@ export const getStatisticsRecruitment = async (filters = {}) => {
 };
 
 // Lấy thống kê doanh thu
-export const getStatisticsRevenue = async () => {
+export const getStatisticsRevenue = async (filters = {}) => {
   try {
-    const res = await _get(`/statistics/revenue`);
+    const queryParams = new URLSearchParams();
+    
+    if (filters.paymentStatus && filters.paymentStatus !== "all") {
+      queryParams.append("paymentStatus", filters.paymentStatus);
+    }
+    if (filters.paymentMethod && filters.paymentMethod !== "all") {
+      queryParams.append("paymentMethod", filters.paymentMethod);
+    }
+    if (filters.dateRange && filters.dateRange.length === 2) {
+      queryParams.append("startDate", filters.dateRange[0]);
+      queryParams.append("endDate", filters.dateRange[1]);
+    }
+
+    const queryString = queryParams.toString();
+    const res = await _get(
+      `/statistics/revenue${queryString ? `?${queryString}` : ""}`
+    );
     const result = await res.json();
     if (res.ok) {
       return {

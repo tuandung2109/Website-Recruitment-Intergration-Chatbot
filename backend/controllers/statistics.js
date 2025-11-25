@@ -852,8 +852,265 @@ function getJobsAndApplicationsByMonth(jobs, applications, monthCount = 6) {
   return Object.values(result);
 }
 
+// Thống kê doanh thu
+const getStatisticsRevenue = async (req, res) => {
+  try {
+    const { paymentStatus, paymentMethod, startDate, endDate } = req.query;
+
+    // Build query for invoices
+    let invoiceQuery = supabase.from("invoice").select(
+      `
+      invoice_id,
+      account_id,
+      amount,
+      payment_status,
+      payment_method,
+      bank_name,
+      description,
+      transaction_code,
+      create_at,
+      account:account_id (
+        email,
+        phone_number
+      )
+    `
+    );
+
+    // Apply filters
+    if (paymentStatus && paymentStatus !== "all") {
+      invoiceQuery = invoiceQuery.eq("payment_status", paymentStatus);
+    }
+
+    if (paymentMethod && paymentMethod !== "all") {
+      invoiceQuery = invoiceQuery.eq("payment_method", paymentMethod);
+    }
+
+    if (startDate && endDate) {
+      invoiceQuery = invoiceQuery
+        .gte("create_at", startDate)
+        .lte("create_at", endDate);
+    }
+
+    const { data: invoices, error: invoiceError } = await invoiceQuery.order(
+      "create_at",
+      { ascending: false }
+    );
+
+    if (invoiceError) throw invoiceError;
+
+    // Calculate statistics
+    const totalRevenue = invoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const completedInvoices = invoices.filter(
+      (inv) => inv.payment_status === "completed"
+    );
+    const completedRevenue = completedInvoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const unfinishedInvoices = invoices.filter(
+      (inv) => inv.payment_status === "unfinished"
+    );
+    const unfinishedRevenue = unfinishedInvoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const totalInvoices = invoices.length;
+    const completedCount = completedInvoices.length;
+    const unfinishedCount = unfinishedInvoices.length;
+
+    // Revenue by payment status
+    const revenueByStatus = [
+      {
+        status: "Hoàn thành",
+        count: completedCount,
+        amount: completedRevenue,
+      },
+      {
+        status: "Chưa hoàn thành",
+        count: unfinishedCount,
+        amount: unfinishedRevenue,
+      },
+    ];
+
+    // Revenue by payment method
+    const paymentMethodCount = {};
+    invoices.forEach((inv) => {
+      const method = inv.payment_method || "Unknown";
+      if (!paymentMethodCount[method]) {
+        paymentMethodCount[method] = { count: 0, amount: 0 };
+      }
+      paymentMethodCount[method].count++;
+      paymentMethodCount[method].amount += parseFloat(inv.amount || 0);
+    });
+
+    const revenueByPaymentMethod = Object.keys(paymentMethodCount).map(
+      (method) => ({
+        method,
+        count: paymentMethodCount[method].count,
+        amount: paymentMethodCount[method].amount,
+      })
+    );
+
+    // Revenue by bank
+    const bankCount = {};
+    invoices.forEach((inv) => {
+      const bank = inv.bank_name || "Unknown";
+      if (!bankCount[bank]) {
+        bankCount[bank] = { count: 0, amount: 0 };
+      }
+      bankCount[bank].count++;
+      bankCount[bank].amount += parseFloat(inv.amount || 0);
+    });
+
+    const revenueByBank = Object.keys(bankCount)
+      .map((bank) => ({
+        bank,
+        count: bankCount[bank].count,
+        amount: bankCount[bank].amount,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    // Revenue by month (last 6 months)
+    const revenueByMonth = getRevenueByMonthFromInvoices(invoices, 6);
+
+    // Top customers by spending
+    const customerSpending = {};
+    invoices.forEach((inv) => {
+      const accountId = inv.account_id;
+      const email = inv.account?.email || "Unknown";
+      if (!customerSpending[accountId]) {
+        customerSpending[accountId] = {
+          account_id: accountId,
+          email: email,
+          total_spent: 0,
+          invoice_count: 0,
+        };
+      }
+      customerSpending[accountId].total_spent += parseFloat(inv.amount || 0);
+      customerSpending[accountId].invoice_count++;
+    });
+
+    const topCustomers = Object.values(customerSpending)
+      .sort((a, b) => b.total_spent - a.total_spent)
+      .slice(0, 10);
+
+    // Average invoice amount
+    const avgInvoiceAmount =
+      totalInvoices > 0 ? (totalRevenue / totalInvoices).toFixed(0) : 0;
+
+    // Get unique payment methods for filter
+    const paymentMethods = [
+      ...new Set(invoices.map((inv) => inv.payment_method).filter(Boolean)),
+    ];
+
+    // Transform invoices for table
+    const invoiceList = invoices.map((inv) => ({
+      invoice_id: inv.invoice_id,
+      account_email: inv.account?.email || "N/A",
+      amount: parseFloat(inv.amount || 0),
+      payment_status: inv.payment_status,
+      payment_method: inv.payment_method,
+      bank_name: inv.bank_name,
+      transaction_code: inv.transaction_code,
+      created_at: inv.create_at,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalRevenue,
+        completedRevenue,
+        unfinishedRevenue,
+        totalInvoices,
+        completedCount,
+        unfinishedCount,
+        avgInvoiceAmount: parseFloat(avgInvoiceAmount),
+        revenueByStatus,
+        revenueByPaymentMethod,
+        revenueByBank,
+        revenueByMonth,
+        topCustomers,
+        invoices: invoiceList,
+        paymentMethods, // For filter dropdown
+      },
+    });
+  } catch (error) {
+    console.error("Error in getStatisticsRevenue:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê doanh thu",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function for revenue by month from invoices
+function getRevenueByMonthFromInvoices(invoices, monthCount = 6) {
+  const monthNames = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
+
+  const result = {};
+  const currentDate = new Date();
+
+  // Initialize last N months
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1
+    );
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+    result[key] = {
+      month: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+      amount: 0,
+      count: 0,
+    };
+  }
+
+  // Sum revenue by month
+  if (invoices && invoices.length > 0) {
+    invoices.forEach((inv) => {
+      if (inv.create_at) {
+        const date = new Date(inv.create_at);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (result[key]) {
+          result[key].amount += parseFloat(inv.amount || 0);
+          result[key].count++;
+        }
+      }
+    });
+  }
+
+  return Object.values(result);
+}
+
 module.exports = {
   getStatisticsOverview,
   getStatisticsAccounts,
   getStatisticsRecruitment,
+  getStatisticsRevenue,
 };

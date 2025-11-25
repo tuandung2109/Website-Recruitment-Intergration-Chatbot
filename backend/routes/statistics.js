@@ -11,4 +11,7 @@ router.get("/accounts", statisticsController.getStatisticsAccounts);
 // Route thống kê tuyển dụng
 router.get("/recruitment", statisticsController.getStatisticsRecruitment);
 
+// Route thống kê doanh thu
+router.get("/revenue", statisticsController.getStatisticsRevenue);
+
 module.exports = router;

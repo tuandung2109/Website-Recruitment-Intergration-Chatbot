@@ -143,13 +143,13 @@ function StatisticsRecruitment() {
       dataIndex: "status",
       key: "status",
       render: (status) =>
-        status === "open" ? (
+        status === "active" ? (
           <Tag icon={<CheckCircleOutlined />} color="success">
-            Đang mở
+            Đang hoạt động
           </Tag>
         ) : (
           <Tag icon={<CloseCircleOutlined />} color="error">
-            Đã đóng
+            Không hoạt động
           </Tag>
         ),
     },
@@ -213,8 +213,7 @@ function StatisticsRecruitment() {
           <Form.Item name="status" label="Trạng thái bài đăng">
             <Select style={{ width: 200 }}>
               <Option value="all">Tất cả</Option>
-              <Option value="open">Đang mở</Option>
-              <Option value="closed">Đã đóng</Option>
+              <Option value="active">Đang hoạt động</Option>
             </Select>
           </Form.Item>
 
@@ -265,7 +264,7 @@ function StatisticsRecruitment() {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="Bài đăng đang mở"
+                  title="Bài đăng đang hoạt động"
                   value={data.openJobPostings}
                   prefix={<CheckCircleOutlined />}
                   valueStyle={{ color: "#52c41a" }}

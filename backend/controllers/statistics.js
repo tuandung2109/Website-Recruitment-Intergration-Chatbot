@@ -664,10 +664,10 @@ const getStatisticsRecruitment = async (req, res) => {
     // Calculate statistics
     const totalJobPostings = jobPostingsWithApps.length;
     const openJobPostings = jobPostingsWithApps.filter(
-      (job) => job.status === "open"
+      (job) => job.status === "active"
     ).length;
     const closedJobPostings = jobPostingsWithApps.filter(
-      (job) => job.status === "closed"
+      (job) => job.status !== "active"
     ).length;
 
     // Filter applications by job postings (if filtered)
@@ -710,8 +710,8 @@ const getStatisticsRecruitment = async (req, res) => {
 
     // Job postings by status
     const jobPostingsByStatus = [
-      { status: "Đang mở", count: openJobPostings },
-      { status: "Đã đóng", count: closedJobPostings },
+      { status: "Đang hoạt động", count: openJobPostings },
+      { status: "Không hoạt động", count: closedJobPostings },
     ];
 
     // Applications by status

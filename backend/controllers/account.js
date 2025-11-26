@@ -1,5 +1,6 @@
 const supabase = require("../config/supabase");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const generateOTP = require("../helper/generate");
 const sendMailHelper = require("../helper/sendMail");
 const otpStore = new Map();
@@ -102,13 +103,19 @@ const postRegister = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Phone đã tồn tại!" });
     // ===== 3. Thêm tài khoản mới =====
+    // Hash password with MD5 (legacy requested). Note: MD5 is insecure; bcrypt is recommended.
+    const hashedPassword = crypto
+      .createHash("md5")
+      .update(password)
+      .digest("hex");
+
     const { data: newAccount, error: insertError } = await supabase
       .from("account")
       .insert([
         {
           email,
           phone_number,
-          password, // có thể hash sau
+          password: hashedPassword,
 
           status: "active",
           gender: gender || null,
@@ -186,8 +193,11 @@ const postRegister2 = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Phone đã tồn tại!" });
 
-    // 🔐 HASH PASSWORD
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 🔐 HASH PASSWORD (MD5 for compatibility with requested format)
+    const hashedPassword = crypto
+      .createHash("md5")
+      .update(password)
+      .digest("hex");
 
     // Tạo tài khoản
     const { data: newAccount, error: insertError } = await supabase
@@ -535,8 +545,9 @@ const userResetPassword = async (req, res) => {
       });
     }
 
-    // 🔹 Kiểm tra mật khẩu mới có trùng mật khẩu cũ không
-    if (password === oldData.password) {
+    // 🔹 Kiểm tra mật khẩu mới có trùng mật khẩu cũ không (so sánh dưới dạng MD5)
+    const newHashed = crypto.createHash("md5").update(password).digest("hex");
+    if (newHashed === oldData.password) {
       return res.status(400).json({
         success: false,
         message: "Mật khẩu mới không được trùng với mật khẩu cũ!",
@@ -546,7 +557,7 @@ const userResetPassword = async (req, res) => {
     // 🔹 Cập nhật mật khẩu mới
     const { data, error } = await supabase
       .from("account")
-      .update({ password: password })
+      .update({ password: newHashed })
       .eq("email", email);
 
     if (error) {
@@ -588,8 +599,10 @@ const userResetPassword2 = async (req, res) => {
       .eq("email", email)
       .single();
 
-    // So sánh nếu trùng mật khẩu cũ
-    const same = await bcrypt.compare(password, oldData.password);
+    // So sánh nếu trùng mật khẩu cũ (MD5)
+    const same =
+      crypto.createHash("md5").update(password).digest("hex") ===
+      oldData.password;
     if (same)
       return res.status(400).json({
         success: false,
@@ -597,7 +610,10 @@ const userResetPassword2 = async (req, res) => {
       });
 
     // 🔐 Hash mật khẩu mới
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = crypto
+      .createHash("md5")
+      .update(password)
+      .digest("hex");
 
     // Update
     await supabase

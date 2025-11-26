@@ -58,9 +58,23 @@ const Login = () => {
         const response = await authAPI.login(formData.email, formData.password);
 
         if (response.success) {
-          const { account } = response; // KHÔNG phải response.data
-          localStorage.setItem("account", JSON.stringify(account));
-          localStorage.setItem("account_id", String(account.id));
+          // Backend returns: { success, message, data: { token, account } }
+          const token = response.data?.token;
+          const account = response.data?.account;
+
+          if (token) {
+            localStorage.setItem("token", token);
+          }
+
+          if (account) {
+            localStorage.setItem("account", JSON.stringify(account));
+            // backend uses `account_id` as the primary id
+            localStorage.setItem(
+              "account_id",
+              String(account.account_id ?? account.id ?? "")
+            );
+          }
+
           navigate("/");
         }
       } catch (error) {

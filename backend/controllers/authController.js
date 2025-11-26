@@ -1,6 +1,7 @@
 // controllers/authController.js
 const supabase = require("../config/supabase");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const authController = {
@@ -52,8 +53,26 @@ const authController = {
       }
 
       // So sánh password
-      //   const isPasswordValid = await bcrypt.compare(password, account.password);
-      const isPasswordValid = password === account.password; // Tạm thời không mã hóa mật khẩu
+      // Support three cases for stored password formats:
+      // - bcrypt hash (starts with $2): verify with bcrypt
+      // - md5 hex (32 hex chars): compare md5(password)
+      // - plaintext fallback: direct equality
+      let isPasswordValid = false;
+      if (account.password && account.password.startsWith("$2")) {
+        // bcrypt
+        isPasswordValid = await bcrypt.compare(password, account.password);
+      } else if (
+        account.password &&
+        typeof account.password === "string" &&
+        /^[a-f0-9]{32}$/.test(account.password)
+      ) {
+        // md5
+        const md5 = crypto.createHash("md5").update(password).digest("hex");
+        isPasswordValid = md5 === account.password;
+      } else {
+        // plaintext (fallback)
+        isPasswordValid = password === account.password;
+      }
 
       if (!isPasswordValid) {
         return res.status(401).json({

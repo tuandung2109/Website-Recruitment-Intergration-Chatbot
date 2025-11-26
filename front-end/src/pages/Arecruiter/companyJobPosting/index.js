@@ -177,6 +177,12 @@ function CompanyJobPosting() {
   const handleUpdate = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Filter skill_ids - chỉ giữ các ID hợp lệ (số và > 0)
+      const validSkillIds = (values.skillIds || [])
+        .filter(id => id && !isNaN(parseInt(id)))
+        .map(id => parseInt(id));
+      
       const updateData = {
         position_name: values.position_name,
         job_description: values.job_description,
@@ -184,30 +190,28 @@ function CompanyJobPosting() {
         salary: values.salary,
         deadline: values.deadline?.format("YYYY-MM-DD"),
         working_time: values.working_time,
-        status: values.status,
-        deleted: values.deleted,
-        account_id: values.account_id,
-        company_id: values.company_id,
         benefits: values.benefits,
         education_level: values.education_level,
         experience_years: values.experience_years,
-        skillIds: values.skillIds
-          ? Array.isArray(values.skillIds)
-            ? values.skillIds.join(",")
-            : values.skillIds
-          : undefined,
+        skill_ids: validSkillIds,
+        status: "inactive", // Chờ duyệt từ admin
       };
-      // Gửi yêu cầu chỉnh sửa lên admin (tạo bản pending), KHÔNG cập nhật trực tiếp
+
+      console.log("📤 Gửi dữ liệu:", updateData);
+      console.log("📤 Job ID:", selectedJob.id || selectedJob.job_posting_id);
+
+      // Cập nhật job posting
       const submitRes = await submitJobUpdate(
         selectedJob.id || selectedJob.job_posting_id,
         updateData
       );
+
+      console.log("📥 Phản hồi từ server:", submitRes);
+
       if (submitRes && submitRes.success) {
-        message.success(
-          "Yêu cầu chỉnh sửa đã gửi lên Admin. Vui lòng chờ duyệt."
-        );
-        // Hiệu ứng optimistic: cập nhật ngay trên UI để người dùng thấy thay đổi,
-        // nhưng backend vẫn giữ bản chính cho đến khi admin duyệt
+        message.success("Yêu cầu chỉnh sửa đã được gửi lên admin. Vui lòng chờ duyệt!");
+
+        // Cập nhật dữ liệu trên UI với status inactive
         const updated = {
           ...selectedJob,
           title: updateData.position_name || selectedJob.title,
@@ -226,9 +230,9 @@ function CompanyJobPosting() {
             updateData.experience_years !== undefined
               ? updateData.experience_years
               : selectedJob.experienceYears,
-          // Đánh dấu trạng thái là pending (chờ duyệt)
-          status: "pending",
+          status: "inactive", // Đánh dấu chờ duyệt
         };
+
         setJobPostings((prev) =>
           prev.map((j) =>
             j.id === (selectedJob.id || selectedJob.job_posting_id)
@@ -239,12 +243,14 @@ function CompanyJobPosting() {
         setSelectedJob(updated);
         setIsEditModal(false);
         form.resetFields();
+        // Reload dữ liệu để đảm bảo consistency
+        await fetchAll(filterParams);
       } else {
-        message.error(submitRes?.message || "Gửi yêu cầu thất bại!");
+        message.error(submitRes?.message || "Cập nhật thất bại!");
       }
     } catch (err) {
-      console.error(err);
-      message.error("Lỗi khi gửi yêu cầu chỉnh sửa!");
+      console.error("❌ Lỗi khi cập nhật:", err);
+      message.error("Lỗi khi cập nhật bài đăng!");
     }
   };
   const handleToggleStatus = async (job) => {

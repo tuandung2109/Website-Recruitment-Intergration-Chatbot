@@ -525,7 +525,7 @@ const updateJobPosting = async (id, jobData) => {
 // NTD gửi bản chỉnh sửa
 const submitJobUpdate = async (job_posting_id, jobData) => {
   try {
-    const res = await _post(
+    const res = await _patch(
       `/jobPosting/submitUpdate/${job_posting_id}`,
       jobData
     );

@@ -32,7 +32,7 @@ router.get(
   controllerJobsPostings.listUpdateJobPosting
 ); // Chi tiết công việc
 // Nhà tuyển dụng gửi bản chỉnh sửa
-router.post("/submitUpdate/:id", controllerJobsPostings.submitJobUpdate);
+router.patch("/submitUpdate/:id", controllerJobsPostings.submitJobUpdate);
 // Admin duyệt chỉnh sửa
 router.patch("/approveUpdate/:id", controllerJobsPostings.approveJobUpdate);
 // Admin từ chối chỉnh sửa

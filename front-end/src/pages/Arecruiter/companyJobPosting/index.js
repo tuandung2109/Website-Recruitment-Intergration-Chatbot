@@ -17,11 +17,13 @@ import {
   Col,
   Space,
   Collapse,
+  Dropdown,
 } from "antd";
 import {
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -45,18 +47,15 @@ const { RangePicker } = DatePicker;
 function CompanyJobPosting() {
   UseTitle("JobVip - Company Job Postings");
   const navigate = useNavigate();
-
   const [company, setCompany] = useState(null);
   const [jobPostings, setJobPostings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [selectedJob, setSelectedJob] = useState(null);
   const [isViewModal, setIsViewModal] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isLockModal, setIsLockModal] = useState(false);
   const [isDeleteModal, setIsDeleteModal] = useState(false);
-
   const [form] = Form.useForm();
   const [filterForm] = Form.useForm();
 
@@ -66,7 +65,8 @@ function CompanyJobPosting() {
 
   // 📌 Trạng thái filter
   const [filterParams, setFilterParams] = useState({});
-
+  console.log(company);
+  console.log(filterParams);
   const fetchAll = async (params = {}) => {
     try {
       setLoading(true);
@@ -124,7 +124,6 @@ function CompanyJobPosting() {
   // ✅ Xử lý khi submit filter
   const handleFilter = (values) => {
     const params = {};
-
     if (values.searchText) params.searchText = values.searchText;
     if (values.status) params.status = values.status;
     if (values.salaryMin) params.salaryMin = values.salaryMin;
@@ -141,11 +140,9 @@ function CompanyJobPosting() {
     if (values.skillIds && values.skillIds.length > 0) {
       params.skillIds = values.skillIds.join(",");
     }
-
     setFilterParams(params);
     fetchAll(params);
   };
-
   // ✅ Reset filter
   const handleResetFilter = () => {
     filterForm.resetFields();
@@ -169,7 +166,6 @@ function CompanyJobPosting() {
       benefits: job.benefits,
       education_level: job.educationLevel,
       experience_years: job.experienceYears,
-      // populate existing skills (use skill_name when available, fallback to id)
       skillIds: job.skills
         ? job.skills.map((s) => s.skill_name ?? s.skill_id ?? String(s))
         : job.skill_names
@@ -178,7 +174,6 @@ function CompanyJobPosting() {
     });
     setIsEditModal(true);
   };
-
   const handleUpdate = async () => {
     try {
       const values = await form.validateFields();
@@ -190,33 +185,62 @@ function CompanyJobPosting() {
         deadline: values.deadline?.format("YYYY-MM-DD"),
         working_time: values.working_time,
         status: values.status,
-
         deleted: values.deleted,
         account_id: values.account_id,
         company_id: values.company_id,
         benefits: values.benefits,
         education_level: values.education_level,
         experience_years: values.experience_years,
-        // include skills (send as comma-separated string, backend expects this format in filters/endpoints)
         skillIds: values.skillIds
           ? Array.isArray(values.skillIds)
             ? values.skillIds.join(",")
             : values.skillIds
           : undefined,
       };
-      const res = await submitJobUpdate(
+      // Gửi yêu cầu chỉnh sửa lên admin (tạo bản pending), KHÔNG cập nhật trực tiếp
+      const submitRes = await submitJobUpdate(
         selectedJob.id || selectedJob.job_posting_id,
         updateData
       );
-      if (res.success) {
+      if (submitRes && submitRes.success) {
         message.success(
           "Yêu cầu chỉnh sửa đã gửi lên Admin. Vui lòng chờ duyệt."
         );
+        // Hiệu ứng optimistic: cập nhật ngay trên UI để người dùng thấy thay đổi,
+        // nhưng backend vẫn giữ bản chính cho đến khi admin duyệt
+        const updated = {
+          ...selectedJob,
+          title: updateData.position_name || selectedJob.title,
+          description: updateData.job_description || selectedJob.description,
+          requirements: updateData.requirements || selectedJob.requirements,
+          salary:
+            updateData.salary !== undefined
+              ? updateData.salary
+              : selectedJob.salary,
+          deadline: updateData.deadline || selectedJob.deadline,
+          workingTime: updateData.working_time || selectedJob.workingTime,
+          benefits: updateData.benefits || selectedJob.benefits,
+          educationLevel:
+            updateData.education_level || selectedJob.educationLevel,
+          experienceYears:
+            updateData.experience_years !== undefined
+              ? updateData.experience_years
+              : selectedJob.experienceYears,
+          // Đánh dấu trạng thái là pending (chờ duyệt)
+          status: "pending",
+        };
+        setJobPostings((prev) =>
+          prev.map((j) =>
+            j.id === (selectedJob.id || selectedJob.job_posting_id)
+              ? updated
+              : j
+          )
+        );
+        setSelectedJob(updated);
         setIsEditModal(false);
         form.resetFields();
-        fetchAll();
       } else {
-        message.error(res.message || "Gửi yêu cầu thất bại!");
+        message.error(submitRes?.message || "Gửi yêu cầu thất bại!");
       }
     } catch (err) {
       console.error(err);
@@ -230,11 +254,9 @@ function CompanyJobPosting() {
           "Tin đang chờ duyệt, không thể thay đổi trạng thái"
         );
       }
-
       if (job.status === "inactive") {
         return message.error("Tin này đã bị admin khóa, bạn không thể mở lại");
       }
-
       // Nếu tin đang active → tắt tin
       if (job.status === "active") {
         const res = await offJobPosting(job.id || job.job_posting_id);
@@ -246,7 +268,6 @@ function CompanyJobPosting() {
         }
         return;
       }
-
       // Nếu tin đang off → mở lại tin
       if (job.status === "off") {
         const res = await unlockJobPosting(job.id || job.job_posting_id);
@@ -263,17 +284,14 @@ function CompanyJobPosting() {
       message.error("Lỗi thao tác trạng thái!");
     }
   };
-
   // Xử lý xóa job posting
   const handleDelete = (job) => {
     setSelectedJob(job);
     setIsDeleteModal(true);
   };
-
   const handleConfirmDelete = async () => {
     try {
       if (!selectedJob) return;
-
       const res = await deleteJobPosting(
         selectedJob.id || selectedJob.job_posting_id
       );
@@ -290,7 +308,6 @@ function CompanyJobPosting() {
       message.error("Lỗi khi xóa job posting!");
     }
   };
-
   if (loading) return <Spin tip="Đang tải dữ liệu..." />;
   if (error) return <Alert message={error} type="error" showIcon />;
   return (
@@ -480,90 +497,65 @@ function CompanyJobPosting() {
             },
             {
               title: "Thao tác",
-              width: 200,
-              render: (_, record) => (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                  }}
-                >
-                  <Button
-                    type="link"
-                    style={{ background: "#8dff91" }}
-                    onClick={() => {
+              width: 120,
+              align: "center",
+              render: (_, record) => {
+                const menuItems = [
+                  {
+                    key: "view",
+                    label: "📝 Xem chi tiết",
+                    onClick: () => {
                       setSelectedJob(record);
                       setIsViewModal(true);
-                    }}
-                  >
-                    Xem chi tiết
-                  </Button>
-                  <Button
-                    type={record.status === "active" ? "default" : "primary"}
-                    danger={record.status === "active"}
-                    onClick={() => handleToggleStatus(record)}
-                    disabled={
+                    },
+                  },
+                  {
+                    key: "toggle",
+                    label:
+                      record.status === "active" ? "🔴 Tắt tin" : "🟢 Mở tin",
+                    onClick: () => handleToggleStatus(record),
+                    disabled:
                       record.status === "pending" ||
-                      record.status === "inactive"
-                    }
-                  >
-                    {record.status === "active" ? "Tắt tin" : "Mở tin"}
-                  </Button>
+                      record.status === "inactive",
+                  },
+                  {
+                    key: "edit",
+                    label: "✏️ Gửi yêu cầu chỉnh sửa",
+                    onClick: () => handleEdit(record),
+                    disabled: record.status === "pending",
+                  },
+                  {
+                    key: "candidates",
+                    label: "👥 Xem ứng viên",
+                    onClick: () => {
+                      navigate(
+                        `/companyAdmin/job-postings/${record.id}/candidates`
+                      );
+                    },
+                  },
+                  {
+                    type: "divider",
+                  },
+                  {
+                    key: "delete",
+                    label: "🗑️ Xóa bài đăng",
+                    onClick: () => handleDelete(record),
+                    danger: true,
+                  },
+                ];
 
-                  <Button
-                    type="link"
-                    style={{ background: "#eeff8d" }}
-                    disabled={record.status === "pending"}
-                    onClick={() => handleEdit(record)}
+                return (
+                  <Dropdown
+                    menu={{ items: menuItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
                   >
-                    Gửi yêu cầu chỉnh sửa
-                  </Button>
-
-                  <Button
-                    type="primary"
-                    size="small"
-                    style={{
-                      background: "linear-gradient(135deg, #667eea, #764ba2)",
-                      border: "none",
-                      fontWeight: "600",
-                    }}
-                    onClick={() => {
-                      navigate(`/companyAdmin/evaluateCandidates/${record.id}`);
-                    }}
-                  >
-                    🤖 Đánh giá AI
-                  </Button>
-
-                  <Button
-                    type="default"
-                    size="small"
-                    style={{
-                      background: "linear-gradient(135deg, #f093fb, #f5576c)",
-                      border: "none",
-                      fontWeight: "600",
-                      color: "white",
-                    }}
-                    onClick={() => {
-                      navigate(`/companyAdmin/candidates/${record.id}`);
-                    }}
-                  >
-                    👥 Xem ứng viên
-                  </Button>
-
-                  <Button
-                    type="primary"
-                    danger
-                    size="small"
-                    style={{
-                      fontWeight: "600",
-                    }}
-                    onClick={() => handleDelete(record)}
-                  >
-                    🗑️ Xóa
-                  </Button>
-                </div>
-              ),
+                    <Button type="primary" icon={<MoreOutlined />}>
+                      Thao tác
+                    </Button>
+                  </Dropdown>
+                );
+              },
             },
           ]}
         />
@@ -737,5 +729,4 @@ function CompanyJobPosting() {
     </div>
   );
 }
-
 export default CompanyJobPosting;

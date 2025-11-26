@@ -7,15 +7,12 @@ router.get(
   "/listJobPostingsCompany",
   controllerJobsPostings.listJobPostingsCompany
 ); //Lấy danh sách bài đăng
-
 router.get(
   "/listJobPostingsEmployer",
   controllerJobsPostings.listJobPostingsEmployer
 ); //Lấy danh sách bài đăng
-
 router.get("/listJobPostingAdmin", controllerJobsPostings.listJobPostingsAdmin); //Lấy danh sách bài đăng
 router.get("/listJobPostingId/:id", controllerJobsPostings.listJobPostingId); // Chi tiết công việc
-
 router.get(
   "/listJobPostingDeleted",
   controllerJobsPostings.listJobPostingsDeleted
@@ -25,13 +22,11 @@ router.patch("/softJobPosting/:id", controllerJobsPostings.softJobPosting); //X�
 router.patch("/unlockJobPosting/:id", controllerJobsPostings.unlockJobPosting); //Cập nhật bài đăng
 router.patch("/updateJobPosting/:id", controllerJobsPostings.updateJobPosting); //Cập nhật bài đăng
 router.patch("/offJobPosting/:id", controllerJobsPostings.offJobPosting); //Tắt  bài đăng
-
 router.get("/byCompany/:companyId", controllerJobsPostings.listJobsByCompany); // Lấy danh sách job theo công ty
 router.get(
   "/statistics/:companyId",
   controllerJobsPostings.getJobPostingStatistics
 ); // Thống kê số tin đã đăng
-
 router.get(
   "/listUpdateJobPosting/:id",
   controllerJobsPostings.listUpdateJobPosting
@@ -46,5 +41,4 @@ router.patch("/rejectUpdate/:id", controllerJobsPostings.rejectJobUpdate);
 router.get("/listPendingUpdates", controllerJobsPostings.listPendingJobUpdates);
 // Xóa cứng job posting (hard delete)
 router.delete("/deleteJobPosting/:id", controllerJobsPostings.deleteJobPosting);
-
 module.exports = router;

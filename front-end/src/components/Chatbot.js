@@ -40,12 +40,16 @@ const Chatbot = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const fileInputRef = useRef(null);
   const [showCVActionDropdown, setShowCVActionDropdown] = useState(false);
-  const [selectedCVAction, setSelectedCVAction] = useState("evaluate"); // "evaluate" or "recommend"
+  const [selectedCVAction, setSelectedCVAction] = useState("recommend"); // "recommend" hoặc "interview"
   const [hasShownJDSuggestion, setHasShownJDSuggestion] = useState(false);
   
   // Context length tracking (128K tokens max)
   const MAX_CONTEXT_TOKENS = 12800;
   const [contextTokens, setContextTokens] = useState(0);
+  
+  // Voice input states
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
 
   // Khóa scroll nền khi fullscreen
   useEffect(() => {
@@ -86,6 +90,49 @@ const Chatbot = () => {
       filters: { title: "backend" }, // Filter theo backend
     },
   ];
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'vi-VN'; // Vietnamese language
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        
+        if (event.error === 'no-speech') {
+          const errorMsg = {
+            id: Date.now(),
+            text: "⚠️ Không nghe thấy giọng nói. Vui lòng thử lại!",
+            sender: "bot",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, errorMsg]);
+        }
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  }, []);
 
   // Check AI service health on component mount
   useEffect(() => {
@@ -425,9 +472,8 @@ const Chatbot = () => {
           
           // Kiểm tra nếu intent là evaluate_cv
           if (intent === "evaluate_cv") {
-            botMessageText = `✅ Đã phân tích CV của bạn thành công!\n\n`;
-            botMessageText += `📊 Điểm tổng quát: ${featuresObj.scores?.overall || 0}/10\n`;
-            botMessageText += `\nĐang chuyển đến trang đánh giá chi tiết...`;
+            botMessageText =
+              "🚫 Tính năng đánh giá CV hiện không khả dụng. Bạn hãy thử gợi ý việc làm hoặc mô phỏng phỏng vấn dựa trên CV của mình nhé.";
           } else {
             botMessageText = `Tôi hiểu bạn đang tìm công việc với các yêu cầu sau:\n`;
             if (featuresObj.title)
@@ -613,9 +659,9 @@ const Chatbot = () => {
       
       setUploadedFile(file);
       
-      // Set default action to evaluate
-      setSelectedCVAction("evaluate");
-      setInputValue("Đánh giá CV cho tôi");
+      // Set default action to job recommendation
+      setSelectedCVAction("recommend");
+      setInputValue("Lựa chọn công việc phù hợp dựa trên CV");
       
       // Add message showing file attached
       const fileMessage = {
@@ -633,12 +679,12 @@ const Chatbot = () => {
     setSelectedCVAction(action);
     setShowCVActionDropdown(false);
     
-    if (action === "evaluate") {
-      setInputValue("Đánh giá CV cho tôi");
-    } else if (action === "recommend") {
+    if (action === "recommend") {
       setInputValue("Lựa chọn công việc phù hợp dựa trên CV");
     } else if (action === "interview") {
       setInputValue("Mô phỏng phỏng vấn dựa trên CV");
+    } else {
+      setInputValue("");
     }
   };
 
@@ -654,6 +700,43 @@ const Chatbot = () => {
 
   const handleFileUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  // Handle voice input
+  const handleVoiceInput = () => {
+    if (!recognition) {
+      const errorMsg = {
+        id: Date.now(),
+        text: "⚠️ Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng sử dụng Chrome hoặc Edge!",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      // Don't allow voice input if file is uploaded
+      if (uploadedFile) {
+        const errorMsg = {
+          id: Date.now(),
+          text: "⚠️ Không thể sử dụng giọng nói khi đã đính kèm file. Vui lòng xóa file trước!",
+          sender: "bot",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+        return;
+      }
+      
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+      }
+    }
   };
 
   return (
@@ -1208,14 +1291,7 @@ const Chatbot = () => {
                   className="flex items-center justify-between w-full px-4 py-2.5 text-sm bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 rounded-lg transition-all border border-purple-200 hover:border-purple-300"
                 >
                   <div className="flex items-center space-x-2">
-                    {selectedCVAction === "evaluate" ? (
-                      <>
-                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium text-gray-700">Đánh giá CV cho tôi</span>
-                      </>
-                    ) : selectedCVAction === "recommend" ? (
+                    {selectedCVAction === "recommend" ? (
                       <>
                         <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1246,32 +1322,8 @@ const Chatbot = () => {
                 {showCVActionDropdown && (
                   <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
                     <button
-                      onClick={() => handleCVActionChange("evaluate")}
-                      className={`w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors ${
-                        selectedCVAction === "evaluate" ? "bg-purple-50 border-l-4 border-purple-500" : ""
-                      }`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-800">Đánh giá CV cho tôi</div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            Phân tích và đánh giá chất lượng CV của bạn
-                          </div>
-                        </div>
-                        {selectedCVAction === "evaluate" && (
-                          <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-
-                    <button
                       onClick={() => handleCVActionChange("recommend")}
-                      className={`w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-t border-gray-100 ${
+                      className={`w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors ${
                         selectedCVAction === "recommend" ? "bg-blue-50 border-l-4 border-blue-500" : ""
                       }`}
                     >
@@ -1337,7 +1389,7 @@ const Chatbot = () => {
                     contextTokens / MAX_CONTEXT_TOKENS > 0.95
                       ? "⚠️ Context đầy - Vui lòng reset"
                       : uploadedFile
-                      ? "Đánh giá CV cho tôi (đã khóa)"
+                      ? `${selectedCVAction === "recommend" ? "Lựa chọn công việc phù hợp dựa trên CV" : "Mô phỏng phỏng vấn dựa trên CV"} (đã khóa)`
                       : chatMode === "agent"
                       ? "Hỏi hoặc yêu cầu thực hiện..."
                       : "Đặt câu hỏi..."
@@ -1372,6 +1424,44 @@ const Chatbot = () => {
                   )}
                 </div>
               </div>
+
+              {/* Voice Input Button */}
+              <button
+                onClick={handleVoiceInput}
+                disabled={uploadedFile !== null || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
+                title={isListening ? "Đang nghe... (nhấn để dừng)" : "Nói vào microphone"}
+                className={`p-2 rounded-full transition-all duration-300 transform hover:scale-105 ${
+                  isListening
+                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                    : uploadedFile || contextTokens / MAX_CONTEXT_TOKENS > 0.95
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-800"
+                }`}
+              >
+                {isListening ? (
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M6 6h12v12H6z" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                    />
+                  </svg>
+                )}
+              </button>
 
               {/* File Upload Button - Only in agent mode */}
               {chatMode === "agent" && (
@@ -1491,6 +1581,17 @@ const Chatbot = () => {
         }
         .animate-slide-up {
           animation: slide-up 0.3s ease-out;
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
         }
       `}</style>
     </div>

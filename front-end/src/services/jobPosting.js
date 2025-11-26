@@ -111,36 +111,23 @@ const listJobPostingsCompany = async (params = {}) => {
     const url = query
       ? `/jobPosting/listJobPostingsCompany?${query}`
       : `/jobPosting/listJobPostingsCompany`;
-
     const res = await _get(url);
     const result = await res.json();
-
     console.log("📦 Dữ liệu gốc từ backend:", result);
-
     if (!res.ok) {
       throw new Error(result.error || "Không thể lấy danh sách công việc");
     }
-
     // 🧠 Linh hoạt với nhiều kiểu response khác nhau
     let rawJobs = [];
     if (Array.isArray(result.job_postings)) rawJobs = result.job_postings;
     else if (Array.isArray(result.data)) rawJobs = result.data;
     else if (result.job_posting) rawJobs = [result.job_posting];
-
     if (rawJobs.length === 0) {
       console.warn("⚠️ Không tìm thấy dữ liệu job trong response:", result);
       return { success: false, message: "Không có dữ liệu job hợp lệ" };
     }
-
     // 🎯 Chuẩn hóa dữ liệu
     const jobs = rawJobs.map((j) => {
-      // Log để kiểm tra các key quan trọng
-      // console.log("🧩 Kiểm tra job:", {
-      //   id: j.job_posting_id,
-      //   work_type: j.work_type,
-      //   job_posting_skill: j.job_posting_skill,
-      // });
-
       return {
         id: j.job_posting_id,
         title: j.position_name || "Chưa có tiêu đề",
@@ -155,7 +142,6 @@ const listJobPostingsCompany = async (params = {}) => {
         status: j.status || "inactive",
         account: j.account || {},
         create_at: j.create_at || "",
-
         // 🏢 Công ty
         company: {
           id: j.company?.company_id || null,
@@ -172,7 +158,6 @@ const listJobPostingsCompany = async (params = {}) => {
               ? j.company.address[0].address_detail
               : "",
         },
-
         // 🧱 Kiểu làm việc
         workTypes:
           Array.isArray(j.work_type) && j.work_type.length > 0
@@ -180,7 +165,6 @@ const listJobPostingsCompany = async (params = {}) => {
             : Array.isArray(j.workTypes) && j.workTypes.length > 0
             ? j.workTypes
             : [],
-
         // 🧠 Kỹ năng
         skills:
           Array.isArray(j.job_posting_skill) && j.job_posting_skill.length > 0
@@ -199,7 +183,6 @@ const listJobPostingsCompany = async (params = {}) => {
             : [],
       };
     });
-
     console.log("✅ Dữ liệu sau khi map:", jobs);
     return { success: true, jobs };
   } catch (error) {
@@ -310,7 +293,6 @@ const listJobPostingsEmployer = async (params = {}) => {
     return { success: false, message: error.message || "Lỗi không xác định" };
   }
 };
-
 const listJobPostingById = async (id) => {
   try {
     const res = await _get(`/jobPosting/listJobPostingId/${id}`);
@@ -517,31 +499,40 @@ const postJobPosting = async (jobs) => {
     };
   }
 };
-
-const updateJobPosting = async (job_posting_id, jobData) => {
+const updateJobPosting = async (id, jobData) => {
   try {
-    const res = await _patch(
-      `/jobPosting/updateJobPosting/${job_posting_id}`,
-      jobData
-    );
+    const res = await _patch(`/jobPosting/updateJobPosting/${id}`, {
+      job_posting: jobData,
+    });
     const result = await res.json();
-    if (res.ok) {
-      return {
-        success: true,
-        job_posting: result.job_posting,
-        message: result.message || "Cập nhật thành công",
-      };
-    } else {
-      return {
-        success: false,
-        message: result.message || "Cập nhật thất bại",
-      };
+    if (!res.ok) {
+      return { success: false, message: result.message || "Cập nhật thất bại" };
     }
+
+    return {
+      success: true,
+      job_posting: result.job_posting,
+      message: result.message || "Cập nhật thành công",
+    };
   } catch (error) {
     return {
       success: false,
       message: error.message || "Lỗi kết nối máy chủ",
     };
+  }
+};
+
+// NTD gửi bản chỉnh sửa
+const submitJobUpdate = async (job_posting_id, jobData) => {
+  try {
+    const res = await _post(
+      `/jobPosting/submitUpdate/${job_posting_id}`,
+      jobData
+    );
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
   }
 };
 // Thống kê số tin đã đăng theo công ty
@@ -558,20 +549,6 @@ const getJobPostingStatistics = async (companyId) => {
     };
   } catch (e) {
     return { success: false, message: e.message };
-  }
-};
-
-// NTD gửi bản chỉnh sửa
-const submitJobUpdate = async (job_posting_id, jobData) => {
-  try {
-    const res = await _post(
-      `/jobPosting/submitUpdate/${job_posting_id}`,
-      jobData
-    );
-    const result = await res.json();
-    return result;
-  } catch (error) {
-    return { success: false, message: error.message || "Lỗi kết nối máy chủ" };
   }
 };
 // ADMIN duyệt chỉnh sửa
@@ -635,7 +612,6 @@ const deleteJobPosting = async (job_posting_id) => {
     };
   }
 };
-
 export {
   listPendingUpdates,
   softJobPosting,

@@ -57,15 +57,15 @@ function AdminPage() {
       icon: <SettingOutlined />,
       children: [{ key: "industry", label: "Danh sách ngành nghề" }],
     },
-    {
-      key: "sub10",
-      label: "Quản lý gói bài đăng",
-      icon: <SettingOutlined />,
-      children: [
-        { key: "jobPosting123", label: "Danh sách gói bài đăng" },
-        { key: "10", label: "Thêm gói bài đăng" },
-      ],
-    },
+    // {
+    //   key: "sub10",
+    //   label: "Quản lý gói bài đăng",
+    //   icon: <SettingOutlined />,
+    //   children: [
+    //     { key: "jobPosting123", label: "Danh sách gói bài đăng" },
+    //     { key: "10", label: "Thêm gói bài đăng" },
+    //   ],
+    // },
     {
       key: "sub22",
       label: "Quản lý hóa đơn",
@@ -117,7 +117,7 @@ function AdminPage() {
     if (e.key === "skills") {
       navigate("/admin/adminSkills");
     }
-    
+
     // ✅ Thêm navigation cho Quản lý thống kê
     if (e.key === "statistics-overview") {
       navigate("/admin/statistics/overview");

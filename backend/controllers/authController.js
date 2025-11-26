@@ -1,7 +1,6 @@
 // controllers/authController.js
 const supabase = require("../config/supabase");
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const authController = {
@@ -52,26 +51,21 @@ const authController = {
         });
       }
 
-      // So sánh password
-      // Support three cases for stored password formats:
-      // - bcrypt hash (starts with $2): verify with bcrypt
-      // - md5 hex (32 hex chars): compare md5(password)
-      // - plaintext fallback: direct equality
+      const storedPassword = account.password || "";
       let isPasswordValid = false;
-      if (account.password && account.password.startsWith("$2")) {
-        // bcrypt
-        isPasswordValid = await bcrypt.compare(password, account.password);
-      } else if (
-        account.password &&
-        typeof account.password === "string" &&
-        /^[a-f0-9]{32}$/.test(account.password)
-      ) {
-        // md5
-        const md5 = crypto.createHash("md5").update(password).digest("hex");
-        isPasswordValid = md5 === account.password;
-      } else {
-        // plaintext (fallback)
-        isPasswordValid = password === account.password;
+
+      if (storedPassword.startsWith("$2")) {
+        isPasswordValid = await bcrypt.compare(password, storedPassword);
+      } else if (storedPassword) {
+        isPasswordValid = storedPassword === password;
+        if (isPasswordValid) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await supabase
+            .from("account")
+            .update({ password: hashedPassword, updated_at: new Date() })
+            .eq("account_id", account.account_id);
+          account.password = hashedPassword;
+        }
       }
 
       if (!isPasswordValid) {

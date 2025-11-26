@@ -26,58 +26,102 @@ const getStatisticsOverview = async (req, res) => {
       ? revenueData.reduce((sum, item) => sum + (item.amount || 0), 0)
       : 0;
 
-    // Người dùng mới tháng này
-    const firstDayOfMonth = new Date(
-      new Date().getFullYear(),
-      new Date().getMonth(),
-      1
-    ).toISOString();
+    // Tính ngày đầu và cuối tháng hiện tại (xử lý timezone đúng)
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const firstDayISO = firstDayOfMonth.toISOString();
+    const lastDayISO = lastDayOfMonth.toISOString();
+
+    // Người dùng mới tháng này (dùng updated_at vì account không có create_at)
     const { count: newUsersThisMonth } = await supabase
       .from("account")
       .select("*", { count: "exact", head: true })
-      .gte("create_at", firstDayOfMonth);
+      .gte("updated_at", firstDayISO)
+      .lte("updated_at", lastDayISO);
 
-    // Công ty mới tháng này
-    const { count: newCompaniesThisMonth } = await supabase
-      .from("company")
-      .select("*", { count: "exact", head: true })
-      .gte("create_at", firstDayOfMonth);
+    // Công ty mới tháng này (company không có cột thời gian, trả về 0)
+    // Note: Schema không có cột thời gian cho company, có thể cần thêm sau
+    const { count: newCompaniesThisMonth } = 0; // Tạm thời trả về 0
 
-    // Bài đăng mới tháng này
-    const { count: newJobPostingsThisMonth } = await supabase
-      .from("job_posting")
-      .select("*", { count: "exact", head: true })
-      .gte("create_at", firstDayOfMonth);
+    // Bài đăng mới tháng này (kiểm tra xem có create_at không, nếu không dùng deadline)
+    let newJobPostingsThisMonth = 0;
+    try {
+      const { count } = await supabase
+        .from("job_posting")
+        .select("*", { count: "exact", head: true })
+        .gte("create_at", firstDayISO)
+        .lte("create_at", lastDayISO);
+      newJobPostingsThisMonth = count || 0;
+    } catch (error) {
+      // Nếu không có cột create_at, thử dùng deadline
+      const { count } = await supabase
+        .from("job_posting")
+        .select("*", { count: "exact", head: true })
+        .gte("deadline", firstDayISO)
+        .lte("deadline", lastDayISO);
+      newJobPostingsThisMonth = count || 0;
+    }
 
-    // Ứng viên mới tháng này
-    const { count: newApplicationsThisMonth } = await supabase
+    // Ứng viên mới tháng này (dùng submitted_at, lọc chính xác trong tháng)
+    const { count: newApplicationsThisMonth, error: appCountError } = await supabase
       .from("job_application")
       .select("*", { count: "exact", head: true })
-      .gte("create_at", firstDayOfMonth);
+      .gte("submitted_at", firstDayISO)
+      .lte("submitted_at", lastDayISO);
+    
+    // Log để debug nếu cần
+    if (appCountError) {
+      console.warn("Lỗi khi đếm ứng viên tháng này:", appCountError);
+    }
 
-    // Người dùng theo tháng (6 tháng gần nhất)
+    // Người dùng theo tháng (6 tháng gần nhất) - dùng updated_at
     const { data: usersData } = await supabase
       .from("account")
-      .select("create_at")
-      .order("create_at", { ascending: true });
+      .select("updated_at")
+      .order("updated_at", { ascending: true });
 
-    const usersByMonth = getUsersByMonth(usersData, 6);
+    const usersByMonth = getUsersByMonth(usersData, 6, "updated_at");
 
-    // Bài đăng theo tháng (6 tháng gần nhất)
-    const { data: jobPostingsData } = await supabase
-      .from("job_posting")
-      .select("create_at")
-      .order("create_at", { ascending: true });
+    // Bài đăng theo tháng (6 tháng gần nhất) - thử create_at, nếu không có thì dùng deadline
+    let jobPostingsData = null;
+    try {
+      const { data } = await supabase
+        .from("job_posting")
+        .select("create_at")
+        .order("create_at", { ascending: true });
+      jobPostingsData = data;
+    } catch (error) {
+      // Nếu không có create_at, dùng deadline
+      const { data } = await supabase
+        .from("job_posting")
+        .select("deadline")
+        .order("deadline", { ascending: true });
+      jobPostingsData = data?.map(item => ({ create_at: item.deadline })) || [];
+    }
 
-    const jobPostingsByMonth = getUsersByMonth(jobPostingsData, 6);
+    const jobPostingsByMonth = getUsersByMonth(jobPostingsData, 6, "create_at");
 
-    // Doanh thu theo tháng (6 tháng gần nhất)
-    const { data: invoicesData } = await supabase
-      .from("invoice")
-      .select("create_at, amount")
-      .order("create_at", { ascending: true });
-
-    const revenueByMonth = getRevenueByMonth(invoicesData, 6);
+    // Doanh thu theo tháng (6 tháng gần nhất) - invoice không có create_at trong schema
+    // Tạm thời trả về mảng rỗng với cấu trúc đúng
+    let revenueByMonth = [];
+    try {
+      const { data: invoicesData } = await supabase
+        .from("invoice")
+        .select("create_at, amount")
+        .order("create_at", { ascending: true });
+      if (invoicesData && invoicesData.length > 0 && invoicesData[0].create_at) {
+        revenueByMonth = getRevenueByMonth(invoicesData, 6);
+      } else {
+        // Nếu không có create_at, tạo mảng rỗng với cấu trúc đúng
+        revenueByMonth = getRevenueByMonth([], 6);
+      }
+    } catch (error) {
+      // Invoice không có cột create_at, tạo mảng rỗng với cấu trúc đúng
+      console.warn("Invoice table không có cột create_at, không thể thống kê doanh thu theo tháng");
+      revenueByMonth = getRevenueByMonth([], 6);
+    }
 
     // Người dùng theo vai trò
     const { data: accountTypes } = await supabase
@@ -150,7 +194,7 @@ const getStatisticsOverview = async (req, res) => {
 };
 
 // Helper functions
-function getUsersByMonth(data, monthCount = 6) {
+function getUsersByMonth(data, monthCount = 6, dateField = "create_at") {
   const monthNames = [
     "Tháng 1",
     "Tháng 2",
@@ -189,8 +233,9 @@ function getUsersByMonth(data, monthCount = 6) {
   // Count data
   if (data && data.length > 0) {
     data.forEach((item) => {
-      if (item.create_at) {
-        const date = new Date(item.create_at);
+      const dateValue = item[dateField] || item.create_at || item.updated_at;
+      if (dateValue) {
+        const date = new Date(dateValue);
         const key = `${date.getFullYear()}-${String(
           date.getMonth() + 1
         ).padStart(2, "0")}`;
@@ -204,7 +249,7 @@ function getUsersByMonth(data, monthCount = 6) {
   return Object.values(result);
 }
 
-function getRevenueByMonth(data, monthCount = 6) {
+function getRevenueByMonth(data, monthCount = 6, dateField = "create_at") {
   const monthNames = [
     "Tháng 1",
     "Tháng 2",
@@ -243,13 +288,14 @@ function getRevenueByMonth(data, monthCount = 6) {
   // Sum revenue
   if (data && data.length > 0) {
     data.forEach((item) => {
-      if (item.create_at && item.amount) {
-        const date = new Date(item.create_at);
+      const dateValue = item[dateField] || item.create_at;
+      if (dateValue && item.amount) {
+        const date = new Date(dateValue);
         const key = `${date.getFullYear()}-${String(
           date.getMonth() + 1
         ).padStart(2, "0")}`;
         if (result[key]) {
-          result[key].amount += item.amount;
+          result[key].amount += parseFloat(item.amount) || 0;
         }
       }
     });
@@ -319,38 +365,50 @@ async function getRecentActivities() {
   // Lấy các hoạt động gần đây từ nhiều bảng
   const activities = [];
 
-  // Lấy user mới nhất
+  // Lấy user mới nhất - dùng updated_at vì account không có create_at
   const { data: recentUsers } = await supabase
     .from("account")
-    .select("account_id, email, create_at")
-    .order("create_at", { ascending: false })
+    .select("account_id, email, updated_at")
+    .order("updated_at", { ascending: false })
     .limit(3);
 
   if (recentUsers) {
     recentUsers.forEach((user) => {
       activities.push({
         id: `user-${user.account_id}`,
-        time: user.create_at,
+        time: user.updated_at,
         activity: "Đăng ký mới",
         details: `${user.email} đã đăng ký tài khoản`,
       });
     });
   }
 
-  // Lấy bài đăng mới nhất
-  const { data: recentJobs } = await supabase
-    .from("job_posting")
-    .select("job_posting_id, title, create_at")
-    .order("create_at", { ascending: false })
-    .limit(3);
+  // Lấy bài đăng mới nhất - thử create_at, nếu không có thì dùng deadline
+  let recentJobs = null;
+  try {
+    const { data } = await supabase
+      .from("job_posting")
+      .select("job_posting_id, position_name, create_at")
+      .order("create_at", { ascending: false })
+      .limit(3);
+    recentJobs = data;
+  } catch (error) {
+    // Nếu không có create_at, dùng deadline
+    const { data } = await supabase
+      .from("job_posting")
+      .select("job_posting_id, position_name, deadline")
+      .order("deadline", { ascending: false })
+      .limit(3);
+    recentJobs = data;
+  }
 
   if (recentJobs) {
     recentJobs.forEach((job) => {
       activities.push({
         id: `job-${job.job_posting_id}`,
-        time: job.create_at,
+        time: job.create_at || job.deadline,
         activity: "Bài đăng mới",
-        details: `Đăng tin: ${job.title}`,
+        details: `Đăng tin: ${job.position_name}`,
       });
     });
   }
@@ -606,10 +664,10 @@ const getStatisticsRecruitment = async (req, res) => {
     // Calculate statistics
     const totalJobPostings = jobPostingsWithApps.length;
     const openJobPostings = jobPostingsWithApps.filter(
-      (job) => job.status === "open"
+      (job) => job.status === "active"
     ).length;
     const closedJobPostings = jobPostingsWithApps.filter(
-      (job) => job.status === "closed"
+      (job) => job.status !== "active"
     ).length;
 
     // Filter applications by job postings (if filtered)
@@ -652,8 +710,8 @@ const getStatisticsRecruitment = async (req, res) => {
 
     // Job postings by status
     const jobPostingsByStatus = [
-      { status: "Đang mở", count: openJobPostings },
-      { status: "Đã đóng", count: closedJobPostings },
+      { status: "Đang hoạt động", count: openJobPostings },
+      { status: "Không hoạt động", count: closedJobPostings },
     ];
 
     // Applications by status
@@ -794,8 +852,265 @@ function getJobsAndApplicationsByMonth(jobs, applications, monthCount = 6) {
   return Object.values(result);
 }
 
+// Thống kê doanh thu
+const getStatisticsRevenue = async (req, res) => {
+  try {
+    const { paymentStatus, paymentMethod, startDate, endDate } = req.query;
+
+    // Build query for invoices
+    let invoiceQuery = supabase.from("invoice").select(
+      `
+      invoice_id,
+      account_id,
+      amount,
+      payment_status,
+      payment_method,
+      bank_name,
+      description,
+      transaction_code,
+      create_at,
+      account:account_id (
+        email,
+        phone_number
+      )
+    `
+    );
+
+    // Apply filters
+    if (paymentStatus && paymentStatus !== "all") {
+      invoiceQuery = invoiceQuery.eq("payment_status", paymentStatus);
+    }
+
+    if (paymentMethod && paymentMethod !== "all") {
+      invoiceQuery = invoiceQuery.eq("payment_method", paymentMethod);
+    }
+
+    if (startDate && endDate) {
+      invoiceQuery = invoiceQuery
+        .gte("create_at", startDate)
+        .lte("create_at", endDate);
+    }
+
+    const { data: invoices, error: invoiceError } = await invoiceQuery.order(
+      "create_at",
+      { ascending: false }
+    );
+
+    if (invoiceError) throw invoiceError;
+
+    // Calculate statistics
+    const totalRevenue = invoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const completedInvoices = invoices.filter(
+      (inv) => inv.payment_status === "completed"
+    );
+    const completedRevenue = completedInvoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const unfinishedInvoices = invoices.filter(
+      (inv) => inv.payment_status === "unfinished"
+    );
+    const unfinishedRevenue = unfinishedInvoices.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount || 0),
+      0
+    );
+
+    const totalInvoices = invoices.length;
+    const completedCount = completedInvoices.length;
+    const unfinishedCount = unfinishedInvoices.length;
+
+    // Revenue by payment status
+    const revenueByStatus = [
+      {
+        status: "Hoàn thành",
+        count: completedCount,
+        amount: completedRevenue,
+      },
+      {
+        status: "Chưa hoàn thành",
+        count: unfinishedCount,
+        amount: unfinishedRevenue,
+      },
+    ];
+
+    // Revenue by payment method
+    const paymentMethodCount = {};
+    invoices.forEach((inv) => {
+      const method = inv.payment_method || "Unknown";
+      if (!paymentMethodCount[method]) {
+        paymentMethodCount[method] = { count: 0, amount: 0 };
+      }
+      paymentMethodCount[method].count++;
+      paymentMethodCount[method].amount += parseFloat(inv.amount || 0);
+    });
+
+    const revenueByPaymentMethod = Object.keys(paymentMethodCount).map(
+      (method) => ({
+        method,
+        count: paymentMethodCount[method].count,
+        amount: paymentMethodCount[method].amount,
+      })
+    );
+
+    // Revenue by bank
+    const bankCount = {};
+    invoices.forEach((inv) => {
+      const bank = inv.bank_name || "Unknown";
+      if (!bankCount[bank]) {
+        bankCount[bank] = { count: 0, amount: 0 };
+      }
+      bankCount[bank].count++;
+      bankCount[bank].amount += parseFloat(inv.amount || 0);
+    });
+
+    const revenueByBank = Object.keys(bankCount)
+      .map((bank) => ({
+        bank,
+        count: bankCount[bank].count,
+        amount: bankCount[bank].amount,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    // Revenue by month (last 6 months)
+    const revenueByMonth = getRevenueByMonthFromInvoices(invoices, 6);
+
+    // Top customers by spending
+    const customerSpending = {};
+    invoices.forEach((inv) => {
+      const accountId = inv.account_id;
+      const email = inv.account?.email || "Unknown";
+      if (!customerSpending[accountId]) {
+        customerSpending[accountId] = {
+          account_id: accountId,
+          email: email,
+          total_spent: 0,
+          invoice_count: 0,
+        };
+      }
+      customerSpending[accountId].total_spent += parseFloat(inv.amount || 0);
+      customerSpending[accountId].invoice_count++;
+    });
+
+    const topCustomers = Object.values(customerSpending)
+      .sort((a, b) => b.total_spent - a.total_spent)
+      .slice(0, 10);
+
+    // Average invoice amount
+    const avgInvoiceAmount =
+      totalInvoices > 0 ? (totalRevenue / totalInvoices).toFixed(0) : 0;
+
+    // Get unique payment methods for filter
+    const paymentMethods = [
+      ...new Set(invoices.map((inv) => inv.payment_method).filter(Boolean)),
+    ];
+
+    // Transform invoices for table
+    const invoiceList = invoices.map((inv) => ({
+      invoice_id: inv.invoice_id,
+      account_email: inv.account?.email || "N/A",
+      amount: parseFloat(inv.amount || 0),
+      payment_status: inv.payment_status,
+      payment_method: inv.payment_method,
+      bank_name: inv.bank_name,
+      transaction_code: inv.transaction_code,
+      created_at: inv.create_at,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalRevenue,
+        completedRevenue,
+        unfinishedRevenue,
+        totalInvoices,
+        completedCount,
+        unfinishedCount,
+        avgInvoiceAmount: parseFloat(avgInvoiceAmount),
+        revenueByStatus,
+        revenueByPaymentMethod,
+        revenueByBank,
+        revenueByMonth,
+        topCustomers,
+        invoices: invoiceList,
+        paymentMethods, // For filter dropdown
+      },
+    });
+  } catch (error) {
+    console.error("Error in getStatisticsRevenue:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê doanh thu",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function for revenue by month from invoices
+function getRevenueByMonthFromInvoices(invoices, monthCount = 6) {
+  const monthNames = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
+
+  const result = {};
+  const currentDate = new Date();
+
+  // Initialize last N months
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - i,
+      1
+    );
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+    result[key] = {
+      month: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+      amount: 0,
+      count: 0,
+    };
+  }
+
+  // Sum revenue by month
+  if (invoices && invoices.length > 0) {
+    invoices.forEach((inv) => {
+      if (inv.create_at) {
+        const date = new Date(inv.create_at);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (result[key]) {
+          result[key].amount += parseFloat(inv.amount || 0);
+          result[key].count++;
+        }
+      }
+    });
+  }
+
+  return Object.values(result);
+}
+
 module.exports = {
   getStatisticsOverview,
   getStatisticsAccounts,
   getStatisticsRecruitment,
+  getStatisticsRevenue,
 };

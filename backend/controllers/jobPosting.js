@@ -804,8 +804,8 @@ const submitJobUpdate = async (req, res) => {
     // === XỬ LÝ SKILLS ===
     // Filter và validate skill_ids
     const validSkillIds = (Array.isArray(skill_ids) ? skill_ids : [])
-      .filter(id => id && !isNaN(parseInt(id)))
-      .map(id => parseInt(id));
+      .filter((id) => id && !isNaN(parseInt(id)))
+      .map((id) => parseInt(id));
 
     console.log("📝 Valid skill IDs:", validSkillIds);
 

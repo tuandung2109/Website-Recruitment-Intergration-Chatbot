@@ -64,6 +64,7 @@ import CreateCVTeacherFixed from "./pages/CreateCV/createCV";
 import CVContentMarketing from "./pages/CreateCV/CVContentMarketing";
 import CVSoftwareEngineer from "./pages/CreateCV/CVSoftwareEngineer";
 import CompanyHome from "./pages/Arecruiter/companyHome";
+import AdminHome from "./pages/Admin/adminHome/adminHome";
 
 function App() {
   return (
@@ -119,6 +120,7 @@ function App() {
         {/* 👑 Admin chỉ được truy cập nếu role = Admin */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="adminHome" element={<AdminHome />} />
             <Route path="adminCompany" element={<AdminCompany />} />
             <Route path="adminAccount" element={<AdminAccount />} />
             <Route path="adminInvoice" element={<AdminInvoice />} />
@@ -138,10 +140,7 @@ function App() {
               path="statistics/recruitment"
               element={<StatisticsRecruitment />}
             />
-            <Route
-              path="statistics/revenue"
-              element={<StatisticsRevenue />}
-            />
+            <Route path="statistics/revenue" element={<StatisticsRevenue />} />
           </Route>
         </Route>
         {/* 🏢 Employer chỉ được vào RecruiterLayout */}

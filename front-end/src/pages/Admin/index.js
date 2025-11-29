@@ -100,7 +100,7 @@ function AdminPage() {
       navigate("/admin/adminAccount");
     }
     if (e.key === "home") {
-      navigate("/admin");
+      navigate("/admin/adminHome");
     }
     if (e.key === "invoice") {
       navigate("/admin/adminInvoice");

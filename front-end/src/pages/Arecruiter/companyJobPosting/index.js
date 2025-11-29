@@ -61,6 +61,7 @@ function CompanyJobPosting() {
 
   // 📌 Dữ liệu cho filter
   const [industries, setIndustries] = useState([]);
+  const [industrys, setIndustrys] = useState([]);
   const [skills, setSkills] = useState([]);
 
   // 📌 Trạng thái filter
@@ -140,6 +141,7 @@ function CompanyJobPosting() {
     if (values.skillIds && values.skillIds.length > 0) {
       params.skillIds = values.skillIds.join(",");
     }
+
     setFilterParams(params);
     fetchAll(params);
   };
@@ -171,18 +173,28 @@ function CompanyJobPosting() {
         : job.skill_names
         ? job.skill_names
         : [],
+      industryIds: job.industrys
+        ? job.industrys.map(
+            (s) => s.industry_name ?? s.industry_id ?? String(s)
+          )
+        : job.industry_name
+        ? job.industry_name
+        : [],
     });
     setIsEditModal(true);
   };
   const handleUpdate = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // Filter skill_ids - chỉ giữ các ID hợp lệ (số và > 0)
       const validSkillIds = (values.skillIds || [])
-        .filter(id => id && !isNaN(parseInt(id)))
-        .map(id => parseInt(id));
-      
+        .filter((id) => id && !isNaN(parseInt(id)))
+        .map((id) => parseInt(id));
+      const validIndustryIds = (values.industryIds || [])
+        .filter((id) => id && !isNaN(parseInt(id)))
+        .map((id) => parseInt(id));
+
       const updateData = {
         position_name: values.position_name,
         job_description: values.job_description,
@@ -194,6 +206,7 @@ function CompanyJobPosting() {
         education_level: values.education_level,
         experience_years: values.experience_years,
         skill_ids: validSkillIds,
+        industry_ids: validIndustryIds,
         status: "inactive", // Chờ duyệt từ admin
       };
 
@@ -209,7 +222,9 @@ function CompanyJobPosting() {
       console.log("📥 Phản hồi từ server:", submitRes);
 
       if (submitRes && submitRes.success) {
-        message.success("Yêu cầu chỉnh sửa đã được gửi lên admin. Vui lòng chờ duyệt!");
+        message.success(
+          "Yêu cầu chỉnh sửa đã được gửi lên admin. Vui lòng chờ duyệt!"
+        );
 
         // Cập nhật dữ liệu trên UI với status inactive
         const updated = {
@@ -646,6 +661,16 @@ function CompanyJobPosting() {
                 options={skills.map((s) => ({
                   value: s.skill_id,
                   label: s.skill_name,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item name="industryIds" label="Ngành nghề">
+              <Select
+                mode="multiple"
+                placeholder="Chọn ngành nghề"
+                options={industries.map((ind) => ({
+                  value: ind.industry_id,
+                  label: ind.name,
                 }))}
               />
             </Form.Item>

@@ -6,13 +6,11 @@ import {
   unlockCompany,
 } from "../../../services/company";
 import UseTitle from "../../../hooks/useTitle";
-
 function AdminCompany() {
   UseTitle(`JobVip - AdminCompany`);
   const [companys, setCompanys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   useEffect(() => {
     const fetchData = async () => {
       const res = await listCompanyAdmin();
@@ -25,7 +23,6 @@ function AdminCompany() {
     };
     fetchData();
   }, []);
-
   // 🔒 Hàm khóa công ty
   const handleLock = async (record) => {
     const res = await lockCompany(record.company_id);
@@ -40,7 +37,6 @@ function AdminCompany() {
       message.error(res.message || "❌ Khóa công ty thất bại!");
     }
   };
-
   // 🔓 Hàm mở khóa công ty
   const handleUnlock = async (record) => {
     const res = await unlockCompany(record.company_id);
@@ -55,13 +51,11 @@ function AdminCompany() {
       message.error(res.message || "❌ Mở khóa công ty thất bại!");
     }
   };
-
   // 🗑️ Hàm xóa công ty (tạm thời)
   const handleDelete = (record) => {
     message.success(`Đã xóa công ty ID: ${record.company_id}`);
     setCompanys(companys.filter((c) => c.company_id !== record.company_id));
   };
-
   const columns = [
     {
       title: "ID",
@@ -151,10 +145,8 @@ function AdminCompany() {
       ),
     },
   ];
-
   if (loading) return <Spin tip="Đang tải danh sách công ty..." />;
   if (error) return <Alert type="error" message={error} />;
-
   return (
     <div style={{ padding: 24 }}>
       <h2 style={{ marginBottom: 16 }}>🏢 Danh sách công ty</h2>

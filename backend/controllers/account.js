@@ -148,7 +148,6 @@ const postRegister = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 // Đăng nhập
 const postLogin = async (req, res) => {
   try {
@@ -558,7 +557,6 @@ const getAccount = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 const sendOtpRegister = async (req, res) => {
   try {
     const email = req.body?.email;
@@ -656,7 +654,6 @@ const sendOtpForgotPassword = async (req, res) => {
       .json({ success: false, message: "Lỗi server khi gửi OTP" });
   }
 };
-
 const verifyOtpRegister = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -690,7 +687,6 @@ const verifyOtpRegister = async (req, res) => {
       .json({ success: false, message: "Lỗi server khi xác minh OTP" });
   }
 };
-
 const updateAccount = async (req, res) => {
   try {
     const { account_id, ...fields } = req.body;
@@ -719,7 +715,6 @@ const updateAccount = async (req, res) => {
     return res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 // PATCH /changePassword
 const changePassword = async (req, res) => {
   try {
@@ -772,7 +767,6 @@ const changePassword = async (req, res) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
-
 const updateAccountMoney = async (req, res) => {
   try {
     const { account_id, deductAmount } = req.body;
@@ -822,7 +816,6 @@ const updateAccountMoney = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
 module.exports = {
   listAccount,
   getApiUser,

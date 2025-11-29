@@ -211,6 +211,7 @@ def chat():
             user_message = request.form.get('message', '')
             mode = request.form.get('mode', 'chat')
             uploaded_file = request.files.get('file')
+            job_description = request.form.get('job_description', '')
 
             if uploaded_file:
                 # Validate file type (case-insensitive)
@@ -245,6 +246,12 @@ def chat():
                 user_chatbots[session_id]['filepath'] = filepath
                 logger.info(f"📄 File uploaded: {filename} ({os.path.getsize(filepath)} bytes)")
                 logger.info(f"✅ File path stored in session: {filepath}")
+                
+                # Log job description if present
+                if job_description:
+                    logger.info(f"📋 Job Description received: {job_description[:100]}...")
+                else:
+                    logger.warning(f"⚠️ No Job Description received in form data")
         else:
             data = request.get_json()
             
@@ -274,8 +281,9 @@ def chat():
                 filepath = user_chatbots[session_id].get('filepath', '')
                 logger.info(f"📂 Filepath from session: '{filepath}'")
                 logger.info(f"📝 User message: '{user_message}'")
+                logger.info(f"📋 Job Description parameter: '{job_description[:100] if job_description else 'EMPTY'}'...")
                 
-                response = bot.chat_with_agent(user_message, filepath=filepath)
+                response = bot.chat_with_agent(user_message, filepath=filepath, job_description=job_description)
                 logger.info(f"✅ Agent response type: {type(response)}")
                 
                 # Check if response is a dictionary (structured agent response)

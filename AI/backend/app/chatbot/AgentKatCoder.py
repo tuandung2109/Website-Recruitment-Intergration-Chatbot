@@ -394,6 +394,32 @@ class AgentKatCoder(BaseAI):
 
     def chat_with_agent(self, message: str, **kwargs) -> str:
         try:
+            # Priority 1: Check if this is a CV-based interview request (filepath + job_description present)
+            filepath = kwargs.get('filepath', '')
+            job_description = kwargs.get('job_description', '')
+            
+            # Debug logging
+            print(f"🔍 chat_with_agent called:")
+            print(f"   Message: '{message[:50]}...'")
+            print(f"   Filepath: '{filepath}'")
+            print(f"   Job Description: '{job_description[:100] if job_description else 'EMPTY'}...'")
+            print(f"   Filepath exists: {bool(filepath)}")
+            print(f"   JD exists: {bool(job_description)}")
+            
+            # If both filepath and job_description exist, it's an interview request
+            if filepath and job_description:
+                from tool.stimulate_interview_based_on_cv import simulate_interview_based_on_cv
+                print(f"🎯 Detected interview request with CV and JD")
+                print(f"   Filepath: {filepath}")
+                print(f"   JD length: {len(job_description)} chars")
+                return {
+                    "intent": "simulate_interview",
+                    "extracted_features": simulate_interview_based_on_cv(filepath, job_description=job_description)
+                }
+            else:
+                print(f"⚠️ NOT interview mode - missing filepath or JD")
+            
+            # Priority 2: Check for exact match messages
             if message == "Đánh giá CV cho tôi":
                 # Get filepath from kwargs
                 filepath = kwargs.get('filepath', '')
@@ -420,12 +446,14 @@ class AgentKatCoder(BaseAI):
             elif message == "Mô phỏng phỏng vấn dựa trên CV":
                 from tool.stimulate_interview_based_on_cv import simulate_interview_based_on_cv
                 filepath = kwargs.get('filepath', '')
+                job_description = kwargs.get('job_description', '')
                 return {
                     "intent": "simulate_interview",
-                    "extracted_features": simulate_interview_based_on_cv(filepath)
+                    "extracted_features": simulate_interview_based_on_cv(filepath, job_description=job_description)
                     
                 }
-                
+            
+            # Priority 3: Classify intent for other messages
             classification_prompt = self.prompt_config.get_prompt("classification_agent_intent", user_input=message)
             intent = self._strip_think(self.generate_content([{"role": "user", "content": classification_prompt}]))
             print(f"Intent classified as: {intent}")

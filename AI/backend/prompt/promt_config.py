@@ -61,7 +61,7 @@ class PromptConfig:
             ),
             "stimulate_interview_based_on_cv": (
               """
-              Bạn là 1 chuyên gia phỏng vấn dựa trên cv của người dùng hãy cho tôi 6 câu hỏi phỏng vấn phù hợp với cv của người dùng để kiểm tra kiến thức và kỹ năng của họ.
+              Bạn là 1 chuyên gia phỏng vấn dựa trên cv của người dùng và mô tả công việc hãy cho tôi 6 câu hỏi phỏng vấn phù hợp với cv và mô tả công việc của người dùng để kiểm tra kiến thức và kỹ năng của họ. Tôi muốn 3 câu hỏi về cv và 3 câu hỏi về mô tả công việc.
               Hãy trả về **JSON hợp lệ** với format:
               {{
                 "questions": [
@@ -74,6 +74,7 @@ class PromptConfig:
                 ]
               }}
               CV: "{user_input}"
+              Job Description: "{job_description}"
               """
               ),
             "extract_features_cv": (

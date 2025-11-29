@@ -7,7 +7,7 @@ from numpy import extract
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-def simulate_interview_based_on_cv(filepath: str):
+def simulate_interview_based_on_cv(filepath: str, job_description: str = ""): 
     """
     Extract and evaluate CV from a PDF file using AI
     
@@ -49,7 +49,7 @@ def simulate_interview_based_on_cv(filepath: str):
     agent_kat_coder = AgentKatCoder(model_name=settings.MODE_KAT_CODER)
 
     prompt_config = PromptConfig()
-    prompt_text = prompt_config.get_prompt("stimulate_interview_based_on_cv", user_input=extract_text_from_pdf(filepath))
+    prompt_text = prompt_config.get_prompt("stimulate_interview_based_on_cv", user_input=extract_text_from_pdf(filepath), job_description=job_description)
 
     # Call the agent to simulate the interview
     # generate_content expects a list of messages

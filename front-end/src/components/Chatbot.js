@@ -42,6 +42,7 @@ const Chatbot = () => {
   const [showCVActionDropdown, setShowCVActionDropdown] = useState(false);
   const [selectedCVAction, setSelectedCVAction] = useState("recommend"); // "recommend" hoặc "interview"
   const [hasShownJDSuggestion, setHasShownJDSuggestion] = useState(false);
+  const [jobDescription, setJobDescription] = useState(""); // Job Description for interview mode
   
   // Context length tracking (128K tokens max)
   const MAX_CONTEXT_TOKENS = 12800;
@@ -331,7 +332,7 @@ const Chatbot = () => {
   };
 
   // Get AI bot response from backend with retry logic
-  const getAIResponse = async (userMessage, retryCount = 0, fileData = null) => {
+  const getAIResponse = async (userMessage, retryCount = 0, fileData = null, jdText = "") => {
     const maxRetries = 2;
 
     try {
@@ -343,6 +344,12 @@ const Chatbot = () => {
         formData.append("message", userMessage);
         formData.append("mode", chatMode);
         formData.append("file", fileData);
+        
+        // Add job description if provided (for interview mode)
+        if (jdText && jdText.trim()) {
+          formData.append("job_description", jdText.trim());
+          console.log("📋 Sending Job Description:", jdText.substring(0, 100) + "...");
+        }
         
 
         response = await fetch(`${AI_API_BASE_URL}/api/chat`, {
@@ -435,6 +442,23 @@ const Chatbot = () => {
       return;
     }
 
+    // Validate Job Description is required for interview mode
+    if (uploadedFile && selectedCVAction === "interview" && inputValue.trim() === "") {
+      const warningMessage = {
+        id: Date.now(),
+        text: "⚠️ Vui lòng nhập Job Description (mô tả công việc) để bắt đầu phỏng vấn! Ví dụ: Yêu cầu kỹ năng React, Node.js, kinh nghiệm 2 năm...",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, warningMessage]);
+      return;
+    }
+
+    // Prepare job description for interview mode (use directly from input, don't rely on state)
+    const currentJobDescription = (uploadedFile && selectedCVAction === "interview" && inputValue.trim()) 
+      ? inputValue.trim() 
+      : "";
+
     const userMessageText = inputValue.trim() || "Xin hãy phân tích CV của tôi";
 
     const userMessage = {
@@ -450,7 +474,8 @@ const Chatbot = () => {
 
     try {
       // Send message with file if available
-      const aiResponse = await getAIResponse(userMessageText, 0, uploadedFile);
+      // Pass currentJobDescription to getAIResponse so it can be included in FormData
+      const aiResponse = await getAIResponse(userMessageText, 0, uploadedFile, currentJobDescription);
 
       let botMessageText = aiResponse;
       let agentData = null;
@@ -681,10 +706,13 @@ const Chatbot = () => {
     
     if (action === "recommend") {
       setInputValue("Lựa chọn công việc phù hợp dựa trên CV");
+      setJobDescription(""); // Clear JD when switching to recommend
     } else if (action === "interview") {
-      setInputValue("Mô phỏng phỏng vấn dựa trên CV");
+      setInputValue(""); // Clear input to allow user to type JD
+      // User can now type JD directly in the message input
     } else {
       setInputValue("");
+      setJobDescription("");
     }
   };
 
@@ -692,6 +720,7 @@ const Chatbot = () => {
     setUploadedFile(null);
     // Clear input value when file is removed
     setInputValue("");
+    setJobDescription(""); // Clear job description
     setShowCVActionDropdown(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -1373,14 +1402,26 @@ const Chatbot = () => {
               </div>
             )}
 
+            {/* Helper text for interview mode */}
+            {uploadedFile && selectedCVAction === "interview" && (
+              <div className="mb-2 flex items-start space-x-2 bg-green-50 border border-green-200 rounded-lg p-2">
+                <svg className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className="text-xs text-green-700">
+                  <strong>Bắt buộc:</strong> Nhập Job Description để AI có thể phỏng vấn theo yêu cầu công việc cụ thể
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => {
-                    // Only allow editing if no file is attached
-                    if (!uploadedFile) {
+                    // Only allow editing if no file is attached OR in interview mode
+                    if (!uploadedFile || selectedCVAction === "interview") {
                       setInputValue(e.target.value);
                     }
                   }}
@@ -1388,16 +1429,20 @@ const Chatbot = () => {
                   placeholder={
                     contextTokens / MAX_CONTEXT_TOKENS > 0.95
                       ? "⚠️ Context đầy - Vui lòng reset"
-                      : uploadedFile
-                      ? `${selectedCVAction === "recommend" ? "Lựa chọn công việc phù hợp dựa trên CV" : "Mô phỏng phỏng vấn dựa trên CV"} (đã khóa)`
+                      : uploadedFile && selectedCVAction === "recommend"
+                      ? "Lựa chọn công việc phù hợp dựa trên CV (đã khóa)"
+                      : uploadedFile && selectedCVAction === "interview"
+                      ? "✏️ Nhập Job Description (bắt buộc)..."
                       : chatMode === "agent"
                       ? "Hỏi hoặc yêu cầu thực hiện..."
                       : "Đặt câu hỏi..."
                   }
-                  disabled={uploadedFile !== null || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
+                  disabled={(uploadedFile !== null && selectedCVAction === "recommend") || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
                   className={`w-full px-4 py-2 pr-10 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
-                    uploadedFile || contextTokens / MAX_CONTEXT_TOKENS > 0.95
+                    (uploadedFile && selectedCVAction === "recommend") || contextTokens / MAX_CONTEXT_TOKENS > 0.95
                       ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-600"
+                      : uploadedFile && selectedCVAction === "interview"
+                      ? "border-green-300 bg-white focus:ring-green-500"
                       : "border-gray-300 bg-white"
                   }`}
                 />
@@ -1428,12 +1473,12 @@ const Chatbot = () => {
               {/* Voice Input Button */}
               <button
                 onClick={handleVoiceInput}
-                disabled={uploadedFile !== null || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
+                disabled={(uploadedFile !== null && selectedCVAction === "recommend") || contextTokens / MAX_CONTEXT_TOKENS > 0.95}
                 title={isListening ? "Đang nghe... (nhấn để dừng)" : "Nói vào microphone"}
                 className={`p-2 rounded-full transition-all duration-300 transform hover:scale-105 ${
                   isListening
                     ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                    : uploadedFile || contextTokens / MAX_CONTEXT_TOKENS > 0.95
+                    : (uploadedFile && selectedCVAction === "recommend") || contextTokens / MAX_CONTEXT_TOKENS > 0.95
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-800"
                 }`}
@@ -1518,15 +1563,21 @@ const Chatbot = () => {
               {/* Send Button */}
               <button
                 onClick={handleSendMessage}
-                disabled={contextTokens / MAX_CONTEXT_TOKENS > 0.95}
+                disabled={
+                  contextTokens / MAX_CONTEXT_TOKENS > 0.95 ||
+                  (uploadedFile && selectedCVAction === "interview" && inputValue.trim() === "")
+                }
                 className={`p-2 rounded-full transition-colors duration-300 transform hover:scale-105 ${
-                  contextTokens / MAX_CONTEXT_TOKENS > 0.95
+                  contextTokens / MAX_CONTEXT_TOKENS > 0.95 ||
+                  (uploadedFile && selectedCVAction === "interview" && inputValue.trim() === "")
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
                 title={
                   contextTokens / MAX_CONTEXT_TOKENS > 0.95
                     ? "Context đầy - Vui lòng reset"
+                    : uploadedFile && selectedCVAction === "interview" && inputValue.trim() === ""
+                    ? "Vui lòng nhập Job Description"
                     : "Gửi tin nhắn"
                 }
               >

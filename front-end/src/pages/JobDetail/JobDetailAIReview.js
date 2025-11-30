@@ -13,7 +13,7 @@ const JobDetailAIReview = () => {
   const [error, setError] = useState("");
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiReview, setAiReview] = useState(null);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("strengths");
 
   // Fetch job detail
   useEffect(() => {
@@ -521,11 +521,9 @@ const JobDetailAIReview = () => {
             <div className="bg-white rounded-2xl shadow-lg p-2 border border-gray-100">
               <div className="flex gap-2">
                 {[
-                  { id: "overview", label: "Tổng quan", icon: "📊" },
                   { id: "strengths", label: "Điểm mạnh", icon: "✨" },
                   { id: "improvements", label: "Cải thiện", icon: "🚀" },
-                  { id: "keywords", label: "Từ khóa", icon: "🔍" },
-                  { id: "comparison", label: "So sánh", icon: "📈" }
+                  { id: "keywords", label: "Từ khóa", icon: "🔍" }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -542,60 +540,6 @@ const JobDetailAIReview = () => {
                 ))}
               </div>
             </div>
-
-            {/* Overview Section */}
-            {activeSection === "overview" && (
-              <div className="space-y-6">
-                {/* Overall Score */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                    <span className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white mr-3">
-                      🎯
-                    </span>
-                    Điểm đánh giá tổng thể
-                  </h3>
-                  <div className="flex flex-col lg:flex-row items-center justify-around gap-8">
-                    <ScoreCircle score={aiReview.overallScore} label="Tổng điểm" color="blue" />
-                    <ScoreCircle score={aiReview.scores.clarity} label="Rõ ràng" color="green" />
-                    <ScoreCircle score={aiReview.scores.completeness} label="Đầy đủ" color="blue" />
-                    <ScoreCircle score={aiReview.scores.attractiveness} label="Hấp dẫn" color="amber" />
-                    <ScoreCircle score={aiReview.scores.seo} label="SEO" color="green" />
-                  </div>
-                  
-                  <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-                    <p className="text-gray-700 leading-relaxed">
-                      <strong className="text-blue-600">Đánh giá chung:</strong> Tin tuyển dụng của bạn có điểm số{' '}
-                      <span className={`font-bold ${
-                        aiReview.overallScore >= 70 ? 'text-green-600' : 
-                        aiReview.overallScore >= 50 ? 'text-yellow-600' : 
-                        'text-red-600'
-                      }`}>
-                        {aiReview.overallScore}/100
-                      </span>
-                      {aiReview.overallScore >= 70 && (
-                        <span> - Rất tốt! </span>
-                      )}
-                      {aiReview.overallScore >= 50 && aiReview.overallScore < 70 && (
-                        <span> - Khá tốt, nhưng có thể cải thiện. </span>
-                      )}
-                      {aiReview.overallScore < 50 && (
-                        <span> - Cần cải thiện nhiều. </span>
-                      )}
-                      {aiReview.strengths && aiReview.strengths.length > 0 && (
-                        <span>
-                          Có {aiReview.strengths.length} điểm mạnh đáng chú ý
-                          {aiReview.improvements && aiReview.improvements.length > 0 && (
-                            <span> và {aiReview.improvements.length} điểm cần cải thiện</span>
-                          )}
-                          .
-                        </span>
-                      )}
-                      {' '}Hãy xem các tab bên dưới để hiểu rõ hơn về từng khía cạnh.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Strengths Section */}
             {activeSection === "strengths" && (
@@ -728,78 +672,6 @@ const JobDetailAIReview = () => {
                           {keyword}
                         </span>
                       ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Comparison Section */}
-            {activeSection === "comparison" && (
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                  <span className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white mr-3">
-                    📈
-                  </span>
-                  So sánh với thị trường
-                </h3>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-blue-600 mb-2">
-                        {aiReview.competitorComparison.betterThan}%
-                      </div>
-                      <p className="text-gray-700 font-medium">Tốt hơn các tin đăng khác</p>
-                      <p className="text-sm text-gray-600 mt-2">Trong cùng ngành nghề</p>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600 mb-2">
-                        +15%
-                      </div>
-                      <p className="text-gray-700 font-medium">Cao hơn mức trung bình</p>
-                      <p className="text-sm text-gray-600 mt-2">{aiReview.competitorComparison.avgSalary}</p>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600 mb-2">
-                        8-12
-                      </div>
-                      <p className="text-gray-700 font-medium">Ứng viên dự kiến</p>
-                      <p className="text-sm text-gray-600 mt-2">{aiReview.competitorComparison.responseRate}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-xl border border-blue-200">
-                  <h4 className="font-bold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                    </svg>
-                    Thống kê dự đoán sau khi cải thiện
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-700">Lượt xem tăng:</span>
-                      <span className="font-bold text-blue-600">+35%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-700">Tỷ lệ apply tăng:</span>
-                      <span className="font-bold text-green-600">+28%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-700">Ứng viên phù hợp:</span>
-                      <span className="font-bold text-purple-600">+42%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-gray-700">Thời gian tuyển dụng:</span>
-                      <span className="font-bold text-orange-600">-15%</span>
                     </div>
                   </div>
                 </div>

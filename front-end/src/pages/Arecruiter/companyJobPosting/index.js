@@ -154,6 +154,45 @@ function CompanyJobPosting() {
   console.log("selectedJob", selectedJob);
   const handleEdit = (job) => {
     setSelectedJob(job);
+
+    // Chuẩn hóa skillIds và industryIds
+    const existingSkillIds = (job.skills || [])
+      .map((s) => (s.skill_id !== undefined ? s.skill_id : null))
+      .filter(Boolean); // chỉ lấy id hợp lệ
+
+    const existingIndustryIds = (job.industrys || [])
+      .map((i) => (i.industry_id !== undefined ? i.industry_id : null))
+      .filter(Boolean);
+
+    form.setFieldsValue({
+      position_name: job.title,
+      job_description: job.description,
+      requirements: job.requirements,
+      salary: job.salary,
+      deadline: job.deadline ? dayjs(job.deadline) : null,
+      working_time: job.workingTime,
+      status: job.status,
+      benefits: job.benefits,
+      education_level: job.educationLevel,
+      experience_years: job.experienceYears,
+      skillIds: existingSkillIds, // chỉ là mảng id
+      industryIds: existingIndustryIds, // chỉ là mảng id
+    });
+
+    setIsEditModal(true);
+  };
+
+  const handleEdit2 = (job) => {
+    setSelectedJob(job);
+
+    // Chuẩn hóa dữ liệu skillIds và industryIds
+    const existingSkillIds = job.skills
+      ? job.skills.map((s) => s.skill_id ?? s.skill_name)
+      : [];
+    const existingIndustryIds = job.industrys
+      ? job.industrys.map((i) => i.industry_id ?? i.industry_name)
+      : [];
+
     form.setFieldsValue({
       position_name: job.title,
       job_description: job.description,
@@ -168,21 +207,13 @@ function CompanyJobPosting() {
       benefits: job.benefits,
       education_level: job.educationLevel,
       experience_years: job.experienceYears,
-      skillIds: job.skills
-        ? job.skills.map((s) => s.skill_name ?? s.skill_id ?? String(s))
-        : job.skill_names
-        ? job.skill_names
-        : [],
-      industryIds: job.industrys
-        ? job.industrys.map(
-            (s) => s.industry_name ?? s.industry_id ?? String(s)
-          )
-        : job.industry_name
-        ? job.industry_name
-        : [],
+      skillIds: existingSkillIds,
+      industryIds: existingIndustryIds,
     });
+
     setIsEditModal(true);
   };
+
   const handleUpdate = async () => {
     try {
       const values = await form.validateFields();
@@ -653,7 +684,7 @@ function CompanyJobPosting() {
             <Form.Item name="requirements" label="Yêu cầu">
               <Input.TextArea rows={3} />
             </Form.Item>
-            {/* Skills: show existing and allow adding new skills */}
+
             <Form.Item name="skillIds" label="Kỹ năng yêu cầu">
               <Select
                 mode="multiple"
@@ -662,8 +693,10 @@ function CompanyJobPosting() {
                   value: s.skill_id,
                   label: s.skill_name,
                 }))}
+                allowClear
               />
             </Form.Item>
+
             <Form.Item name="industryIds" label="Ngành nghề">
               <Select
                 mode="multiple"
@@ -672,6 +705,7 @@ function CompanyJobPosting() {
                   value: ind.industry_id,
                   label: ind.name,
                 }))}
+                allowClear
               />
             </Form.Item>
 

@@ -911,25 +911,42 @@ const JobListings = () => {
                                 {/* {job.description} */}
                               </p>
                               <div className="flex flex-wrap gap-2 mb-4">
-                                Skill:
-                                {job.skills.map((skill, skillIndex) => (
-                                  <span
-                                    key={`skill-${skillIndex}`}
-                                    // className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full font-medium"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                                {job.industries &&
-                                  job.industries.map((ind, indIndex) => (
+                                {/* Skills nhỏ hơn, nhiều màu */}
+                                {job.skills.map((skill, index) => {
+                                  const colors = [
+                                    "bg-blue-100 text-blue-800",
+                                    "bg-green-100 text-green-800",
+                                    "bg-purple-100 text-purple-800",
+                                    "bg-pink-100 text-pink-800",
+                                    "bg-yellow-100 text-yellow-800",
+                                    "bg-indigo-100 text-indigo-800",
+                                    "bg-red-100 text-red-800",
+                                    "bg-teal-100 text-teal-800",
+                                  ];
+                                  const colorClass =
+                                    colors[index % colors.length];
+                                  return (
                                     <span
-                                      key={`ind-${indIndex}`}
+                                      key={`skill-${index}`}
+                                      className={`${colorClass} px-2 py-0.5 rounded-full text-xs font-semibold transform transition-all duration-300 hover:scale-105`}
+                                    >
+                                      {skill}
+                                    </span>
+                                  );
+                                })}
+
+                                {/* Industries giữ kích thước bình thường */}
+                                {job.industries &&
+                                  job.industries.map((ind, index) => (
+                                    <span
+                                      key={`ind-${index}`}
                                       className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full font-medium"
                                     >
                                       {ind}
                                     </span>
                                   ))}
                               </div>
+
                               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                 <span className="flex items-center">
                                   <svg

@@ -653,7 +653,6 @@ def embeddings_status():
                 "error": f"Collection not found or error accessing: {str(e)}",
                 "timestamp": time.time()
             }), 404
-        
     except Exception as e:
         logger.error(f"❌ Failed to get embeddings status: {e}")
         return jsonify({

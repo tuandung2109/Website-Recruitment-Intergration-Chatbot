@@ -205,6 +205,9 @@ def handleEvaluateInterview():
 def chat():
     """Chat endpoint for recruitment conversations using AgentKatCoder (OpenAI)"""
     try:
+        # Initialize variables that will be used later
+        job_description = ''
+        
         # Support both JSON requests and multipart/form-data uploads (PDF)
         if request.content_type and 'multipart/form-data' in request.content_type:
             # Handle file upload

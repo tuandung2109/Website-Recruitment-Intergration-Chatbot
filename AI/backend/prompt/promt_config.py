@@ -641,8 +641,15 @@ ví dụ:
   "skills": 8,
   "education": 7,
   "positions": 9,
-  "experience": 8
+  "experience": 8,
+  "general": 8
 }}
+trong đó:
+- skills: Đánh giá mức độ phù hợp về kỹ năng giữa CV và JD (0-10).
+- education: Đánh giá mức độ phù hợp về trình độ học vấn giữa CV và JD
+- positions: Đánh giá mức độ phù hợp về vị trí công việc giữa CV và JD.
+- experience: Đánh giá mức độ phù hợp về kinh nghiệm làm việc giữa CV và JD
+- general: Đánh giá tổng thể mức độ phù hợp giữa CV và JD.
 input:
 JD: {jd}
 CV: {cv}

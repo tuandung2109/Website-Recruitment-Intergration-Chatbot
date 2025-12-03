@@ -367,7 +367,7 @@ class AgentKatCoder(BaseAI):
                                             evaluation_result_json.get("education", 0),
                                             evaluation_result_json.get("positions", 0),
                                             evaluation_result_json.get("experience", 0),
-                                            8,
+                                            evaluation_result_json.get("general", 0),
                                             ", ".join(evaluation_data.get("weaknesses", [])),
                                             ", ".join(evaluation_data.get("strengths", [])),
                                             ", ".join(evaluation_data.get("interview_questions", [])),

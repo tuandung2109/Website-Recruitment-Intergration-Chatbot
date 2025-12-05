@@ -1265,7 +1265,7 @@ const Chatbot = () => {
 
           {/* Quick Replies */}
           <div className="px-4 py-2 bg-white border-t border-gray-100">
-            {/* <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {quickReplies.map((reply) => (
                 <button
                   key={reply.id}
@@ -1283,7 +1283,7 @@ const Chatbot = () => {
                   {reply.text}
                 </button>
               ))}
-            </div> */}
+            </div>
           </div>
 
           {/* Input */}

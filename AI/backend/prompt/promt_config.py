@@ -748,7 +748,7 @@ Return *only* valid JSON with the exact structure below and translated to Vietna
 - The analysis must use only information found in the CV.
 - If the CV contains multiple domains (AI, blockchain, Unity…), detect cross-domain ambiguity.
 - Be specific and data-driven.
-
+- Translate all output to Vietnamese.
 
 ### NOW WAIT
 Do not produce output yet.  

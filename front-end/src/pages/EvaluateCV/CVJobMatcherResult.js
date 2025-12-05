@@ -103,7 +103,6 @@ const CVJobMatcherResult = ({ data, onNewScan, cvFileName, jobTitle }) => {
     const evaluation = data || {};
     const displayedJobTitle = jobTitle || evaluation.job_title || 'Kết quả đánh giá AI';
     const resumeName = cvFileName || 'CV đã tải lên';
-    const generalPercent = normalizeScore(evaluation.general);
 
     const metrics = [
         { key: 'skill', label: 'Kỹ năng', value: evaluation.skill },
@@ -112,6 +111,22 @@ const CVJobMatcherResult = ({ data, onNewScan, cvFileName, jobTitle }) => {
         { key: 'experiences', label: 'Kinh nghiệm', value: evaluation.experiences },
         { key: 'general', label: 'Tổng quan', value: evaluation.general }
     ];
+
+    const metricAggregate = metrics.reduce(
+        (acc, metric) => {
+            const numericValue = Number(metric.value);
+            if (Number.isFinite(numericValue)) {
+                acc.sum += numericValue;
+                acc.count += 1;
+            }
+            return acc;
+        },
+        { sum: 0, count: 0 }
+    );
+
+    const averageScore = metricAggregate.count ? metricAggregate.sum / metricAggregate.count : 0;
+    const overallDisplayScore = Number.isFinite(averageScore) ? Number(averageScore.toFixed(1)) : 0;
+    const generalPercent = normalizeScore(averageScore);
 
     const insights = parseInsights(evaluation.detail_analysis);
     const strengths = splitList(evaluation.strong);
@@ -158,7 +173,7 @@ const CVJobMatcherResult = ({ data, onNewScan, cvFileName, jobTitle }) => {
                                 />
                             </svg>
                             <div className="score-ring-inner">
-                                <span className="score-ring-value">{evaluation.general ?? 0}</span>
+                                <span className="score-ring-value">{overallDisplayScore}</span>
                                 <span className="score-ring-caption">/10 Tổng quan</span>
                             </div>
                         </div>

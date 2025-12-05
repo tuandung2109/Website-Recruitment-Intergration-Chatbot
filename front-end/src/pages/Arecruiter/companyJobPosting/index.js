@@ -156,13 +156,38 @@ function CompanyJobPosting() {
     setSelectedJob(job);
 
     // Chuẩn hóa skillIds và industryIds
-    const existingSkillIds = (job.skills || [])
-      .map((s) => (s.skill_id !== undefined ? s.skill_id : null))
-      .filter(Boolean); // chỉ lấy id hợp lệ
+    const skillRelations = job.skillDetails || job.skills || [];
+    const industryRelations = job.industrys || job.industryDetails || [];
 
-    const existingIndustryIds = (job.industrys || [])
-      .map((i) => (i.industry_id !== undefined ? i.industry_id : null))
-      .filter(Boolean);
+    const existingSkillIds = (Array.isArray(skillRelations) ? skillRelations : [])
+      .map((s) => {
+        if (typeof s === "object" && s !== null) {
+          return s.skill_id ?? s.id ?? null;
+        }
+        if (typeof s === "number") return s;
+        if (typeof s === "string") {
+          const parsed = Number(s);
+          return Number.isNaN(parsed) ? null : parsed;
+        }
+        return null;
+      })
+      .filter((id) => id !== null && id !== undefined);
+
+    const existingIndustryIds = (Array.isArray(industryRelations)
+      ? industryRelations
+      : [])
+      .map((i) => {
+        if (typeof i === "object" && i !== null) {
+          return i.industry_id ?? i.id ?? null;
+        }
+        if (typeof i === "number") return i;
+        if (typeof i === "string") {
+          const parsed = Number(i);
+          return Number.isNaN(parsed) ? null : parsed;
+        }
+        return null;
+      })
+      .filter((id) => id !== null && id !== undefined);
 
     form.setFieldsValue({
       position_name: job.title,
@@ -186,12 +211,38 @@ function CompanyJobPosting() {
     setSelectedJob(job);
 
     // Chuẩn hóa dữ liệu skillIds và industryIds
-    const existingSkillIds = job.skills
-      ? job.skills.map((s) => s.skill_id ?? s.skill_name)
-      : [];
-    const existingIndustryIds = job.industrys
-      ? job.industrys.map((i) => i.industry_id ?? i.industry_name)
-      : [];
+    const skillRelations = job.skillDetails || job.skills || [];
+    const industryRelations = job.industrys || job.industryDetails || [];
+
+    const existingSkillIds = (Array.isArray(skillRelations) ? skillRelations : [])
+      .map((s) => {
+        if (typeof s === "object" && s !== null) {
+          return s.skill_id ?? s.id ?? null;
+        }
+        if (typeof s === "number") return s;
+        if (typeof s === "string") {
+          const parsed = Number(s);
+          return Number.isNaN(parsed) ? null : parsed;
+        }
+        return null;
+      })
+      .filter((id) => id !== null && id !== undefined);
+
+    const existingIndustryIds = (Array.isArray(industryRelations)
+      ? industryRelations
+      : [])
+      .map((i) => {
+        if (typeof i === "object" && i !== null) {
+          return i.industry_id ?? i.id ?? null;
+        }
+        if (typeof i === "number") return i;
+        if (typeof i === "string") {
+          const parsed = Number(i);
+          return Number.isNaN(parsed) ? null : parsed;
+        }
+        return null;
+      })
+      .filter((id) => id !== null && id !== undefined);
 
     form.setFieldsValue({
       position_name: job.title,

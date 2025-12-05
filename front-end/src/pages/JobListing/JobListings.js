@@ -5,6 +5,7 @@ import { getAgentFilters } from "../../controller/agentController";
 import { listJobsPosting } from "../../services/jobPosting";
 import UseTitle from "../../hooks/useTitle";
 import { listSkills } from "../../services/skill";
+import { listIndustry } from "../../services/industry";
 import { checkApplied } from "../../services/jobApplication";
 
 const JobListings = () => {
@@ -36,7 +37,7 @@ const JobListings = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [filtersFromDb] = useState({
+  const [filtersFromDb, setFiltersFromDb] = useState({
     workType: [],
     industry: [],
   });
@@ -299,6 +300,25 @@ const JobListings = () => {
       }
     };
     fetchSkillList();
+  }, []);
+
+  useEffect(() => {
+    const fetchIndustryFilters = async () => {
+      const res = await listIndustry();
+      if (res.success) {
+        const names = res.industrys
+          .map((industry) => industry.name || industry.industry_name)
+          .filter(Boolean);
+        setFiltersFromDb((prev) => ({
+          ...prev,
+          industry: Array.from(new Set(names)),
+        }));
+      } else {
+        console.warn(res.message || "Khong the tai danh sach nganh nghe");
+      }
+    };
+
+    fetchIndustryFilters();
   }, []);
 
   // Hàm lọc công việc

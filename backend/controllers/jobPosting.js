@@ -762,6 +762,7 @@ const submitJobUpdate = async (req, res) => {
       benefits,
       working_time,
       skill_ids,
+      industry_ids,
       status,
     } = req.body;
 
@@ -803,6 +804,8 @@ const submitJobUpdate = async (req, res) => {
 
     // === XỬ LÝ SKILLS ===
     // Filter và validate skill_ids
+    const numericJobPostingId = parseInt(jobPostingId);
+
     const validSkillIds = (Array.isArray(skill_ids) ? skill_ids : [])
       .filter((id) => id && !isNaN(parseInt(id)))
       .map((id) => parseInt(id));
@@ -814,7 +817,7 @@ const submitJobUpdate = async (req, res) => {
       const { error: deleteError } = await supabase
         .from("job_posting_skill")
         .delete()
-        .eq("job_posting_id", parseInt(jobPostingId));
+        .eq("job_posting_id", numericJobPostingId);
 
       if (deleteError) {
         console.error("❌ Lỗi khi xóa skill cũ:", deleteError);
@@ -822,7 +825,7 @@ const submitJobUpdate = async (req, res) => {
 
       // Thêm skill mới
       const skillRecords = validSkillIds.map((skillId) => ({
-        job_posting_id: parseInt(jobPostingId),
+        job_posting_id: numericJobPostingId,
         skill_id: skillId,
       }));
 
@@ -844,7 +847,42 @@ const submitJobUpdate = async (req, res) => {
       await supabase
         .from("job_posting_skill")
         .delete()
-        .eq("job_posting_id", parseInt(jobPostingId));
+        .eq("job_posting_id", numericJobPostingId);
+    }
+
+    // === XỬ LÝ INDUSTRY ===
+    const validIndustryIds = (Array.isArray(industry_ids) ? industry_ids : [])
+      .filter((id) => id && !isNaN(parseInt(id)))
+      .map((id) => parseInt(id));
+
+    console.log("📝 Valid industry IDs:", validIndustryIds);
+
+    // Xóa tất cả industry cũ trước khi thêm mới để tránh trùng
+    const { error: deleteIndustryError } = await supabase
+      .from("job_posting_industry")
+      .delete()
+      .eq("job_posting_id", numericJobPostingId);
+
+    if (deleteIndustryError) {
+      console.error("❌ Lỗi khi xóa industry cũ:", deleteIndustryError);
+    }
+
+    if (validIndustryIds.length > 0) {
+      const industryRecords = validIndustryIds.map((industryId) => ({
+        job_posting_id: numericJobPostingId,
+        industry_id: industryId,
+      }));
+
+      const { error: insertIndustryError } = await supabase
+        .from("job_posting_industry")
+        .insert(industryRecords);
+
+      if (insertIndustryError) {
+        console.error("❌ Lỗi khi thêm industry mới:", insertIndustryError);
+        throw insertIndustryError;
+      }
+
+      console.log("✅ Cập nhật industry thành công");
     }
 
     res.status(200).json({

@@ -16,8 +16,6 @@ const JobDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openApply, setOpenApply] = useState(false);
-  const [showCustomShare, setShowCustomShare] = useState(false);
-  const [showSharePopup, setShowSharePopup] = useState(false);
 
   // 🆕 State kiểm tra đã ứng tuyển
   const [hasApplied, setHasApplied] = useState(false);
@@ -181,7 +179,7 @@ const JobDetail = () => {
     const shareText = `${jobTitle} - ${jobCompany}`;
 
     switch (platform) {
-      case "facebook1":
+      case "facebook":
         window.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
             jobUrl
@@ -189,9 +187,6 @@ const JobDetail = () => {
           "_blank",
           "width=600,height=400"
         );
-        break;
-      case "facebook":
-        setShowSharePopup(true);
         break;
 
       case "twitter":
@@ -776,72 +771,6 @@ const JobDetail = () => {
           </div>
         </div>
 
-        {showSharePopup && job && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-5 rounded-xl shadow-lg w-[420px]">
-              <h2 className="text-xl font-semibold mb-3">Nội dung chia sẻ</h2>
-
-              <textarea
-                className="w-full h-40 p-3 border rounded-lg"
-                readOnly
-                value={`📌Tên công việc: *${job.title}*\n🏢 Công ty: ${
-                  job.companyInfo?.name || job.company
-                }\n💰 Mức lương: ${job.salaryRange || ""}\n🏷️ Ngành nghề: ${
-                  job.industries && job.industries.length > 0
-                    ? job.industries.join(", ")
-                    : ""
-                }\n📍 Địa chỉ: ${
-                  job.location || job.companyInfo?.company_address || ""
-                }\n🔗 Đường link: ${window.location.href}`}
-              />
-
-              <div className="flex justify-between mt-4">
-                <button
-                  className="px-4 py-2 bg-gray-300 rounded-lg"
-                  onClick={() => setShowSharePopup(false)}
-                >
-                  Đóng
-                </button>
-
-                <button
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `📌 Tên công việc: ${job.title}\n💰 Lương: ${
-                        job.salaryRange || ""
-                      }\n🏷️ Ngành nghề: ${
-                        job.industries && job.industries.length > 0
-                          ? job.industries.join(", ")
-                          : ""
-                      }\n🏢 Công ty: ${
-                        job.companyInfo?.name || job.company || ""
-                      }\n📍 ${
-                        job.location || job.companyInfo?.company_address || ""
-                      }\n🔗 ${window.location.href}`
-                    );
-                    alert("Đã sao chép nội dung!");
-                  }}
-                >
-                  Sao chép
-                </button>
-
-                <button
-                  className="px-4 py-2 bg-blue-700 text-white rounded-lg"
-                  onClick={() => {
-                    window.open(
-                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                        window.location.href
-                      )}`,
-                      "_blank"
-                    );
-                  }}
-                >
-                  Mở Facebook
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Modal Ứng tuyển — để trong return, nằm cuối cùng */}

@@ -291,7 +291,7 @@ const Login = () => {
             </button>
 
             {/* Divider */}
-            {/* <div className="relative my-6">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -300,10 +300,10 @@ const Login = () => {
                   Hoặc đăng nhập với
                 </span>
               </div>
-            </div> */}
+            </div>
 
             {/* Social Login */}
-            {/* <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 disabled={loading}
@@ -347,7 +347,7 @@ const Login = () => {
                   Facebook
                 </span>
               </button>
-            </div> */}
+            </div>
 
             {/* Register Link */}
             <div className="text-center mt-6">
